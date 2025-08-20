@@ -229,11 +229,6 @@ const LayoutClassic = ({ formData }) => (
         <div>
             <h2 className="text-4xl font-extrabold uppercase text-gray-800 tracking-wider">{getDocumentTypeName(formData.invoiceTypeCode)}</h2>
         </div>
-        <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900 tracking-tight break-words">{formData.senderName}</div>
-            <p className="text-sm text-gray-500 break-words">{formData.senderStreet}</p>
-            <p className="text-sm text-gray-500 break-words">{formData.senderZip} {formData.senderCity}</p>
-        </div>
       </header>
       <section className="grid grid-cols-2 gap-12 mt-8">
         <div>
@@ -314,10 +309,6 @@ const LayoutModern = ({ formData }) => (
     <div className="bg-white text-gray-800 p-10 font-sans shadow-2xl rounded-lg w-full">
         <header className="flex justify-between items-center pb-6">
             <h1 className="text-5xl font-thin uppercase text-gray-800 tracking-[0.3em]">{getDocumentTypeName(formData.invoiceTypeCode)}</h1>
-            <div className="text-right">
-                <div className="text-xl font-semibold text-gray-900 break-words">{formData.senderName}</div>
-                <p className="text-sm text-gray-500 break-words">{formData.senderStreet} • {formData.senderZip} {formData.senderCity}</p>
-            </div>
         </header>
         <section className="grid grid-cols-2 gap-8 mt-10 pb-8 border-b border-gray-200">
             <div>
@@ -443,11 +434,6 @@ const LayoutCreative = ({ formData }) => (
             <div>
                 <h1 className="text-5xl font-bold text-white tracking-tight">{getDocumentTypeName(formData.invoiceTypeCode)}</h1>
                 <p className="text-gray-400 mt-2">Rechnungs-Nr. {formData.reference}</p>
-            </div>
-            <div className="text-right text-xs">
-                <p className="font-bold text-base">{formData.senderName}</p>
-                <p className="text-gray-400">{formData.senderStreet}</p>
-                <p className="text-gray-400">{formData.senderZip} {formData.senderCity}</p>
             </div>
         </header>
         <section className="grid grid-cols-2 gap-10 mt-8 text-sm">
