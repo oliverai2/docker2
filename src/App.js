@@ -1451,6 +1451,21 @@ const App = () => {
   const generateInvoiceSummary = async () => {
     setLoadingSummary(true);
     try {
+        const apiKey = "";
+        
+        // Wenn kein API-Key vorhanden ist, verwende Fallback-Zusammenfassung
+        if (!apiKey) {
+            const fallbackSummary = `• Rechnungssteller: ${formData.senderName}
+• Rechnungsempfänger: ${formData.recipientName}
+• Rechnungsnummer: ${formData.reference}
+• Gesamtbrutto: ${formData.grossAmount} ${formData.invoiceCurrencyCode}
+• Rechnungsdatum: ${formatDate(formData.invoiceDate)}
+• Leistungsdatum: ${formatDate(formData.serviceDate)}
+• Anzahl Positionen: ${formData.lineItems.length}`;
+            setInvoiceSummary(fallbackSummary);
+            return true;
+        }
+
         const prompt = `Fasse die folgenden Rechnungsdaten in Stichpunkten zusammen. Nur Fakten, kein Einleitungssatz, keine Erklärungen.
 - Rechnungssteller: ${formData.senderName}
 - Rechnungsempfänger: ${formData.recipientName}
@@ -1460,7 +1475,6 @@ const App = () => {
 
         const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
         const payload = { contents: chatHistory };
-        const apiKey = "";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
         const response = await fetch(apiUrl, {
@@ -1478,16 +1492,38 @@ const App = () => {
         }
     } catch (error) {
         console.error("Fehler bei der Erstellung der Zusammenfassung:", error);
-        setInvoiceSummary("Fehler: Zusammenfassung konnte nicht erstellt werden.");
-        return false;
+        // Fallback-Zusammenfassung bei Fehlern
+        const fallbackSummary = `• Rechnungssteller: ${formData.senderName}
+• Rechnungsempfänger: ${formData.recipientName}
+• Rechnungsnummer: ${formData.reference}
+• Gesamtbrutto: ${formData.grossAmount} ${formData.invoiceCurrencyCode}
+• Rechnungsdatum: ${formatDate(formData.invoiceDate)}
+• Leistungsdatum: ${formatDate(formData.serviceDate)}`;
+        setInvoiceSummary(fallbackSummary);
+        return true; // Gib true zurück, da wir eine Fallback-Zusammenfassung haben
     } finally {
         setLoadingSummary(false);
     }
   };
   
   const handleOpenSapModal = async () => {
-    const success = await generateInvoiceSummary();
-    if (success) setShowSapIdModal(true);
+    // Öffne das Modal immer, auch wenn die KI-Zusammenfassung fehlschlägt
+    setShowSapIdModal(true);
+    
+    // Versuche die KI-Zusammenfassung zu generieren, aber blockiere das Modal nicht
+    try {
+      await generateInvoiceSummary();
+    } catch (error) {
+      console.error("KI-Zusammenfassung fehlgeschlagen:", error);
+      // Fallback-Zusammenfassung setzen
+      const fallbackSummary = `• Rechnungssteller: ${formData.senderName}
+• Rechnungsempfänger: ${formData.recipientName}
+• Rechnungsnummer: ${formData.reference}
+• Gesamtbrutto: ${formData.grossAmount} ${formData.invoiceCurrencyCode}
+• Rechnungsdatum: ${formatDate(formData.invoiceDate)}
+• Leistungsdatum: ${formatDate(formData.serviceDate)}`;
+      setInvoiceSummary(fallbackSummary);
+    }
   };
 
   const getFormValue = (placeholder) => {
