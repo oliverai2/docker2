@@ -546,9 +546,9 @@ const HomePage = ({
               </button>
               <button onClick={handleUploadClick} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
                 <Upload size={20} />
-                <span>Hochladen</span>
+                <span>XML/PDF laden</span>
               </button>
-              <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xml" className="hidden"/>
+              <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xml,.pdf" className="hidden"/>
           </div>
           
           {/* Invoice Issuer */}
@@ -932,68 +932,242 @@ const App = () => {
   };
 
   const handleFileUpload = (e) => {
+    console.log('=== DATEI UPLOAD GESTARTET ===');
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+        console.log('Keine Datei ausgewählt');
+        return;
+    }
 
-    if (file.type !== 'text/xml' && file.type !== 'application/xml') {
-        showMessage('Bitte laden Sie eine gültige XML-Datei hoch.', 'error');
+    // Unterstützte Dateitypen: XML und PDF (robuste Erkennung)
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type.toLowerCase();
+    
+    console.log('Datei Details:');
+    console.log('- Name:', file.name);
+    console.log('- Typ:', file.type);
+    console.log('- Größe:', file.size, 'bytes');
+    console.log('- fileName (lowercase):', fileName);
+    console.log('- fileType (lowercase):', fileType);
+    
+    const isXmlFile = fileType === 'text/xml' || 
+                      fileType === 'application/xml' || 
+                      fileName.endsWith('.xml');
+                      
+    const isPdfFile = fileType === 'application/pdf' || 
+                      fileName.endsWith('.pdf');
+    
+    console.log('Dateityp-Prüfung:');
+    console.log('- isXmlFile:', isXmlFile);
+    console.log('- isPdfFile:', isPdfFile);
+    
+    if (!isXmlFile && !isPdfFile) {
+        console.log('FEHLER: Dateityp nicht unterstützt');
+        showMessage(`Nicht unterstützter Dateityp: "${file.name}" (${file.type}). Bitte laden Sie eine gültige XML- oder ZUGFeRD-PDF-Datei hoch.`, 'error');
         if (fileInputRef.current) { fileInputRef.current.value = null; }
         return;
     }
 
+    if (isPdfFile) {
+        console.log('PDF-Datei erkannt - starte PDF-Verarbeitung');
+        showMessage('ZUGFeRD-PDF erkannt, extrahiere XML...', 'info');
+        processPdfFile(file);
+    } else {
+        console.log('XML-Datei erkannt - starte XML-Verarbeitung');
+        showMessage('XML-Datei erkannt, verarbeite...', 'info');
+        processXmlFile(file);
+    }
+  };
+
+  const processXmlFile = (file) => {
+    console.log('=== XML-VERARBEITUNG GESTARTET ===');
     const reader = new FileReader();
     reader.onload = (event) => {
+        console.log('XML-Datei gelesen, Größe:', event.target.result.length, 'Zeichen');
         const xmlContent = event.target.result;
+        parseXmlContent(xmlContent);
+    };
+    reader.onerror = (error) => {
+        console.error('Fehler beim Lesen der XML-Datei:', error);
+        showMessage('Fehler beim Lesen der XML-Datei.', 'error');
+    };
+    reader.readAsText(file);
+  };
+
+  const processPdfFile = (file) => {
+    console.log('=== PDF-VERARBEITUNG GESTARTET ===');
+    showMessage('Verarbeite ZUGFeRD-PDF...', 'info');
+    const reader = new FileReader();
+    reader.onload = async (event) => {
         try {
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(xmlContent, "application/xml");
+            console.log('PDF-Datei als ArrayBuffer gelesen, Größe:', event.target.result.byteLength, 'bytes');
+            const pdfData = new Uint8Array(event.target.result);
+            console.log('PDF-Daten konvertiert, starte XML-Extraktion...');
+            const xmlContent = await extractXmlFromPdf(pdfData);
             
-            const ublNamespace = 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2';
-            const ciiNamespace = 'urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100';
-            
-            let detectedFormat = '';
-            let parsedResult = null;
-
-            if (xmlDoc.documentElement.namespaceURI === ublNamespace) {
-                detectedFormat = 'XRechnung 3.0.2 UBL erkannt';
-                parsedResult = parseUBL(xmlDoc);
-            } else if (xmlDoc.documentElement.lookupNamespaceURI('rsm') === ciiNamespace) {
-                detectedFormat = 'ZUGFeRD Rechnung (CII) erkannt';
-                parsedResult = parseCII(xmlDoc);
+            if (xmlContent) {
+                console.log('XML erfolgreich extrahiert, Größe:', xmlContent.length, 'Zeichen');
+                showMessage('XML-Anhang erfolgreich extrahiert', 'success');
+                parseXmlContent(xmlContent);
             } else {
-                showMessage('Kein gültiges e-Rechnungsformat DE', 'error');
-                return;
-            }
-
-            if (parsedResult && parsedResult.data) {
-                setFormData(parsedResult.data);
-                setUnmappedFields(parsedResult.unmapped);
-                setXrechnungXML(xmlContent);
-
-                if (parsedResult.unmapped.length === 0) {
-                    setUploadStatus('success');
-                    showMessage('Rechnungsdaten erfolgreich erfasst', 'success', detectedFormat);
-                } else {
-                    setUploadStatus('incomplete');
-                    const fieldLabels = { senderName: 'Name (Sender)', recipientName: 'Name (Empfänger)', leitwegId: 'Leitweg-ID' };
-                    const missingFieldsMsg = parsedResult.unmapped.map(f => fieldLabels[f] || f).join(', ');
-                    showMessage(`Folgende Felder konnten nicht zugeordnet werden:\n- ${missingFieldsMsg}`, 'error', detectedFormat);
-                }
-                setTimeout(() => setUploadStatus(null), 2000);
-
-            } else {
-                throw new Error("Parsing fehlgeschlagen");
+                console.log('Kein XML-Inhalt gefunden');
+                showMessage('Kein ZUGFeRD XML-Anhang in der PDF-Datei gefunden.', 'error');
             }
         } catch (error) {
-            console.error("Fehler beim Verarbeiten der XML:", error);
-            showMessage('Fehler beim Mapping der Rechnungsdaten', 'error', 'Kein gültiges e-Rechnungsformat DE');
+            console.error("Fehler beim Verarbeiten der PDF:", error);
+            showMessage('Fehler beim Extrahieren des XML-Anhangs aus der PDF-Datei.', 'error');
         } finally {
             if (fileInputRef.current) {
                 fileInputRef.current.value = null;
             }
         }
     };
-    reader.readAsText(file);
+    reader.onerror = (error) => {
+        console.error('Fehler beim Lesen der PDF-Datei:', error);
+        showMessage('Fehler beim Lesen der PDF-Datei.', 'error');
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const extractXmlFromPdf = async (pdfData) => {
+    try {
+        // Konvertiere PDF-Daten zu String für die Suche
+        const pdfString = Array.from(pdfData, byte => String.fromCharCode(byte)).join('');
+        
+        console.log('PDF-Größe:', pdfData.length, 'bytes');
+        
+        // Erweiterte Suche nach verschiedenen ZUGFeRD-XML-Patterns
+        const xmlPatterns = [
+            // Standard ZUGFeRD mit rsm Namespace
+            /(<\?xml[^>]*?>[\s\S]*?<rsm:CrossIndustryInvoice[\s\S]*?<\/rsm:CrossIndustryInvoice>)/i,
+            // ZUGFeRD ohne rsm Namespace
+            /(<\?xml[^>]*?>[\s\S]*?<CrossIndustryInvoice[\s\S]*?<\/CrossIndustryInvoice>)/i,
+            // Factur-X Format (französische Variante)
+            /(<\?xml[^>]*?>[\s\S]*?<rsm:CrossIndustryDocument[\s\S]*?<\/rsm:CrossIndustryDocument>)/i,
+            // UBL Format (XRechnung)
+            /(<\?xml[^>]*?>[\s\S]*?<Invoice[\s\S]*?<\/Invoice>)/i
+        ];
+        
+        let xmlContent = null;
+        let detectedPattern = '';
+        
+        for (let i = 0; i < xmlPatterns.length; i++) {
+            const match = pdfString.match(xmlPatterns[i]);
+            if (match) {
+                xmlContent = match[1];
+                detectedPattern = `Pattern ${i + 1}`;
+                console.log(`XML gefunden mit ${detectedPattern}`);
+                break;
+            }
+        }
+        
+        if (!xmlContent) {
+            // Fallback: Suche nach <?xml und versuche manuell zu extrahieren
+            const xmlStartIndex = pdfString.indexOf('<?xml');
+            if (xmlStartIndex !== -1) {
+                console.log('XML-Start gefunden bei Index:', xmlStartIndex);
+                
+                // Suche nach möglichen End-Tags
+                const endTags = [
+                    '</rsm:CrossIndustryInvoice>',
+                    '</CrossIndustryInvoice>',
+                    '</rsm:CrossIndustryDocument>',
+                    '</Invoice>'
+                ];
+                
+                for (const endTag of endTags) {
+                    const endIndex = pdfString.indexOf(endTag, xmlStartIndex);
+                    if (endIndex !== -1) {
+                        xmlContent = pdfString.substring(xmlStartIndex, endIndex + endTag.length);
+                        console.log(`End-Tag gefunden: ${endTag}`);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (!xmlContent) {
+            console.log('Kein XML-Inhalt in PDF gefunden');
+            return null;
+        }
+        
+        // Bereinige das XML (entferne mögliche PDF-spezifische Zeichen und Null-Bytes)
+        xmlContent = xmlContent
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')  // Entferne Steuerzeichen
+            .replace(/\0/g, '')  // Entferne Null-Bytes
+            .trim();
+        
+        console.log('Extrahiertes XML (erste 200 Zeichen):', xmlContent.substring(0, 200));
+        
+        // Validiere das XML
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlContent, "application/xml");
+        const parseError = xmlDoc.getElementsByTagName("parsererror");
+        
+        if (parseError.length > 0) {
+            console.warn("XML Parse Error:", parseError[0].textContent);
+            // Versuche weitere Bereinigung
+            xmlContent = xmlContent.replace(/&(?![a-zA-Z0-9#]{1,6};)/g, '&amp;');
+            const retryDoc = parser.parseFromString(xmlContent, "application/xml");
+            const retryError = retryDoc.getElementsByTagName("parsererror");
+            if (retryError.length > 0) {
+                return null;
+            }
+        }
+        
+        return xmlContent;
+    } catch (error) {
+        console.error("Fehler beim Extrahieren des XML:", error);
+        return null;
+    }
+  };
+
+  const parseXmlContent = (xmlContent) => {
+    try {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlContent, "application/xml");
+        
+        const ublNamespace = 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2';
+        const ciiNamespace = 'urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100';
+        
+        let detectedFormat = '';
+        let parsedResult = null;
+
+        if (xmlDoc.documentElement.namespaceURI === ublNamespace) {
+            detectedFormat = 'XRechnung 3.0.2 UBL erkannt';
+            parsedResult = parseUBL(xmlDoc);
+        } else if (xmlDoc.documentElement.lookupNamespaceURI('rsm') === ciiNamespace || 
+                   xmlDoc.documentElement.tagName.includes('CrossIndustryInvoice')) {
+            detectedFormat = 'ZUGFeRD Rechnung (CII) erkannt';
+            parsedResult = parseCII(xmlDoc);
+        } else {
+            showMessage('Kein gültiges e-Rechnungsformat DE', 'error');
+            return;
+        }
+
+        if (parsedResult && parsedResult.data) {
+            setFormData(parsedResult.data);
+            setUnmappedFields(parsedResult.unmapped);
+            setXrechnungXML(xmlContent);
+
+            if (parsedResult.unmapped.length === 0) {
+                setUploadStatus('success');
+                showMessage('Rechnungsdaten erfolgreich erfasst', 'success', detectedFormat);
+            } else {
+                setUploadStatus('incomplete');
+                const fieldLabels = { senderName: 'Name (Sender)', recipientName: 'Name (Empfänger)', leitwegId: 'Leitweg-ID' };
+                const missingFieldsMsg = parsedResult.unmapped.map(f => fieldLabels[f] || f).join(', ');
+                showMessage(`Folgende Felder konnten nicht zugeordnet werden:\n- ${missingFieldsMsg}`, 'error', detectedFormat);
+            }
+            setTimeout(() => setUploadStatus(null), 2000);
+
+        } else {
+            throw new Error("Parsing fehlgeschlagen");
+        }
+    } catch (error) {
+        console.error("Fehler beim Verarbeiten der XML:", error);
+        showMessage('Fehler beim Mapping der Rechnungsdaten', 'error', 'Kein gültiges e-Rechnungsformat DE');
+    }
   };
   
   const parseUBL = (xmlDoc) => {
@@ -1120,9 +1294,43 @@ const App = () => {
       mapValue('invoiceDate', issueDate ? issueDate.substring(0, 8).replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3') : '');
       mapValue('serviceDate', deliveryDate ? deliveryDate.substring(0, 8).replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3') : '');
       mapValue('iban', getValue('.//ram:PayeePartyCreditorFinancialAccount/ram:IBANID', settlement));
-      mapValue('bic', getValue('.//ram:PayeePartyCreditorFinancialAccount/ram:ProprietaryID', settlement));
+      // Erweiterte Suche für BIC (BT-86) - verschiedene mögliche Pfade
+      console.log('=== BIC SUCHE (BT-86) ===');
+      let bicValue1 = getValue('.//ram:PayeePartyCreditorFinancialAccount/ram:ProprietaryID', settlement);
+      let bicValue2 = getValue('.//ram:SpecifiedTradeSettlementPaymentMeans/ram:PayeePartyCreditorFinancialAccount/ram:ProprietaryID', settlement);
+      let bicValue3 = getValue('.//ram:PayeeSpecifiedCreditorFinancialInstitution/ram:BICID', settlement);
+      let bicValue4 = getValue('.//ram:SpecifiedTradeSettlementPaymentMeans/ram:PayeeSpecifiedCreditorFinancialInstitution/ram:BICID', settlement);
+      let bicValue5 = getValue('.//ram:PayeePartyCreditorFinancialAccount/ram:PayeeSpecifiedCreditorFinancialInstitution/ram:BICID', settlement);
+      let bicValue6 = getValue('.//ram:SpecifiedTradeSettlementPaymentMeans/ram:PayeePartyCreditorFinancialAccount/ram:PayeeSpecifiedCreditorFinancialInstitution/ram:BICID', settlement);
+      
+      console.log('BIC Pfad 1 (Standard):', bicValue1);
+      console.log('BIC Pfad 2 (PaymentMeans):', bicValue2);
+      console.log('BIC Pfad 3 (BICID):', bicValue3);
+      console.log('BIC Pfad 4 (PaymentMeans/BICID):', bicValue4);
+      console.log('BIC Pfad 5 (Nested BICID):', bicValue5);
+      console.log('BIC Pfad 6 (PaymentMeans/Nested BICID):', bicValue6);
+      
+      let bicValue = bicValue1 || bicValue2 || bicValue3 || bicValue4 || bicValue5 || bicValue6;
+      console.log('Finaler BIC Wert:', bicValue);
+      mapValue('bic', bicValue);
+      
       mapValue('paymentMeansCode', getValue('.//ram:SpecifiedTradeSettlementPaymentMeans/ram:TypeCode', settlement));
-      mapValue('paymentTerms', getValue('.//ram:ApplicableTradePaymentTerms/ram:Description', settlement));
+      
+      // Erweiterte Suche für Zahlungsbedingungen (BT-20) - verschiedene mögliche Pfade
+      console.log('=== ZAHLUNGSBEDINGUNGEN SUCHE (BT-20) ===');
+      let paymentTermsValue1 = getValue('.//ram:ApplicableTradePaymentTerms/ram:Description', settlement);
+      let paymentTermsValue2 = getValue('.//ram:SpecifiedTradePaymentTerms/ram:Description', settlement);
+      let paymentTermsValue3 = getValue('.//ram:ApplicableHeaderTradeSettlement/ram:ApplicableTradePaymentTerms/ram:Description', tradeTransaction);
+      let paymentTermsValue4 = getValue('.//ram:ApplicableTradePaymentTerms/ram:Description', tradeTransaction);
+      
+      console.log('PaymentTerms Pfad 1:', paymentTermsValue1);
+      console.log('PaymentTerms Pfad 2:', paymentTermsValue2);
+      console.log('PaymentTerms Pfad 3:', paymentTermsValue3);
+      console.log('PaymentTerms Pfad 4:', paymentTermsValue4);
+      
+      let paymentTermsValue = paymentTermsValue1 || paymentTermsValue2 || paymentTermsValue3 || paymentTermsValue4;
+      console.log('Finale PaymentTerms:', paymentTermsValue);
+      mapValue('paymentTerms', paymentTermsValue);
       mapValue('invoiceTypeCode', getValue('//rsm:ExchangedDocument/ram:TypeCode'));
       mapValue('invoiceCurrencyCode', getValue('.//ram:InvoiceCurrencyCode', settlement));
       mapValue('taxRate', parseInt(getValue('.//ram:ApplicableTradeTax/ram:RateApplicablePercent', settlement) || '0', 10).toString());
@@ -1135,7 +1343,16 @@ const App = () => {
   };
   
   const handleUploadClick = () => {
+    console.log('Upload-Button geklickt');
     fileInputRef.current.click();
+  };
+
+  // Test-Funktion für Debugging (kann in der Browser-Konsole aufgerufen werden)
+  window.testFileUpload = () => {
+    console.log('=== TEST UPLOAD FUNKTION ===');
+    console.log('fileInputRef:', fileInputRef.current);
+    console.log('handleFileUpload:', typeof handleFileUpload);
+    return 'Test-Funktion verfügbar. Laden Sie eine Datei hoch und schauen Sie in die Konsole.';
   };
   
   const validateFormData = () => {
@@ -1388,44 +1605,206 @@ const App = () => {
   
   const handleDragOver = (e) => e.preventDefault();
   
+  // Hilfsfunktion für zufällige Auswahl aus Array
+  const getRandomItem = (array) => array[Math.floor(Math.random() * array.length)];
+  
+  // Hilfsfunktion für zufällige Zahlen
+  const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  
+  // Hilfsfunktion für zufällige deutsche PLZ
+  const getRandomPostalCode = () => String(getRandomNumber(10000, 99999));
+  
+  // Hilfsfunktion für zufällige IBAN
+  const getRandomIBAN = () => {
+    const bankCode = String(getRandomNumber(10000000, 99999999));
+    const accountNumber = String(getRandomNumber(1000000000, 9999999999));
+    return `DE${getRandomNumber(10, 99)}${bankCode}${accountNumber}`;
+  };
+  
+  // Hilfsfunktion für zufällige BIC
+  const getRandomBIC = () => {
+    const codes = ['DEUTDEFF', 'COBADEFF', 'DRESDEFF', 'BYLADEFF', 'GENODEF1', 'SPKRDEFF'];
+    return getRandomItem(codes) + String(getRandomNumber(100, 999));
+  };
+
+  const generateMockInvoiceData = () => {
+    const companies = [
+      'TechSolutions GmbH', 'Digital Innovations AG', 'Moderne Systeme GmbH', 'Kreative Medien GmbH',
+      'Professionelle Dienste AG', 'Qualitäts-Service GmbH', 'Experten-Beratung GmbH', 'Premium Solutions AG'
+    ];
+    
+    const streets = [
+      'Hauptstraße', 'Bahnhofstraße', 'Kirchgasse', 'Schulstraße', 'Gartenweg', 'Mühlenstraße',
+      'Industriestraße', 'Marktplatz', 'Lindenallee', 'Rosenweg', 'Bergstraße', 'Waldweg'
+    ];
+    
+    const cities = [
+      'München', 'Hamburg', 'Berlin', 'Köln', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund',
+      'Essen', 'Leipzig', 'Bremen', 'Dresden', 'Hannover', 'Nürnberg', 'Duisburg', 'Bochum'
+    ];
+    
+    const firstNames = [
+      'Michael', 'Thomas', 'Andreas', 'Wolfgang', 'Klaus', 'Jürgen', 'Stefan', 'Peter',
+      'Sabine', 'Petra', 'Andrea', 'Monika', 'Gabriele', 'Susanne', 'Claudia', 'Birgit'
+    ];
+    
+    const lastNames = [
+      'Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker',
+      'Schulz', 'Hoffmann', 'Schäfer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf'
+    ];
+    
+    const services = [
+      { name: 'Beratungsleistung', unit: 'HUR', price: '125.00' },
+      { name: 'Softwareentwicklung', unit: 'HUR', price: '95.00' },
+      { name: 'Projektmanagement', unit: 'HUR', price: '110.00' },
+      { name: 'IT-Support', unit: 'HUR', price: '85.00' },
+      { name: 'Webdesign', unit: 'HUR', price: '75.00' },
+      { name: 'Datenanalyse', unit: 'HUR', price: '105.00' },
+      { name: 'Schulung', unit: 'HUR', price: '90.00' },
+      { name: 'Wartung', unit: 'HUR', price: '65.00' }
+    ];
+
+    const senderCompany = getRandomItem(companies);
+    const recipientCompany = getRandomItem(companies.filter(c => c !== senderCompany));
+    const contactFirstName = getRandomItem(firstNames);
+    const contactLastName = getRandomItem(lastNames);
+    
+    // Generiere 2-4 Rechnungspositionen
+    const lineItems = [];
+    const numItems = getRandomNumber(2, 4);
+    for (let i = 0; i < numItems; i++) {
+      const service = getRandomItem(services);
+      const quantity = getRandomNumber(5, 40);
+      const price = parseFloat(service.price);
+      const netAmount = (quantity * price).toFixed(2);
+      
+      lineItems.push({
+        id: i + 1,
+        name: service.name,
+        unitCode: service.unit,
+        billedQuantity: quantity.toString(),
+        price: service.price,
+        netAmount: netAmount
+      });
+    }
+    
+    const invoiceNumber = `RE-${new Date().getFullYear()}-${String(getRandomNumber(1000, 9999))}`;
+    const leitwegId = `${getRandomNumber(100000, 999999)}-${getRandomNumber(100000, 999999)}-${getRandomNumber(10, 99)}`;
+    
+    return {
+      // Sender (Rechnungssteller)
+      senderName: senderCompany,
+      senderStreet: `${getRandomItem(streets)} ${getRandomNumber(1, 150)}`,
+      senderZip: getRandomPostalCode(),
+      senderCity: getRandomItem(cities),
+      senderTaxId: `DE${getRandomNumber(100000000, 999999999)}`,
+      senderContactName: `${contactFirstName} ${contactLastName}`,
+      senderContactPhone: `+49 ${getRandomNumber(30, 89)} ${getRandomNumber(10000000, 99999999)}`,
+      senderContactEmail: `${contactFirstName.toLowerCase()}.${contactLastName.toLowerCase()}@${senderCompany.toLowerCase().replace(/[^a-z]/g, '')}.de`,
+      senderElectronicAddress: `${senderCompany.toLowerCase().replace(/[^a-z]/g, '')}@company.de`,
+      
+      // Empfänger
+      recipientName: recipientCompany,
+      recipientStreet: `${getRandomItem(streets)} ${getRandomNumber(1, 200)}`,
+      recipientZip: getRandomPostalCode(),
+      recipientCity: getRandomItem(cities),
+      recipientElectronicAddress: `${recipientCompany.toLowerCase().replace(/[^a-z]/g, '')}@kunde.de`,
+      
+      // Rechnungsdaten
+      leitwegId: leitwegId,
+      reference: invoiceNumber,
+      invoiceDate: new Date(Date.now() - getRandomNumber(1, 30) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      iban: getRandomIBAN(),
+      bic: getRandomBIC(),
+      invoiceTypeCode: '380',
+      invoiceCurrencyCode: 'EUR',
+      paymentTerms: `Zahlbar innerhalb von ${getRandomNumber(14, 30)} Tagen ohne Abzug.`,
+      paymentMeansCode: '58',
+      
+      // Rechnungspositionen
+      lineItems: lineItems
+    };
+  };
+
   const handlePrefill = async () => {
     setLoadingPrefill(true);
-    showMessage('Generiere KI-Werte...', 'info');
+    showMessage('Generiere Zufallswerte...', 'info');
     try {
-        const prompt = "Erstelle ein JSON-Objekt mit vollständigen, realistischen aber fiktiven deutschen Rechnungsdaten. Das Objekt muss exakt dem folgenden JSON-Schema entsprechen. Fülle alle Felder aus, aber lasse 'taxRate' und 'serviceDate' aus.";
-        const payload = {
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: "OBJECT",
-                    properties: {
-                        senderName: { type: "STRING" }, senderStreet: { type: "STRING" }, senderZip: { type: "STRING" }, senderCity: { type: "STRING" }, senderTaxId: { type: "STRING" }, senderContactName: { type: "STRING" }, senderContactPhone: { type: "STRING" }, senderContactEmail: { type: "STRING" }, senderElectronicAddress: { type: "STRING" },
-                        recipientName: { type: "STRING" }, recipientStreet: { type: "STRING" }, recipientZip: { type: "STRING" }, recipientCity: { type: "STRING" }, recipientElectronicAddress: { type: "STRING" },
-                        leitwegId: { type: "STRING" }, reference: { type: "STRING" }, invoiceDate: { type: "STRING" }, iban: { type: "STRING" }, bic: { type: "STRING" },
-                        invoiceTypeCode: { type: "STRING" }, invoiceCurrencyCode: { type: "STRING" }, paymentTerms: { type: "STRING" }, paymentMeansCode: { type: "STRING" },
-                        lineItems: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "NUMBER" }, name: { type: "STRING" }, unitCode: { type: "STRING" }, billedQuantity: { type: "STRING" }, price: { type: "STRING" }, netAmount: { type: "STRING" } } } }
-                    }
-                }
-            }
-        };
-        const apiKey = "";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        const result = await response.json();
-        const generatedData = JSON.parse(result?.candidates?.[0]?.content?.parts?.[0]?.text);
+        // Simuliere kurze Ladezeit für bessere UX
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        if (generatedData) {
-            const finalData = { ...generatedData, serviceDate: new Date().toISOString().slice(0, 10), taxRate: '19' };
-            setFormData(prev => ({...prev, ...finalData}));
-            showMessage('Werte erfolgreich mit KI vorbefüllt!', 'success');
-        } else {
-            throw new Error("Keine Daten von KI erhalten.");
-        }
+        const generatedData = (() => {
+          const getRandomItem = (array) => array[Math.floor(Math.random() * array.length)];
+          const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+          const companies = ['TechSolutions GmbH', 'Digital Innovations AG', 'Moderne Systeme GmbH', 'Kreative Medien GmbH', 'Professionelle Dienste AG'];
+          const cities = ['München', 'Hamburg', 'Berlin', 'Köln', 'Frankfurt', 'Stuttgart', 'Düsseldorf'];
+          const streets = ['Hauptstraße', 'Bahnhofstraße', 'Kirchgasse', 'Schulstraße', 'Gartenweg'];
+          const firstNames = ['Michael', 'Thomas', 'Andreas', 'Wolfgang', 'Klaus', 'Sabine', 'Petra'];
+          const lastNames = ['Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner'];
+          
+          const senderCompany = getRandomItem(companies);
+          const recipientCompany = getRandomItem(companies.filter(c => c !== senderCompany));
+          const contactFirstName = getRandomItem(firstNames);
+          const contactLastName = getRandomItem(lastNames);
+          
+          return {
+            senderName: senderCompany,
+            senderStreet: `${getRandomItem(streets)} ${getRandomNumber(1, 150)}`,
+            senderZip: String(getRandomNumber(10000, 99999)),
+            senderCity: getRandomItem(cities),
+            senderTaxId: `DE${getRandomNumber(100000000, 999999999)}`,
+            senderContactName: `${contactFirstName} ${contactLastName}`,
+            senderContactPhone: `+49 ${getRandomNumber(30, 89)} ${getRandomNumber(10000000, 99999999)}`,
+            senderContactEmail: `${contactFirstName.toLowerCase()}.${contactLastName.toLowerCase()}@example.de`,
+            senderElectronicAddress: 'sender@company.de',
+            recipientName: recipientCompany,
+            recipientStreet: `${getRandomItem(streets)} ${getRandomNumber(1, 200)}`,
+            recipientZip: String(getRandomNumber(10000, 99999)),
+            recipientCity: getRandomItem(cities),
+            recipientElectronicAddress: 'recipient@kunde.de',
+            leitwegId: `${getRandomNumber(100000, 999999)}-${getRandomNumber(100000, 999999)}-${getRandomNumber(10, 99)}`,
+            reference: `RE-${new Date().getFullYear()}-${String(getRandomNumber(1000, 9999))}`,
+            invoiceDate: new Date(Date.now() - getRandomNumber(1, 30) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+            iban: `DE${getRandomNumber(10, 99)}${String(getRandomNumber(10000000, 99999999))}${String(getRandomNumber(1000000000, 9999999999))}`,
+            bic: `${getRandomItem(['DEUTDEFF', 'COBADEFF', 'DRESDEFF'])}${getRandomNumber(100, 999)}`,
+            invoiceTypeCode: '380',
+            invoiceCurrencyCode: 'EUR',
+            paymentTerms: `Zahlbar innerhalb von ${getRandomNumber(14, 30)} Tagen ohne Abzug.`,
+            paymentMeansCode: '58',
+            lineItems: (() => {
+              const items = [];
+              const services = [
+                { name: 'Beratungsleistung', price: 125.00 },
+                { name: 'Softwareentwicklung', price: 95.00 },
+                { name: 'IT-Support', price: 85.00 }
+              ];
+              
+              for (let i = 0; i < getRandomNumber(1, 3); i++) {
+                const service = getRandomItem(services);
+                const quantity = getRandomNumber(5, 40);
+                const price = service.price;
+                const netAmount = (quantity * price).toFixed(2);
+                
+                items.push({
+                  id: i + 1,
+                  name: service.name,
+                  unitCode: 'HUR',
+                  billedQuantity: String(quantity),
+                  price: price.toFixed(2),
+                  netAmount: netAmount
+                });
+              }
+              return items;
+            })()
+          };
+        })();
+        const finalData = { ...generatedData, serviceDate: new Date().toISOString().slice(0, 10), taxRate: '19' };
+        
+        setFormData(prev => ({...prev, ...finalData}));
+        showMessage('Werte erfolgreich vorbefüllt!', 'success');
     } catch (error) {
         console.error("Fehler bei der Vorbefüllung:", error);
-        showMessage('Fehler bei der Vorbefüllung mit KI-Werten.', 'error');
+        showMessage('Fehler bei der Vorbefüllung mit Zufallswerten.', 'error');
     } finally {
         setLoadingPrefill(false);
     }
