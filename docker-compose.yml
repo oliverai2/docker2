@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Development service
+  dev:
+    container_name: xrechnung-app-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      # Mount the source code for hot-reloading
+      - ./src:/app/src
+      - ./public:/app/public
+    ports:
+      # Map port 3000 on the host to port 3000 in the container
+      - "3000:3000"
+    environment:
+      # Ensures the server is accessible from outside the container
+      - WDS_SOCKET_PORT=0
+      - HOST=0.0.0.0
+
+  # Production service
+  prod:
+    container_name: xrechnung-app-prod
+    build:
+      context: .
+      # This now correctly points to the renamed "Dockerfile"
+      dockerfile: Dockerfile
+    ports:
+      # Map port 8080 on the host to port 80 in the container
+      - "8080:80"
+

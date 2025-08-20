@@ -1,0 +1,1724 @@
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Download,
+  FileText,
+  Table,
+  Home,
+  X,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  Copy,
+  PlusCircle,
+  Trash2,
+  Import,
+  Move,
+  Upload,
+  Info,
+  Sparkles,
+  RotateCcw,
+  FileCode,
+  Send,
+  LayoutTemplate
+} from 'lucide-react';
+
+// #region CONSTANTS & DATA
+// ============================================================================
+
+// Leeres Formular-Grundgerüst
+const blankFormData = {
+    senderName: '',
+    senderStreet: '',
+    senderZip: '',
+    senderCity: '',
+    senderCountry: 'DE',
+    senderTaxId: '',
+    senderContactName: '',
+    senderContactPhone: '',
+    senderContactEmail: '',
+    senderElectronicAddress: '',
+    recipientName: '',
+    recipientStreet: '',
+    recipientZip: '',
+    recipientCity: '',
+    recipientCountry: 'DE',
+    recipientElectronicAddress: '',
+    leitwegId: '',
+    reference: '',
+    invoiceDate: new Date().toISOString().slice(0, 10),
+    serviceDate: new Date().toISOString().slice(0, 10),
+    iban: '',
+    bic: '',
+    invoiceTypeCode: '380',
+    invoiceCurrencyCode: 'EUR',
+    paymentTerms: '',
+    paymentMeansCode: '30',
+    taxRate: '19',
+    lineItems: [
+        { id: 1, name: '', unitCode: 'XPP', billedQuantity: '1', netAmount: '0.00', price: '0.00' }
+    ],
+    totalNetAmount: '0.00',
+    totalTaxAmount: '0.00',
+    grossAmount: '0.00',
+};
+
+// Mapping-Daten für E-Rechnungs-Standards (EN 16931)
+const eRechnungMappingData = [
+    { id: 1, btId: 'BT-1', description: 'Rechnungsnummer', xrechnungPath: 'cbc:ID', zugferdPath: 'rsm:ExchangedDocument/ram:ID' },
+    { id: 2, btId: 'BT-2', description: 'Rechnungsdatum', xrechnungPath: 'cbc:IssueDate', zugferdPath: 'rsm:ExchangedDocument/ram:IssueDateTime' },
+    { id: 3, btId: 'BT-3', description: 'Rechnungstyp', xrechnungPath: 'cbc:InvoiceTypeCode', zugferdPath: 'rsm:ExchangedDocument/ram:TypeCode' },
+    { id: 4, btId: 'BT-5', description: 'Währung', xrechnungPath: 'cbc:DocumentCurrencyCode', zugferdPath: '.../ram:InvoiceCurrencyCode' },
+    { id: 5, btId: 'BT-10', description: 'Leitweg-ID', xrechnungPath: 'cbc:BuyerReference', zugferdPath: '.../ram:BuyerReference' },
+    { id: 6, btId: 'BT-20', description: 'Zahlungsbedingungen', xrechnungPath: 'cac:PaymentTerms/cbc:Note', zugferdPath: '.../ram:ApplicableTradePaymentTerms/ram:Description' },
+    { id: 7, btId: 'BT-27', description: 'Name des Verkäufers', xrechnungPath: 'cac:AccountingSupplierParty/.../cbc:Name', zugferdPath: '.../ram:SellerTradeParty/ram:Name' },
+    { id: 8, btId: 'BT-31', description: 'USt-IdNr. des Verkäufers', xrechnungPath: '.../PartyTaxScheme/cbc:CompanyID', zugferdPath: '.../ram:SpecifiedTaxRegistration/ram:ID' },
+    { id: 9, btId: 'BT-34', description: 'Elektronische Adresse (Verkäufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID' },
+    { id: 10, btId: 'BT-35', description: 'Straße des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne' },
+    { id: 11, btId: 'BT-37', description: 'Ort des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName' },
+    { id: 12, btId: 'BT-38', description: 'PLZ des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode' },
+    { id: 13, btId: 'BT-40', description: 'Land des Verkäufers', xrechnungPath: '.../Country/cbc:IdentificationCode', zugferdPath: '.../ram:PostalTradeAddress/ram:CountryID' },
+    { id: 14, btId: 'BT-41', description: 'Kontaktpunkt des Verkäufers', xrechnungPath: '.../Contact/cbc:Name', zugferdPath: '.../ram:DefinedTradeContact/ram:PersonName' },
+    { id: 15, btId: 'BT-42', description: 'Telefon des Verkäufers', xrechnungPath: '.../Contact/cbc:Telephone', zugferdPath: '.../ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber' },
+    { id: 16, btId: 'BT-43', description: 'E-Mail des Verkäufers', xrechnungPath: '.../Contact/cbc:ElectronicMail', zugferdPath: '.../ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID' },
+    { id: 17, btId: 'BT-44', description: 'Name des Käufers', xrechnungPath: 'cac:AccountingCustomerParty/.../cbc:Name', zugferdPath: '.../ram:BuyerTradeParty/ram:Name' },
+    { id: 18, btId: 'BT-49', description: 'Elektronische Adresse (Käufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID' },
+    { id: 19, btId: 'BT-50', description: 'Straße des Käufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne' },
+    { id: 20, btId: 'BT-52', description: 'Ort des Käufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName' },
+    { id: 21, btId: 'BT-53', description: 'PLZ des Käufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode' },
+    { id: 22, btId: 'BT-55', description: 'Land des Käufers', xrechnungPath: '.../Country/cbc:IdentificationCode', zugferdPath: '.../ram:PostalTradeAddress/ram:CountryID' },
+    { id: 23, btId: 'BT-72', description: 'Liefer-/Leistungsdatum', xrechnungPath: 'cbc:DueDate', zugferdPath: '.../ram:ActualDeliverySupplyChainEvent/ram:OccurrenceDateTime' },
+    { id: 24, btId: 'BT-81', description: 'Zahlungsart (Code)', xrechnungPath: '.../PaymentMeans/cbc:PaymentMeansCode', zugferdPath: '.../ram:PaymentMeansCode' },
+    { id: 25, btId: 'BT-84', description: 'IBAN', xrechnungPath: '.../PayeeFinancialAccount/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:IBANID' },
+    { id: 26, btId: 'BT-86', description: 'BIC / SWIFT-Code', xrechnungPath: '.../FinancialInstitutionBranch/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:ProprietaryID' },
+    { id: 27, btId: 'BT-106', description: 'Summe Nettobeträge Positionen', xrechnungPath: '.../LegalMonetaryTotal/cbc:LineExtensionAmount', zugferdPath: '.../ram:GrandTotalAmount' },
+    { id: 28, btId: 'BT-109', description: 'Rechnungsnettobetrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:TaxExclusiveAmount', zugferdPath: '.../ram:TaxBasisTotalAmount' },
+    { id: 29, btId: 'BT-110', description: 'Gesamtsteuerbetrag', xrechnungPath: '.../TaxTotal/cbc:TaxAmount', zugferdPath: '.../ram:TaxTotalAmount[@currencyID]' },
+    { id: 30, btId: 'BT-112', description: 'Rechnungsbruttobetrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:TaxInclusiveAmount', zugferdPath: '.../ram:GrandTotalAmount' },
+    { id: 31, btId: 'BT-115', description: 'Zu zahlender Betrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:PayableAmount', zugferdPath: '.../ram:DuePayableAmount' },
+    { id: 32, btId: 'BT-126', description: 'Positionsnummer', xrechnungPath: '.../InvoiceLine/cbc:ID', zugferdPath: '.../ram:AssociatedDocumentLineDocument/ram:LineID' },
+    { id: 33, btId: 'BT-129', description: 'Menge der Position', xrechnungPath: '.../cbc:InvoicedQuantity', zugferdPath: '.../ram:BilledQuantity' },
+    { id: 34, btId: 'BT-130', description: 'Einheit der Position', xrechnungPath: '.../cbc:InvoicedQuantity/@unitCode', zugferdPath: '.../ram:BilledQuantity/@unitCode' },
+    { id: 35, btId: 'BT-131', description: 'Nettobetrag der Position', xrechnungPath: '.../cbc:LineExtensionAmount', zugferdPath: '.../ram:SpecifiedTradeSettlementLineMonetarySummation/ram:LineTotalAmount' },
+    { id: 36, btId: 'BT-146', description: 'Preis der Position', xrechnungPath: '.../Price/cbc:PriceAmount', zugferdPath: '.../ram:GrossPriceProductTradePrice/ram:ChargeAmount' },
+    { id: 37, btId: 'BT-152', description: 'Steuersatz der Position (%)', xrechnungPath: '.../cbc:Percent', zugferdPath: '.../ram:ApplicableTradeTax/ram:RateApplicablePercent' },
+    { id: 38, btId: 'BT-153', description: 'Artikelname der Position', xrechnungPath: '.../Item/cbc:Name', zugferdPath: '.../ram:SpecifiedTradeProduct/ram:Name' },
+].sort((a, b) => parseInt(a.btId.substring(3)) - parseInt(b.btId.substring(3)));
+
+// Standard-Mapping für SAP-XML
+const defaultSapMapping = [
+    { id: -15, xRechnungField: 'Segment öffnen (DOCUMENT)', value: '', targetXmlField: 'DOCUMENT', type: 'openSegment' },
+    { id: -14, xRechnungField: 'Client', value: '384', targetXmlField: 'CLIENT', type: 'field' },
+    { id: -13, xRechnungField: 'SENDER_GLN', value: '12345', targetXmlField: 'SENDER_GLN', type: 'field' },
+    { id: -12, xRechnungField: 'RECIPIENT_GLN', value: '12345', targetXmlField: 'RECIPIENT_GLN', type: 'field' },
+    { id: -11, xRechnungField: 'SETTLEMENT_PERIOD', value: '0', targetXmlField: 'SETTLEMENT_PERIOD', type: 'field' },
+    { id: -10, xRechnungField: 'TRANSMISSION_TYPE', value: 'TEST', targetXmlField: 'TRANSMISSION_TYPE', type: 'field' },
+    { id: -9, xRechnungField: 'TRANSMISSION_CYCLE', value: '1', targetXmlField: 'TRANSMISSION_CYCLE', type: 'field' },
+    { id: -8, xRechnungField: 'Segment öffnen (DOCUMENT_HEADER)', value: '', targetXmlField: 'DOCUMENT_HEADER', type: 'openSegment' },
+    { id: -7, xRechnungField: 'ARCHIV_NO', value: '123456789', targetXmlField: 'ARCHIV_NO', type: 'field' },
+    { id: -6, xRechnungField: 'Segment öffnen (DOCUMENT_INFO)', value: '', targetXmlField: 'DOCUMENT_INFO', type: 'openSegment' },
+    { id: -5, xRechnungField: 'PROCEDURE', value: 'XML', targetXmlField: 'PROCEDURE', type: 'field' },
+    { id: -4, xRechnungField: 'INPUT_TYPE', value: 'I', targetXmlField: 'INPUT_TYPE', type: 'field' },
+    { id: -3, xRechnungField: 'DOC_TYPE', value: 'DOC_TYPE', targetXmlField: 'DOC_TYPE', type: 'field' },
+    { id: -2, xRechnungField: 'DOC_DATE_ARRIVAL', value: '$TODAY', targetXmlField: 'DOC_DATE_ARRIVAL', type: 'field' },
+    { id: -1, xRechnungField: 'Segment öffnen (ORDER_DELIVERY_LIST)', value: '', targetXmlField: 'ORDER_DELIVERY_LIST', type: 'openSegment' },
+    { id: 39, xRechnungField: 'Segment öffnen (ORDER_DELIVERY_ITEM)', value: '', targetXmlField: 'ORDER_DELIVERY_ITEM', type: 'openSegment' },
+    { id: 40, xRechnungField: 'Segment schließen (ORDER_DELIVERY_ITEM)', value: '', targetXmlField: 'ORDER_DELIVERY_ITEM', type: 'closeSegment' },
+    { id: 41, xRechnungField: 'Segment schließen (ORDER_DELIVERY_LIST)', value: '', targetXmlField: 'ORDER_DELIVERY_LIST', type: 'closeSegment' },
+    { id: 42, xRechnungField: 'Segment schließen (DOCUMENT_INFO)', value: '', targetXmlField: 'DOCUMENT_INFO', type: 'closeSegment' },
+    { id: 43, xRechnungField: 'Segment öffnen (CUSTOMER_SPECIFICATION)', value: '', targetXmlField: 'CUSTOMER_SPECIFICATION', type: 'openSegment' },
+    { id: 44, xRechnungField: 'ENTRY_TYP', value: 'DOC', targetXmlField: 'ENTRY_TYP', type: 'field' },
+    { id: 45, xRechnungField: 'COUNTRY', value: 'DE', targetXmlField: 'COUNTRY', type: 'field' },
+    { id: 46, xRechnungField: 'Segment schließen (CUSTOMER_SPECIFICATION)', value: '', targetXmlField: 'CUSTOMER_SPECIFICATION', type: 'closeSegment' },
+    { id: 1, xRechnungField: 'Segment öffnen (IDoc)', value: '', targetXmlField: 'IDOC', type: 'openSegment' },
+    { id: 2, xRechnungField: 'Segment öffnen (E1INVOICE)', value: '', targetXmlField: 'E1INVOICE', type: 'openSegment' },
+    { id: 3, xRechnungField: 'Rechnungsdatum', value: '{{invoiceDate}}', targetXmlField: 'DOC_DATE', type: 'field' },
+    { id: 4, xRechnungField: 'Segment öffnen (party) - Empfänger', value: '', targetXmlField: 'PARTY', type: 'openSegment' },
+    { id: 5, xRechnungField: 'Empfänger Typ', value: 'Recipient', targetXmlField: 'TYPE', type: 'field' },
+    { id: 6, xRechnungField: 'Empfänger Name', value: '{{recipientName}}', targetXmlField: 'NAME1', type: 'field' },
+    { id: 7, xRechnungField: 'Empfänger Straße', value: '{{recipientStreet}}', targetXmlField: 'STREET', type: 'field' },
+    { id: 8, xRechnungField: 'Empfänger Land', value: 'DE', targetXmlField: 'COUNTRY', type: 'field' },
+    { id: 9, xRechnungField: 'Empfänger PLZ', value: '{{recipientZip}}', targetXmlField: 'ZIP', type: 'field' },
+    { id: 10, xRechnungField: 'Empfänger Ort', value: '{{recipientCity}}', targetXmlField: 'CITY', type: 'field' },
+    { id: 11, xRechnungField: 'Buchungskreisnummer', value: '{{buchungskreisId}}', targetXmlField: 'CUST_INTERNAL_ID', type: 'field' },
+    { id: 12, xRechnungField: 'Segment schließen (party) - Empfänger', value: '', targetXmlField: 'PARTY', type: 'closeSegment' },
+    { id: 13, xRechnungField: 'Segment öffnen (party) - Steller', value: '', targetXmlField: 'PARTY', type: 'openSegment' },
+    { id: 14, xRechnungField: 'Steller Typ', value: 'Sender', targetXmlField: 'TYPE', type: 'field' },
+    { id: 15, xRechnungField: 'Steller Name', value: '{{senderName}}', targetXmlField: 'NAME1', type: 'field' },
+    { id: 16, xRechnungField: 'Steller Straße', value: '{{senderStreet}}', targetXmlField: 'STREET', type: 'field' },
+    { id: 17, xRechnungField: 'Steller Land', value: 'DE', targetXmlField: 'COUNTRY', type: 'field' },
+    { id: 18, xRechnungField: 'Steller PLZ', value: '{{senderZip}}', targetXmlField: 'ZIP', type: 'field' },
+    { id: 19, xRechnungField: 'Steller Ort', value: '{{senderCity}}', targetXmlField: 'CITY', type: 'field' },
+    { id: 20, xRechnungField: 'Kreditorennummer', value: '{{kreditorId}}', targetXmlField: 'CUST_INTERNAL_ID', type: 'field' },
+    { id: 21, xRechnungField: 'Segment schließen (party) - Steller', value: '', targetXmlField: 'PARTY', type: 'closeSegment' },
+    { id: 22, xRechnungField: 'Segment schließen (PARTIES)', value: '', targetXmlField: 'PARTIES', type: 'closeSegment' },
+    { id: 23, xRechnungField: 'Segment öffnen (bank_info)', value: '', targetXmlField: 'BANK_INFO', type: 'openSegment' },
+    { id: 24, xRechnungField: 'IBAN', value: '{{iban}}', targetXmlField: 'BANK_IBAN', type: 'field' },
+    { id: 25, xRechnungField: 'BIC', value: '{{bic}}', targetXmlField: 'BANK_SWIFT_BIC', type: 'field' },
+    { id: 26, xRechnungField: 'Segment schließen (bank_info)', value: '', targetXmlField: 'BANK_INFO', type: 'closeSegment' },
+    { id: 27, xRechnungField: 'Segment öffnen (payment_info)', value: '', targetXmlField: 'PAYMENT_INFO', type: 'openSegment' },
+    { id: 28, xRechnungField: 'Leistungsdatum', value: '{{serviceDate}}', targetXmlField: 'PERFORMANCE_DATE_TO', type: 'field' },
+    { id: 29, xRechnungField: 'Segment schließen (payment_info)', value: '', targetXmlField: 'PAYMENT_INFO', type: 'closeSegment' },
+    { id: 30, xRechnungField: 'Segment schließen (DOCUMENT_HEADER)', value: '', targetXmlField: 'DOCUMENT_HEADER', type: 'closeSegment' },
+    { id: 31, xRechnungField: 'Segment öffnen (document_footer)', value: '', targetXmlField: 'DOCUMENT_FOOTER', type: 'openSegment' },
+    { id: 32, xRechnungField: 'Segment öffnen (document_summary)', value: '', targetXmlField: 'DOCUMENT_SUMMARY', type: 'openSegment' },
+    { id: 33, xRechnungField: 'Währung', value: '{{invoiceCurrencyCode}}', targetXmlField: 'DOC_CURRENCY', type: 'field' },
+    { id: 34, xRechnungField: 'VAT_COUNTRY', value: 'DE', targetXmlField: 'VAT_COUNTRY', type: 'field' },
+    { id: 35, xRechnungField: 'Bruttobetrag', value: '{{grossAmount}}', targetXmlField: 'TOTAL_GROSS', type: 'field' },
+    { id: 36, xRechnungField: 'Nettobetrag', value: '{{totalNetAmount}}', targetXmlField: 'TOTAL_NET', type: 'field' },
+    { id: 37, xRechnungField: 'MwSt Betrag', value: '{{totalTaxAmount}}', targetXmlField: 'TOTAL_VAT', type: 'field' },
+    { id: 38, xRechnungField: 'Segment schließen (DOCUMENT_SUMMARY)', value: '', targetXmlField: 'DOCUMENT_SUMMARY', type: 'closeSegment' }
+];
+
+// #endregion
+
+// #region HELPER COMPONENTS & FUNCTIONS
+// ============================================================================
+
+// Hilfskomponente für Formularfelder mit BT-ID
+const FormField = ({ name, label, value, onChange, placeholder, type = "text", btId, children, disabled = false, isUnmapped = false }) => (
+    <div className="relative">
+        <label htmlFor={name} className="flex items-center text-sm font-medium text-gray-600 mb-1">
+          {label}
+          {btId && <span className="ml-1.5 text-[10px] font-sans text-gray-500">({btId})</span>}
+        </label>
+        {children ? (
+            <select id={name} name={name} value={value || ''} onChange={onChange} className={`w-full p-3 rounded-xl bg-white/50 text-gray-800 border transition-all duration-200 placeholder:text-gray-600 ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : 'border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500'}`}>
+                {children}
+            </select>
+        ) : (
+            <input id={name} type={type} name={name} value={value || ''} onChange={onChange} placeholder={placeholder} disabled={disabled} className={`w-full p-3 rounded-xl bg-white/50 text-gray-800 border transition-all duration-200 disabled:bg-white/20 disabled:text-gray-500 placeholder:text-gray-600 ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : 'border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500'}`}/>
+        )}
+        {isUnmapped && (
+            <div className="absolute top-0 right-0 -mt-1 -mr-1" title={`Feld "${label}" konnte nicht aus der Datei gelesen werden.`}>
+                <AlertCircle className="h-5 w-5 text-white bg-red-500 rounded-full p-0.5" />
+            </div>
+        )}
+    </div>
+);
+
+// Formatierungsfunktionen
+const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' });
+};
+
+const formatCurrency = (amount) => {
+    const number = parseFloat(amount);
+    return isNaN(number) ? '0,00' : number.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const getDocumentTypeName = (code) => {
+    switch (code) {
+        case '380': return 'Rechnung';
+        case '389': return 'Selbst ausgestellte Rechnung';
+        case '384': return 'Korrigierte Rechnung';
+        case '261': return 'Gutschrift';
+        default: return 'Dokument';
+    }
+};
+
+// #endregion
+
+// #region LAYOUT COMPONENTS
+// ============================================================================
+
+const LayoutClassic = ({ formData }) => (
+    <div className="bg-white text-gray-800 p-10 font-sans shadow-2xl rounded-lg w-full">
+      <header className="flex justify-between items-start pb-6 border-b-2 border-gray-100">
+        <div>
+            <h2 className="text-4xl font-extrabold uppercase text-gray-800 tracking-wider">{getDocumentTypeName(formData.invoiceTypeCode)}</h2>
+        </div>
+        <div className="text-right">
+            <div className="text-2xl font-bold text-gray-900 tracking-tight break-words">{formData.senderName}</div>
+            <p className="text-sm text-gray-500 break-words">{formData.senderStreet}</p>
+            <p className="text-sm text-gray-500 break-words">{formData.senderZip} {formData.senderCity}</p>
+        </div>
+      </header>
+      <section className="grid grid-cols-2 gap-12 mt-8">
+        <div>
+          <p className="text-sm font-semibold text-gray-600 mb-2">RECHNUNGSSTELLER</p>
+          <p className="font-bold text-gray-800 break-words">{formData.senderName}</p>
+          <p className="text-gray-600 break-words">{formData.senderStreet}, {formData.senderZip} {formData.senderCity}</p>
+          <p className="text-gray-600 break-words">{formData.senderContactEmail}</p>
+          <p className="text-gray-600 break-words">Steuernummer: {formData.senderTaxId}</p>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-600 mb-2">RECHNUNGSEMPFÄNGER</p>
+          <p className="font-bold text-gray-800 break-words">{formData.recipientName}</p>
+          <p className="text-gray-600 break-words">{formData.recipientStreet}, {formData.recipientZip} {formData.recipientCity}</p>
+          <p className="text-gray-600 break-words">{formData.recipientElectronicAddress}</p>
+          <p className="text-gray-600 break-words">Leitweg-ID: {formData.leitwegId}</p>
+        </div>
+      </section>
+      <section className="mt-8 pt-8 border-t border-gray-100 text-sm">
+          <div className="grid grid-cols-3 gap-4">
+              <div><span className="font-semibold text-gray-600">Rechnungs-Nr.:</span> <span className="text-gray-800 break-all">{formData.reference}</span></div>
+              <div><span className="font-semibold text-gray-600">Rechnungsdatum:</span> <span className="text-gray-800">{formatDate(formData.invoiceDate)}</span></div>
+              <div><span className="font-semibold text-gray-600">Leistungsdatum:</span> <span className="text-gray-800">{formatDate(formData.serviceDate)}</span></div>
+          </div>
+      </section>
+      <section className="mt-10">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="text-left font-semibold text-gray-600 p-3 rounded-l-lg">Beschreibung</th>
+              <th className="text-right font-semibold text-gray-600 p-3">Menge</th>
+              <th className="text-right font-semibold text-gray-600 p-3">Einzelpreis (€)</th>
+              <th className="text-right font-semibold text-gray-600 p-3 rounded-r-lg">Gesamt (€)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {formData.lineItems.map((item) => (
+              <tr key={item.id} className="border-b border-gray-100">
+                <td className="p-3 font-medium text-gray-800 break-words">{item.name}</td>
+                <td className="text-right p-3 text-gray-600">{item.billedQuantity}</td>
+                <td className="text-right p-3 text-gray-600">{formatCurrency(item.price)}</td>
+                <td className="text-right p-3 font-medium text-gray-800">{formatCurrency(item.netAmount)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+      <section className="grid grid-cols-2 gap-12 mt-8">
+        <div className="w-full text-sm">
+          <div className="flex justify-between py-2">
+            <span className="font-semibold text-gray-600">Nettobetrag:</span>
+            <span className="text-gray-800">{formatCurrency(formData.totalNetAmount)} {formData.invoiceCurrencyCode}</span>
+          </div>
+          <div className="flex justify-between py-2">
+            <span className="font-semibold text-gray-600">MwSt. ({formData.taxRate}%):</span>
+            <span className="text-gray-800">{formatCurrency(formData.totalTaxAmount)} {formData.invoiceCurrencyCode}</span>
+          </div>
+          <div className="flex justify-between py-3 mt-2 border-t-2 border-gray-200 bg-gray-50 rounded-lg px-4">
+            <span className="font-bold text-lg text-gray-900">Gesamtbetrag:</span>
+            <span className="font-bold text-lg text-gray-900">{formatCurrency(formData.grossAmount)} {formData.invoiceCurrencyCode}</span>
+          </div>
+        </div>
+        <div>
+            <p className="font-semibold text-gray-600 text-sm">Zahlungsinformationen</p>
+            <p className="text-xs text-gray-500 mt-2 break-words">{formData.paymentTerms}</p>
+            <div className="mt-2 text-xs break-words">
+                <p><span className="font-bold text-gray-600">IBAN:</span> {formData.iban}</p>
+                <p><span className="font-bold text-gray-600">BIC:</span> {formData.bic}</p>
+            </div>
+        </div>
+      </section>
+      <footer className="mt-12 pt-6 border-t-2 border-gray-100 text-center text-xs text-gray-500">
+        Vielen Dank für Ihren Auftrag!
+      </footer>
+    </div>
+);
+
+const LayoutModern = ({ formData }) => (
+    <div className="bg-white text-gray-800 p-10 font-sans shadow-2xl rounded-lg w-full">
+        <header className="flex justify-between items-center pb-6">
+            <h1 className="text-5xl font-thin uppercase text-gray-800 tracking-[0.3em]">{getDocumentTypeName(formData.invoiceTypeCode)}</h1>
+            <div className="text-right">
+                <div className="text-xl font-semibold text-gray-900 break-words">{formData.senderName}</div>
+                <p className="text-sm text-gray-500 break-words">{formData.senderStreet} • {formData.senderZip} {formData.senderCity}</p>
+            </div>
+        </header>
+        <section className="grid grid-cols-2 gap-8 mt-10 pb-8 border-b border-gray-200">
+            <div>
+                <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">RECHNUNG AN</p>
+                <p className="font-medium text-gray-800 break-words">{formData.recipientName}</p>
+                <p className="text-gray-600 text-sm break-words">{formData.recipientStreet}, {formData.recipientZip} {formData.recipientCity}</p>
+            </div>
+            <div className="text-right">
+                <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">VON</p>
+                <p className="font-medium text-gray-800 break-words">{formData.senderName}</p>
+                <p className="text-gray-600 text-sm break-words">{formData.senderStreet}, {formData.senderZip} {formData.senderCity}</p>
+            </div>
+        </section>
+         <section className="grid grid-cols-3 gap-8 mt-4 pb-8">
+            <div>
+                <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">RECHNUNGS-NR.</p>
+                <p className="font-mono text-gray-800 break-all">{formData.reference}</p>
+            </div>
+            <div>
+                <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">DATUM</p>
+                <p className="font-medium text-gray-800">{formatDate(formData.invoiceDate)}</p>
+            </div>
+             <div>
+                <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">LEISTUNGSDATUM</p>
+                <p className="font-medium text-gray-800">{formatDate(formData.serviceDate)}</p>
+            </div>
+        </section>
+        <section className="mt-8">
+            <table className="w-full text-sm">
+                <thead>
+                    <tr>
+                        <th className="text-left font-bold text-gray-500 tracking-wider p-3">LEISTUNG</th>
+                        <th className="text-right font-bold text-gray-500 tracking-wider p-3">MENGE</th>
+                        <th className="text-right font-bold text-gray-500 tracking-wider p-3">PREIS</th>
+                        <th className="text-right font-bold text-gray-500 tracking-wider p-3">SUMME</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {formData.lineItems.map((item) => (
+                        <tr key={item.id}>
+                            <td className="p-3 border-b border-gray-100 font-medium text-gray-800 break-words">{item.name}</td>
+                            <td className="text-right p-3 border-b border-gray-100 text-gray-600">{item.billedQuantity}</td>
+                            <td className="text-right p-3 border-b border-gray-100 text-gray-600">{formatCurrency(item.price)} €</td>
+                            <td className="text-right p-3 border-b border-gray-100 font-medium text-gray-800">{formatCurrency(item.netAmount)} €</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </section>
+        <section className="flex justify-end mt-8">
+            <div className="w-full max-w-xs text-sm">
+                <div className="flex justify-between py-2 text-gray-600"><span>Zwischensumme</span><span>{formatCurrency(formData.totalNetAmount)} €</span></div>
+                <div className="flex justify-between py-2 text-gray-600"><span>MwSt. ({formData.taxRate}%)</span><span>{formatCurrency(formData.totalTaxAmount)} €</span></div>
+                <div className="flex justify-between py-3 mt-2 border-t-2 border-gray-800">
+                    <span className="font-bold text-xl text-gray-900">Gesamt</span>
+                    <span className="font-bold text-xl text-gray-900">{formatCurrency(formData.grossAmount)} €</span>
+                </div>
+            </div>
+        </section>
+        <footer className="mt-12 pt-6 border-t border-gray-200 text-xs text-gray-500">
+            <p className="font-semibold mb-2">Zahlungsbedingungen: {formData.paymentTerms}</p>
+            <p>IBAN: {formData.iban} • BIC: {formData.bic}</p>
+        </footer>
+    </div>
+);
+
+const LayoutMinimalist = ({ formData }) => (
+    <div className="bg-white text-black p-10 font-mono text-xs w-full shadow-2xl rounded-lg">
+        <header className="grid grid-cols-2 gap-10">
+            <div className="break-words">
+                <p>{formData.senderName}</p>
+                <p>{formData.senderStreet}</p>
+                <p>{formData.senderZip} {formData.senderCity}</p>
+            </div>
+            <div className="text-right break-words">
+                <p>{getDocumentTypeName(formData.invoiceTypeCode)}</p>
+            </div>
+        </header>
+        <section className="mt-10 pt-10 border-t border-black">
+             <div className="grid grid-cols-2 gap-10">
+                <div className="break-words">
+                    <p className="mb-2">An:</p>
+                    <p>{formData.recipientName}</p>
+                    <p>{formData.recipientStreet}</p>
+                    <p>{formData.recipientZip} {formData.recipientCity}</p>
+                </div>
+                <div className="text-right break-words">
+                    <p>Nr: {formData.reference}</p>
+                    <p>Datum: {formatDate(formData.invoiceDate)}</p>
+                </div>
+            </div>
+        </section>
+        <section className="mt-10">
+            <div className="grid grid-cols-[1fr,auto,auto,auto] gap-4 py-2 border-b border-black font-bold">
+                <p>Beschreibung</p><p className="text-right">Menge</p><p className="text-right">Einzel</p><p className="text-right">Gesamt</p>
+            </div>
+            {formData.lineItems.map(item => (
+                <div key={item.id} className="grid grid-cols-[1fr,auto,auto,auto] gap-4 py-2 border-b border-gray-200">
+                    <p className="break-words">{item.name}</p>
+                    <p className="text-right">{item.billedQuantity}</p>
+                    <p className="text-right">{formatCurrency(item.price)}</p>
+                    <p className="text-right">{formatCurrency(item.netAmount)}</p>
+                </div>
+            ))}
+        </section>
+        <section className="mt-10 flex justify-end">
+            <div className="w-1/2 space-y-2">
+                <div className="flex justify-between"><p>Netto</p><p>{formatCurrency(formData.totalNetAmount)} €</p></div>
+                <div className="flex justify-between"><p>MwSt. {formData.taxRate}%</p><p>{formatCurrency(formData.totalTaxAmount)} €</p></div>
+                <div className="flex justify-between pt-2 border-t border-black font-bold"><p>Brutto</p><p>{formatCurrency(formData.grossAmount)} €</p></div>
+            </div>
+        </section>
+        <footer className="mt-10 pt-10 border-t border-black text-center">
+            <p>IBAN: {formData.iban}</p>
+            <p>Vielen Dank.</p>
+        </footer>
+    </div>
+);
+
+const LayoutCreative = ({ formData }) => (
+    <div className="bg-gray-900 text-white p-10 font-sans shadow-2xl rounded-lg w-full">
+        <header className="flex justify-between items-start pb-6 border-b border-gray-700">
+            <div>
+                <h1 className="text-5xl font-bold text-white tracking-tight">{getDocumentTypeName(formData.invoiceTypeCode)}</h1>
+                <p className="text-gray-400 mt-2">Rechnungs-Nr. {formData.reference}</p>
+            </div>
+            <div className="text-right text-xs">
+                <p className="font-bold text-base">{formData.senderName}</p>
+                <p className="text-gray-400">{formData.senderStreet}</p>
+                <p className="text-gray-400">{formData.senderZip} {formData.senderCity}</p>
+            </div>
+        </header>
+        <section className="grid grid-cols-2 gap-10 mt-8 text-sm">
+            <div>
+                <p className="text-gray-400 mb-2">RECHNUNG AN</p>
+                <p className="font-medium text-white break-words">{formData.recipientName}</p>
+                <p className="text-gray-300 break-words">{formData.recipientStreet}, {formData.recipientZip} {formData.recipientCity}</p>
+            </div>
+            <div className="text-right">
+                <p className="text-gray-400">Rechnungsdatum: {formatDate(formData.invoiceDate)}</p>
+                <p className="text-gray-400">Leistungsdatum: {formatDate(formData.serviceDate)}</p>
+            </div>
+        </section>
+        <section className="mt-10">
+            <table className="w-full text-sm">
+                <thead>
+                    <tr className="border-b border-gray-700">
+                        <th className="text-left p-3 font-semibold tracking-wider">LEISTUNG</th>
+                        <th className="text-right p-3 font-semibold tracking-wider">MENGE</th>
+                        <th className="text-right p-3 font-semibold tracking-wider">PREIS</th>
+                        <th className="text-right p-3 font-semibold tracking-wider">SUMME</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {formData.lineItems.map((item, index) => (
+                        <tr key={item.id} className={`${index === formData.lineItems.length - 1 ? '' : 'border-b border-gray-800'}`}>
+                            <td className="p-3 break-words">{item.name}</td>
+                            <td className="text-right p-3">{item.billedQuantity}</td>
+                            <td className="text-right p-3">{formatCurrency(item.price)} €</td>
+                            <td className="text-right p-3">{formatCurrency(item.netAmount)} €</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </section>
+        <section className="mt-8 pt-8 border-t border-gray-700 flex justify-between items-start">
+            <div className="text-xs text-gray-400">
+                <p className="font-bold text-gray-300 mb-2">Zahlungsinformationen</p>
+                <p>IBAN: {formData.iban}</p>
+                <p>BIC: {formData.bic}</p>
+                <p className="mt-2">{formData.paymentTerms}</p>
+            </div>
+            <div className="w-1/3 text-sm">
+                <div className="flex justify-between text-gray-400"><span>Netto</span><span>{formatCurrency(formData.totalNetAmount)} €</span></div>
+                <div className="flex justify-between text-gray-400 mt-2"><span>MwSt. ({formData.taxRate}%)</span><span>{formatCurrency(formData.totalTaxAmount)} €</span></div>
+                <div className="flex justify-between text-2xl font-bold text-white mt-4 pt-4 border-t border-gray-700"><span>Gesamt</span><span>{formatCurrency(formData.grossAmount)} €</span></div>
+            </div>
+        </section>
+    </div>
+);
+
+const InvoicePreview = ({ formData, layout }) => {
+    switch(layout) {
+        case 'modern': return <LayoutModern formData={formData} />;
+        case 'minimalist': return <LayoutMinimalist formData={formData} />;
+        case 'creative': return <LayoutCreative formData={formData} />;
+        case 'classic':
+        default: return <LayoutClassic formData={formData} />;
+    }
+};
+
+// #endregion
+
+// #region PAGE COMPONENTS
+// ============================================================================
+
+const HomePage = ({
+    formData,
+    formRef,
+    previewContainerRef,
+    previewContentRef,
+    previewTransform,
+    loadingPrefill,
+    handlePrefill,
+    handleReset,
+    handleUploadClick,
+    fileInputRef,
+    handleFileUpload,
+    handleInputChange,
+    handleLineItemChange,
+    addLineItem,
+    removeLineItem,
+    loading,
+    generateXRechnungUBL,
+    loadingSummary,
+    handleOpenSapModal,
+    sapXml,
+    handleCopy,
+    handleDownload,
+    xrechnungXML,
+    selectedLayout,
+    unmappedFields
+}) => (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Left side: Form */}
+        <div className="space-y-6" ref={formRef}>
+          <div className="flex justify-between items-center border-b border-white/30 pb-2 mb-4">
+              <h2 className="text-2xl font-semibold text-gray-800">Rechnungsdatenerfassung</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <button onClick={handlePrefill} disabled={loadingPrefill} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors disabled:bg-gray-200/50 disabled:cursor-not-allowed">
+                  {loadingPrefill ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />}
+                  <span>KI-Werte</span>
+              </button>
+              <button onClick={handleReset} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
+                  <RotateCcw size={20} />
+                  <span>Zurücksetzen</span>
+              </button>
+              <button onClick={handleUploadClick} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
+                <Upload size={20} />
+                <span>Hochladen</span>
+              </button>
+              <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xml" className="hidden"/>
+          </div>
+          
+          {/* Invoice Issuer */}
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
+              <h3 className="font-semibold text-lg text-gray-800">Rechnungssteller</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField name="senderName" label="Name" value={formData.senderName} onChange={handleInputChange} placeholder="Firma GmbH" btId="BT-27" isUnmapped={unmappedFields.includes('senderName')}/>
+                  <FormField name="senderStreet" label="Straße & Hausnummer" value={formData.senderStreet} onChange={handleInputChange} placeholder="Musterstraße 1" btId="BT-35" isUnmapped={unmappedFields.includes('senderStreet')}/>
+                  <FormField name="senderZip" label="PLZ" value={formData.senderZip} onChange={handleInputChange} placeholder="12345" btId="BT-38" isUnmapped={unmappedFields.includes('senderZip')}/>
+                  <FormField name="senderCity" label="Ort" value={formData.senderCity} onChange={handleInputChange} placeholder="Musterstadt" btId="BT-37" isUnmapped={unmappedFields.includes('senderCity')}/>
+                  <FormField name="senderCountry" label="Ländercode" value={formData.senderCountry} onChange={handleInputChange} placeholder="DE" btId="BT-40" isUnmapped={unmappedFields.includes('senderCountry')}/>
+                  <FormField name="senderTaxId" label="Steuernummer / USt-IdNr." value={formData.senderTaxId} onChange={handleInputChange} placeholder="DE123456789" btId="BT-31" isUnmapped={unmappedFields.includes('senderTaxId')}/>
+                  <FormField name="senderContactName" label="Ansprechpartner" value={formData.senderContactName} onChange={handleInputChange} placeholder="Max Mustermann" btId="BT-41" isUnmapped={unmappedFields.includes('senderContactName')}/>
+                  <FormField name="senderContactPhone" label="Telefon" value={formData.senderContactPhone} onChange={handleInputChange} placeholder="+49 30 123456" btId="BT-42" isUnmapped={unmappedFields.includes('senderContactPhone')}/>
+                  <div className="md:col-span-2">
+                      <FormField name="senderContactEmail" label="E-Mail" value={formData.senderContactEmail} onChange={handleInputChange} placeholder="max@firma.de" btId="BT-43" isUnmapped={unmappedFields.includes('senderContactEmail')}/>
+                  </div>
+                  <div className="md:col-span-2">
+                      <FormField name="senderElectronicAddress" label="Elektronische Adresse" value={formData.senderElectronicAddress} onChange={handleInputChange} placeholder="rechnung@firma.de" btId="BT-34" isUnmapped={unmappedFields.includes('senderElectronicAddress')}/>
+                  </div>
+              </div>
+          </div>
+
+          {/* Invoice Recipient */}
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
+              <h3 className="font-semibold text-lg text-gray-800">Rechnungsempfänger</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField name="recipientName" label="Name des Empfängers" value={formData.recipientName} onChange={handleInputChange} placeholder="Kunde AG" btId="BT-44" isUnmapped={unmappedFields.includes('recipientName')}/>
+                  <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')}/>
+                  <FormField name="recipientZip" label="PLZ" value={formData.recipientZip} onChange={handleInputChange} placeholder="54321" btId="BT-53" isUnmapped={unmappedFields.includes('recipientZip')}/>
+                  <FormField name="recipientCity" label="Ort" value={formData.recipientCity} onChange={handleInputChange} placeholder="Kundenstadt" btId="BT-52" isUnmapped={unmappedFields.includes('recipientCity')}/>
+                  <FormField name="recipientCountry" label="Ländercode" value={formData.recipientCountry} onChange={handleInputChange} placeholder="DE" btId="BT-55" isUnmapped={unmappedFields.includes('recipientCountry')}/>
+                  <div className="md:col-span-2">
+                      <FormField name="leitwegId" label="Leitweg-ID" value={formData.leitwegId} onChange={handleInputChange} placeholder="04011000-12345-67" btId="BT-10" isUnmapped={unmappedFields.includes('leitwegId')}/>
+                  </div>
+                   <div className="md:col-span-2">
+                      <FormField name="recipientElectronicAddress" label="Elektronische Adresse" value={formData.recipientElectronicAddress} onChange={handleInputChange} placeholder="rechnung@kunde.de" btId="BT-49" isUnmapped={unmappedFields.includes('recipientElectronicAddress')}/>
+                  </div>
+              </div>
+          </div>
+
+          {/* Invoice Details */}
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
+              <h3 className="font-semibold text-lg text-gray-800">Rechnungsdetails</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField name="reference" label="Rechnungsnummer" value={formData.reference} onChange={handleInputChange} placeholder="RE-2025-001" btId="BT-1" isUnmapped={unmappedFields.includes('reference')}/>
+                  <FormField name="invoiceDate" label="Rechnungsdatum" value={formData.invoiceDate} onChange={handleInputChange} type="date" btId="BT-2" isUnmapped={unmappedFields.includes('invoiceDate')}/>
+                  <FormField name="serviceDate" label="Leistungs-/Lieferdatum" value={formData.serviceDate} onChange={handleInputChange} type="date" btId="BT-72" isUnmapped={unmappedFields.includes('serviceDate')}/>
+                  <FormField name="invoiceTypeCode" label="Rechnungstyp" value={formData.invoiceTypeCode} onChange={handleInputChange} btId="BT-3" isUnmapped={unmappedFields.includes('invoiceTypeCode')}>
+                      <option value="380">Rechnung (380)</option>
+                      <option value="389">Selbst ausgestellte Rechnung (389)</option>
+                      <option value="384">Korrigierte Rechnung (384)</option>
+                      <option value="261">Gutschrift (261)</option>
+                  </FormField>
+                  <FormField name="invoiceCurrencyCode" label="Währung" value={formData.invoiceCurrencyCode} onChange={handleInputChange} placeholder="EUR" btId="BT-5" isUnmapped={unmappedFields.includes('invoiceCurrencyCode')}/>
+              </div>
+          </div>
+
+          {/* Line Items */}
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
+              <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-lg text-gray-800">Rechnungspositionen</h3>
+                  <button onClick={addLineItem} className="p-2 rounded-full bg-white/50 text-gray-700 hover:bg-white/80 transition-colors" title="Position hinzufügen">
+                      <PlusCircle size={20} />
+                  </button>
+              </div>
+              {formData.lineItems.map((item, index) => (
+                  <div key={item.id} className="p-3 border border-white/30 rounded-xl space-y-3 relative">
+                      <div className="flex justify-between items-center">
+                          <p className="font-semibold text-gray-700">Position {index + 1} <span className="text-[10px] font-sans text-gray-500">(BT-126)</span></p>
+                          {formData.lineItems.length > 1 && (
+                              <button onClick={() => removeLineItem(item.id)} className="text-red-600 hover:opacity-80" title="Position entfernen">
+                                  <Trash2 size={18} />
+                              </button>
+                          )}
+                      </div>
+                      <FormField name="name" label="Beschreibung" value={item.name} onChange={(e) => handleLineItemChange(item.id, 'name', e.target.value)} placeholder="Leistungsbeschreibung" btId="BT-153"/>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <FormField name="billedQuantity" label="Menge" value={item.billedQuantity} onChange={(e) => handleLineItemChange(item.id, 'billedQuantity', e.target.value)} type="number" btId="BT-129"/>
+                          <FormField name="unitCode" label="Einheit" value={item.unitCode} onChange={(e) => handleLineItemChange(item.id, 'unitCode', e.target.value)} placeholder="XPP" btId="BT-130"/>
+                          <FormField name="price" label="Einzelpreis (Netto)" value={item.price} onChange={(e) => handleLineItemChange(item.id, 'price', e.target.value)} type="number" btId="BT-146"/>
+                          <FormField name="netAmount" label="Gesamt (Netto)" value={item.netAmount} onChange={() => {}} type="number" btId="BT-131" disabled={true}/>
+                      </div>
+                  </div>
+              ))}
+          </div>
+          
+          {/* Totals Block */}
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
+            <h3 className="font-semibold text-lg text-gray-800">Gesamtbeträge</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-600">Gesamt Netto <span className="ml-1.5 text-[10px] font-sans text-gray-500">(BT-109)</span></label>
+                    <p className="mt-1 w-full p-3 rounded-xl bg-white/50 text-gray-700 border border-white/30">{formData.totalNetAmount}</p>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-600">Steuerbetrag <span className="ml-1.5 text-[10px] font-sans text-gray-500">(BT-110)</span></label>
+                    <p className="mt-1 w-full p-3 rounded-xl bg-white/50 text-gray-700 border border-white/30">{formData.totalTaxAmount}</p>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-600">Gesamt Brutto <span className="ml-1.5 text-[10px] font-sans text-gray-500">(BT-112)</span></label>
+                    <p className="mt-1 w-full p-3 rounded-xl bg-white/50 text-gray-700 border border-white/30">{formData.grossAmount}</p>
+                </div>
+            </div>
+          </div>
+
+          {/* Payment Block */}
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
+              <h3 className="font-semibold text-lg text-gray-800">Zahlungsinformationen</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField name="iban" label="IBAN" value={formData.iban} onChange={handleInputChange} placeholder="DE..." btId="BT-84" isUnmapped={unmappedFields.includes('iban')}/>
+                  <FormField name="bic" label="BIC" value={formData.bic} onChange={handleInputChange} placeholder="DEUTDEFFXXX" btId="BT-86" isUnmapped={unmappedFields.includes('bic')}/>
+                  <FormField name="paymentMeansCode" label="Zahlungsmittel-Code" value={formData.paymentMeansCode} onChange={handleInputChange} placeholder="30" btId="BT-81" isUnmapped={unmappedFields.includes('paymentMeansCode')}/>
+                  <FormField name="taxRate" label="MwSt.-Satz (%)" value={formData.taxRate} onChange={handleInputChange} type="number" placeholder="19" btId="BT-119" isUnmapped={unmappedFields.includes('taxRate')}/>
+                   <div className="md:col-span-2">
+                      <FormField name="paymentTerms" label="Zahlungsbedingungen" value={formData.paymentTerms} onChange={handleInputChange} placeholder="Zahlbar innerhalb von 30 Tagen" btId="BT-20" isUnmapped={unmappedFields.includes('paymentTerms')}/>
+                  </div>
+              </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex flex-col gap-4 mt-6">
+            <button onClick={generateXRechnungUBL} disabled={loading} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl">
+              {loading ? <Loader2 className="animate-spin" size={20} /> : <FileText size={20} />}
+              <span>1. XRechnung UBL erstellen</span>
+            </button>
+            <button onClick={handleOpenSapModal} disabled={loadingSummary} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
+              {loadingSummary ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
+              <span>2. SAP-XML erzeugen</span>
+            </button>
+          </div>
+          
+          {sapXml && (
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold text-gray-800 border-b border-white/30 pb-2 mb-4">Generierte SAP-XML</h3>
+              <div className="relative">
+                <textarea className="w-full h-40 p-4 font-mono text-sm bg-white/50 text-gray-800 rounded-xl border border-white/30 resize-none" value={sapXml} readOnly/>
+                <div className="absolute top-2 right-2 flex space-x-2">
+                  <button onClick={() => handleCopy(sapXml)} className="p-2 rounded-full bg-black/20 text-gray-700 hover:bg-black/30" title="Kopieren"><Copy size={16} /></button>
+                  <button onClick={() => handleDownload(sapXml, 'sap_invoice.xml', 'application/xml')} className="p-2 rounded-full bg-blue-600/80 text-white hover:bg-blue-600" title="Herunterladen"><Download size={16} /></button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right side: HTML Preview */}
+        <div className="h-full">
+            <div className="sticky top-20 h-[calc(100vh-160px)] overflow-hidden" ref={previewContainerRef}>
+                <div 
+                  ref={previewContentRef} 
+                  style={{ 
+                    transform: `translateY(${previewTransform}px)`, 
+                    transition: 'transform 0.2s ease-out' 
+                  }}
+                >
+                    <div className="flex justify-between items-center border-b border-white/30 pb-2 mb-4">
+                        <h2 className="text-2xl font-semibold text-gray-800">Rechnungsvorschau</h2>
+                    </div>
+                    <InvoicePreview formData={formData} layout={selectedLayout} />
+                </div>
+            </div>
+        </div>
+      </div>
+      
+      {/* XRechnung XML Output at the bottom */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-semibold text-gray-800 border-b border-white/30 pb-2 mb-4">XRechnung XML-Ausgabe (UBL)</h2>
+        <div className="relative">
+          <textarea className="w-full h-80 p-4 font-mono text-sm bg-white/50 text-gray-800 rounded-xl border border-white/30 resize-none" value={xrechnungXML} readOnly placeholder="Generierte XRechnung-XML wird hier angezeigt..."/>
+          {xrechnungXML && (
+            <div className="absolute top-2 right-2 flex space-x-2">
+              <button onClick={() => handleCopy(xrechnungXML)} className="p-2 rounded-full bg-black/20 text-gray-700 hover:bg-black/30" title="Kopieren"><Copy size={16} /></button>
+              <button onClick={() => handleDownload(xrechnungXML, 'xrechnung.xml', 'application/xml')} className="p-2 rounded-full bg-blue-600/80 text-white hover:bg-blue-600" title="Herunterladen"><Download size={16} /></button>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+);
+
+// #endregion
+
+// #region MAIN APP COMPONENT
+// ============================================================================
+const App = () => {
+  // Set initial state with realistic dummy data
+  const [formData, setFormData] = useState({
+    senderName: 'Musterfirma GmbH',
+    senderStreet: 'Hauptstraße 10',
+    senderZip: '12345',
+    senderCity: 'Berlin',
+    senderCountry: 'DE',
+    senderTaxId: 'DE123456789',
+    senderContactName: 'Max Mustermann',
+    senderContactPhone: '+49 30 1234567',
+    senderContactEmail: 'max.mustermann@musterfirma.de',
+    senderElectronicAddress: 'rechnung@musterfirma.de',
+    recipientName: 'Käufer AG',
+    recipientStreet: 'Beispielweg 5',
+    recipientZip: '67890',
+    recipientCity: 'München',
+    recipientCountry: 'DE',
+    recipientElectronicAddress: 'eingang@kaeufer.de',
+    leitwegId: '04011000-12345-67',
+    reference: 'RE-2025-001',
+    invoiceDate: new Date().toISOString().slice(0, 10),
+    serviceDate: new Date().toISOString().slice(0, 10),
+    iban: 'DE12345678901234567890',
+    bic: 'DEUTDEFFXXX',
+    invoiceTypeCode: '380',
+    invoiceCurrencyCode: 'EUR',
+    paymentTerms: 'Zahlbar innerhalb von 30 Tagen ohne Abzug.',
+    paymentMeansCode: '30',
+    taxRate: '19',
+    lineItems: [
+        { id: 1, name: 'Beratungsleistung für Projekt X', unitCode: 'XPP', billedQuantity: '1', price: '1000.00', netAmount: '1000.00' }
+    ],
+    totalNetAmount: '1000.00',
+    totalTaxAmount: '190.00',
+    grossAmount: '1190.00',
+  });
+
+  const [xrechnungXML, setXrechnungXML] = useState('');
+  const [sapXml, setSapXml] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [loadingPrefill, setLoadingPrefill] = useState(false);
+  const [currentPage, setCurrentPage] = useState('home'); // 'home', 'eRechnungMapping', 'sapMapping', 'layoutSelection'
+  const [selectedLayout, setSelectedLayout] = useState('classic');
+  const [sapMapping, setSapMapping] = useState(defaultSapMapping);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('info');
+  const messageTimeoutRef = useRef(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [rowToDelete, setRowToDelete] = useState(null);
+  const fileInputRef = useRef(null);
+  const [showSapIdModal, setShowSapIdModal] = useState(false);
+  const [kreditorId, setKreditorId] = useState('');
+  const [buchungskreisId, setBuchungskreisId] = useState('');
+  const [invoiceSummary, setInvoiceSummary] = useState('');
+  const [loadingSummary, setLoadingSummary] = useState(false);
+  const formRef = useRef(null);
+  const previewContainerRef = useRef(null);
+  const previewContentRef = useRef(null);
+  const [previewTransform, setPreviewTransform] = useState(0);
+  const [unmappedFields, setUnmappedFields] = useState([]);
+  const [uploadStatus, setUploadStatus] = useState(null); // 'success', 'incomplete', null
+  const dragItem = useRef(null);
+  const dragOverItem = useRef(null);
+
+  // Effect for auto-calculation of totals
+  useEffect(() => {
+    const totalNet = formData.lineItems.reduce((sum, item) => sum + (parseFloat(item.netAmount) || 0), 0);
+    const taxRate = parseFloat(formData.taxRate) || 0;
+    const totalTax = totalNet * (taxRate / 100);
+    const totalGross = totalNet + totalTax;
+
+    setFormData(prev => ({
+        ...prev,
+        totalNetAmount: totalNet.toFixed(2),
+        totalTaxAmount: totalTax.toFixed(2),
+        grossAmount: totalGross.toFixed(2)
+    }));
+  }, [formData.lineItems, formData.taxRate]);
+
+  // Handle message timeouts
+  useEffect(() => {
+    if (message) {
+      if (messageTimeoutRef.current) clearTimeout(messageTimeoutRef.current);
+      messageTimeoutRef.current = setTimeout(() => {
+        setMessage('');
+        setMessageType('info');
+      }, 5000);
+    }
+    return () => {
+      if (messageTimeoutRef.current) clearTimeout(messageTimeoutRef.current);
+    };
+  }, [message]);
+  
+  // Effect for parallax scroll effect
+  useEffect(() => {
+    if (currentPage !== 'home') return;
+
+    const formColumn = formRef.current;
+    const previewContent = previewContentRef.current;
+    const previewContainer = previewContainerRef.current;
+
+    if (!formColumn || !previewContent || !previewContainer) return;
+
+    const handleScroll = () => {
+        const formHeight = formColumn.scrollHeight;
+        const previewHeight = previewContent.scrollHeight;
+        const previewViewportHeight = previewContainer.clientHeight;
+
+        if (previewHeight <= previewViewportHeight) {
+            setPreviewTransform(0);
+            return;
+        }
+        
+        const maxPreviewTranslate = previewHeight - previewViewportHeight;
+        const maxFormScroll = formHeight - window.innerHeight;
+        if (maxFormScroll <= 0) {
+            setPreviewTransform(0);
+            return;
+        }
+
+        const currentScroll = window.scrollY;
+        const scrollPercent = Math.min(currentScroll / maxFormScroll, 1);
+        const newTransform = - (scrollPercent * maxPreviewTranslate);
+        setPreviewTransform(Math.max(newTransform, -maxPreviewTranslate));
+    };
+    
+    const resizeObserver = new ResizeObserver(handleScroll);
+    resizeObserver.observe(formColumn);
+    resizeObserver.observe(previewContent);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial call
+
+    return () => {
+        window.removeEventListener('scroll', handleScroll);
+        resizeObserver.disconnect();
+    };
+  }, [currentPage]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleLineItemChange = (id, field, value) => {
+    setFormData(prev => ({
+        ...prev,
+        lineItems: prev.lineItems.map(item => {
+            if (item.id === id) {
+                const updatedItem = { ...item, [field]: value };
+                if (field === 'billedQuantity' || field === 'price') {
+                    const quantity = parseFloat(updatedItem.billedQuantity) || 0;
+                    const price = parseFloat(updatedItem.price) || 0;
+                    updatedItem.netAmount = (quantity * price).toFixed(2);
+                }
+                return updatedItem;
+            }
+            return item;
+        })
+    }));
+  };
+
+  const addLineItem = () => {
+    setFormData(prev => ({
+        ...prev,
+        lineItems: [
+            ...prev.lineItems,
+            {
+                id: (prev.lineItems[prev.lineItems.length - 1]?.id || 0) + 1,
+                name: '',
+                unitCode: 'XPP',
+                billedQuantity: '1',
+                price: '0.00',
+                netAmount: '0.00'
+            }
+        ]
+    }));
+  };
+
+  const removeLineItem = (id) => {
+    setFormData(prev => ({
+        ...prev,
+        lineItems: prev.lineItems.filter(item => item.id !== id)
+    }));
+  };
+
+  const showMessage = (text, type = 'info', format = '') => {
+      setMessage(format ? `${format}\n${text}` : text);
+      setMessageType(type);
+  };
+  
+  const resetToDefaultMapping = () => {
+    setSapMapping(defaultSapMapping);
+    showMessage('Mapping-Tabelle auf Standardwerte zurückgesetzt!', 'success');
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'text/xml' && file.type !== 'application/xml') {
+        showMessage('Bitte laden Sie eine gültige XML-Datei hoch.', 'error');
+        if (fileInputRef.current) { fileInputRef.current.value = null; }
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const xmlContent = event.target.result;
+        try {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlContent, "application/xml");
+            
+            const ublNamespace = 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2';
+            const ciiNamespace = 'urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100';
+            
+            let detectedFormat = '';
+            let parsedResult = null;
+
+            if (xmlDoc.documentElement.namespaceURI === ublNamespace) {
+                detectedFormat = 'XRechnung 3.0.2 UBL erkannt';
+                parsedResult = parseUBL(xmlDoc);
+            } else if (xmlDoc.documentElement.lookupNamespaceURI('rsm') === ciiNamespace) {
+                detectedFormat = 'ZUGFeRD Rechnung (CII) erkannt';
+                parsedResult = parseCII(xmlDoc);
+            } else {
+                showMessage('Kein gültiges e-Rechnungsformat DE', 'error');
+                return;
+            }
+
+            if (parsedResult && parsedResult.data) {
+                setFormData(parsedResult.data);
+                setUnmappedFields(parsedResult.unmapped);
+                setXrechnungXML(xmlContent);
+
+                if (parsedResult.unmapped.length === 0) {
+                    setUploadStatus('success');
+                    showMessage('Rechnungsdaten erfolgreich erfasst', 'success', detectedFormat);
+                } else {
+                    setUploadStatus('incomplete');
+                    const fieldLabels = { senderName: 'Name (Sender)', recipientName: 'Name (Empfänger)', leitwegId: 'Leitweg-ID' };
+                    const missingFieldsMsg = parsedResult.unmapped.map(f => fieldLabels[f] || f).join(', ');
+                    showMessage(`Folgende Felder konnten nicht zugeordnet werden:\n- ${missingFieldsMsg}`, 'error', detectedFormat);
+                }
+                setTimeout(() => setUploadStatus(null), 2000);
+
+            } else {
+                throw new Error("Parsing fehlgeschlagen");
+            }
+        } catch (error) {
+            console.error("Fehler beim Verarbeiten der XML:", error);
+            showMessage('Fehler beim Mapping der Rechnungsdaten', 'error', 'Kein gültiges e-Rechnungsformat DE');
+        } finally {
+            if (fileInputRef.current) {
+                fileInputRef.current.value = null;
+            }
+        }
+    };
+    reader.readAsText(file);
+  };
+  
+  const parseUBL = (xmlDoc) => {
+    const nsResolver = (prefix) => ({'cac': 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2', 'cbc': 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'})[prefix] || null;
+    const getValue = (xpath, parent) => xmlDoc.evaluate(xpath, parent || xmlDoc, nsResolver, XPathResult.STRING_TYPE, null).stringValue.trim();
+    const getAttribute = (xpath, attribute, parent) => {
+        const result = xmlDoc.evaluate(xpath, parent || xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        return result ? result.getAttribute(attribute) : '';
+    };
+
+    const supplierParty = xmlDoc.evaluate('//cac:AccountingSupplierParty/cac:Party', xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const customerParty = xmlDoc.evaluate('//cac:AccountingCustomerParty/cac:Party', xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const legalMonetaryTotal = xmlDoc.evaluate('//cac:LegalMonetaryTotal', xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const taxTotal = xmlDoc.evaluate('//cac:TaxTotal', xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const paymentMeans = xmlDoc.evaluate('//cac:PaymentMeans', xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const paymentTermsNode = xmlDoc.evaluate('//cac:PaymentTerms', xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
+    const parsedLineItems = Array.from(xmlDoc.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2', 'InvoiceLine')).map((item, index) => ({
+        id: index + 1,
+        name: getValue('.//cac:Item/cbc:Name', item),
+        unitCode: getAttribute('.//cbc:InvoicedQuantity', 'unitCode', item),
+        billedQuantity: getValue('.//cbc:InvoicedQuantity', item),
+        price: getValue('.//cac:Price/cbc:PriceAmount', item),
+        netAmount: getValue('.//cbc:LineExtensionAmount', item)
+    }));
+    
+    const data = { ...blankFormData };
+    const unmapped = Object.keys(blankFormData).filter(k => k !== 'lineItems');
+    const mapValue = (key, value) => {
+        if(value) {
+            data[key] = value;
+            const index = unmapped.indexOf(key);
+            if (index > -1) unmapped.splice(index, 1);
+        }
+    };
+
+    mapValue('senderName', getValue('.//cac:PartyLegalEntity/cbc:RegistrationName', supplierParty) || getValue('.//cac:PartyName/cbc:Name', supplierParty));
+    mapValue('senderStreet', getValue('.//cac:PostalAddress/cbc:StreetName', supplierParty));
+    mapValue('senderZip', getValue('.//cac:PostalAddress/cbc:PostalZone', supplierParty));
+    mapValue('senderCity', getValue('.//cac:PostalAddress/cbc:CityName', supplierParty));
+    mapValue('senderCountry', getValue('.//cac:PostalAddress/cac:Country/cbc:IdentificationCode', supplierParty));
+    mapValue('senderTaxId', getValue('.//cac:PartyTaxScheme/cbc:CompanyID', supplierParty));
+    mapValue('senderContactName', getValue('.//cac:Contact/cbc:Name', supplierParty));
+    mapValue('senderContactPhone', getValue('.//cac:Contact/cbc:Telephone', supplierParty));
+    mapValue('senderContactEmail', getValue('.//cac:Contact/cbc:ElectronicMail', supplierParty));
+    mapValue('senderElectronicAddress', getValue('.//cbc:EndpointID', supplierParty));
+    mapValue('recipientName', getValue('.//cac:PartyLegalEntity/cbc:RegistrationName', customerParty) || getValue('.//cac:PartyName/cbc:Name', customerParty));
+    mapValue('recipientStreet', getValue('.//cac:PostalAddress/cbc:StreetName', customerParty));
+    mapValue('recipientZip', getValue('.//cac:PostalAddress/cbc:PostalZone', customerParty));
+    mapValue('recipientCity', getValue('.//cac:PostalAddress/cbc:CityName', customerParty));
+    mapValue('recipientCountry', getValue('.//cac:PostalAddress/cac:Country/cbc:IdentificationCode', customerParty));
+    mapValue('recipientElectronicAddress', getValue('.//cbc:EndpointID', customerParty));
+    mapValue('leitwegId', getValue('//cbc:BuyerReference'));
+    mapValue('reference', getValue('//cbc:ID'));
+    mapValue('invoiceDate', getValue('//cbc:IssueDate'));
+    mapValue('serviceDate', getValue('//cbc:DueDate'));
+    mapValue('iban', getValue('.//cac:PayeeFinancialAccount/cbc:ID', paymentMeans));
+    mapValue('bic', getValue('.//cac:PayeeFinancialAccount/cac:FinancialInstitutionBranch/cbc:ID', paymentMeans));
+    mapValue('paymentMeansCode', getValue('.//cbc:PaymentMeansCode', paymentMeans));
+    mapValue('paymentTerms', getValue('.//cbc:Note', paymentTermsNode));
+    mapValue('invoiceTypeCode', getValue('//cbc:InvoiceTypeCode'));
+    mapValue('invoiceCurrencyCode', getValue('//cbc:DocumentCurrencyCode'));
+    mapValue('taxRate', parseInt(getValue('.//cac:TaxSubtotal/cac:TaxCategory/cbc:Percent', taxTotal) || '0', 10).toString());
+    if (parsedLineItems.length > 0) data.lineItems = parsedLineItems;
+    mapValue('totalNetAmount', getValue('.//cbc:TaxExclusiveAmount', legalMonetaryTotal));
+    mapValue('totalTaxAmount', getValue('.//cbc:TaxAmount', taxTotal));
+    mapValue('grossAmount', getValue('.//cbc:TaxInclusiveAmount', legalMonetaryTotal));
+
+    return { data, unmapped };
+  };
+
+  const parseCII = (xmlDoc) => {
+      const nsResolver = (prefix) => ({ 'ram': 'urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100', 'rsm': 'urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100', 'udt': 'urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100' })[prefix] || null;
+      const getValue = (xpath, parent) => xmlDoc.evaluate(xpath, parent || xmlDoc, nsResolver, XPathResult.STRING_TYPE, null).stringValue.trim();
+      const getAttribute = (xpath, attribute, parent) => {
+        const result = xmlDoc.evaluate(xpath, parent || xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        return result ? result.getAttribute(attribute) : '';
+      };
+
+      const tradeTransaction = xmlDoc.evaluate('//rsm:SupplyChainTradeTransaction', xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      const header = xmlDoc.evaluate('.//ram:ApplicableHeaderTradeAgreement', tradeTransaction, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      const settlement = xmlDoc.evaluate('.//ram:ApplicableHeaderTradeSettlement', tradeTransaction, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      const sellerParty = xmlDoc.evaluate('.//ram:SellerTradeParty', header, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      const buyerParty = xmlDoc.evaluate('.//ram:BuyerTradeParty', header, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      const monetarySummation = xmlDoc.evaluate('.//ram:SpecifiedTradeSettlementHeaderMonetarySummation', settlement, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      
+      const parsedLineItems = Array.from(xmlDoc.getElementsByTagNameNS('urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100', 'IncludedSupplyChainTradeLineItem')).map((item, index) => {
+          const lineSettlement = xmlDoc.evaluate('.//ram:SpecifiedTradeSettlementLineMonetarySummation', item, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+          const tradeAgreement = xmlDoc.evaluate('.//ram:SpecifiedLineTradeAgreement', item, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+          return { id: index + 1, name: getValue('.//ram:SpecifiedTradeProduct/ram:Name', item), unitCode: getAttribute('.//ram:BilledQuantity', 'unitCode', item), billedQuantity: getValue('.//ram:BilledQuantity', item), price: getValue('.//ram:GrossPriceProductTradePrice/ram:ChargeAmount', tradeAgreement), netAmount: getValue('.//ram:LineTotalAmount', lineSettlement) };
+      });
+
+      const data = { ...blankFormData };
+      const unmapped = Object.keys(blankFormData).filter(k => k !== 'lineItems');
+      const mapValue = (key, value) => {
+        if(value) {
+            data[key] = value;
+            const index = unmapped.indexOf(key);
+            if (index > -1) unmapped.splice(index, 1);
+        }
+      };
+      
+      const issueDate = getValue('//rsm:ExchangedDocument/ram:IssueDateTime/udt:DateTimeString');
+      const deliveryDate = getValue('.//ram:ActualDeliverySupplyChainEvent/ram:OccurrenceDateTime/udt:DateTimeString', tradeTransaction);
+
+      mapValue('senderName', getValue('.//ram:Name', sellerParty));
+      mapValue('senderStreet', getValue('.//ram:PostalTradeAddress/ram:LineOne', sellerParty));
+      mapValue('senderZip', getValue('.//ram:PostalTradeAddress/ram:PostcodeCode', sellerParty));
+      mapValue('senderCity', getValue('.//ram:PostalTradeAddress/ram:CityName', sellerParty));
+      mapValue('senderCountry', getValue('.//ram:PostalTradeAddress/ram:CountryID', sellerParty));
+      mapValue('senderTaxId', getValue('.//ram:SpecifiedTaxRegistration/ram:ID', sellerParty));
+      mapValue('senderContactName', getValue('.//ram:DefinedTradeContact/ram:PersonName', sellerParty));
+      mapValue('senderContactPhone', getValue('.//ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber', sellerParty));
+      mapValue('senderContactEmail', getValue('.//ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID', sellerParty));
+      mapValue('senderElectronicAddress', getValue('.//ram:URIUniversalCommunication/ram:URIID', sellerParty));
+      mapValue('recipientName', getValue('.//ram:Name', buyerParty));
+      mapValue('recipientStreet', getValue('.//ram:PostalTradeAddress/ram:LineOne', buyerParty));
+      mapValue('recipientZip', getValue('.//ram:PostalTradeAddress/ram:PostcodeCode', buyerParty));
+      mapValue('recipientCity', getValue('.//ram:PostalTradeAddress/ram:CityName', buyerParty));
+      mapValue('recipientCountry', getValue('.//ram:PostalTradeAddress/ram:CountryID', buyerParty));
+      mapValue('recipientElectronicAddress', getValue('.//ram:URIUniversalCommunication/ram:URIID', buyerParty));
+      mapValue('leitwegId', getValue('.//ram:BuyerReference', header));
+      mapValue('reference', getValue('//rsm:ExchangedDocument/ram:ID'));
+      mapValue('invoiceDate', issueDate ? issueDate.substring(0, 8).replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3') : '');
+      mapValue('serviceDate', deliveryDate ? deliveryDate.substring(0, 8).replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3') : '');
+      mapValue('iban', getValue('.//ram:PayeePartyCreditorFinancialAccount/ram:IBANID', settlement));
+      mapValue('bic', getValue('.//ram:PayeePartyCreditorFinancialAccount/ram:ProprietaryID', settlement));
+      mapValue('paymentMeansCode', getValue('.//ram:SpecifiedTradeSettlementPaymentMeans/ram:TypeCode', settlement));
+      mapValue('paymentTerms', getValue('.//ram:ApplicableTradePaymentTerms/ram:Description', settlement));
+      mapValue('invoiceTypeCode', getValue('//rsm:ExchangedDocument/ram:TypeCode'));
+      mapValue('invoiceCurrencyCode', getValue('.//ram:InvoiceCurrencyCode', settlement));
+      mapValue('taxRate', parseInt(getValue('.//ram:ApplicableTradeTax/ram:RateApplicablePercent', settlement) || '0', 10).toString());
+      if (parsedLineItems.length > 0) data.lineItems = parsedLineItems;
+      mapValue('totalNetAmount', getValue('.//ram:TaxBasisTotalAmount', monetarySummation));
+      mapValue('totalTaxAmount', getValue('.//ram:TaxTotalAmount', monetarySummation));
+      mapValue('grossAmount', getValue('.//ram:GrandTotalAmount', monetarySummation));
+      
+      return { data, unmapped };
+  };
+  
+  const handleUploadClick = () => {
+    fileInputRef.current.click();
+  };
+  
+  const validateFormData = () => {
+    const issueDate = new Date(formData.invoiceDate);
+    issueDate.setHours(0, 0, 0, 0);
+    const serviceDate = new Date(formData.serviceDate);
+    serviceDate.setHours(0, 0, 0, 0);
+
+    if (serviceDate < issueDate) {
+        showMessage('Das Leistungsdatum darf nicht vor dem Rechnungsdatum liegen.', 'error');
+        return false;
+    }
+
+    const requiredFields = {
+      'BT-1': { value: formData.reference, label: 'Rechnungsnummer' },
+      'BT-2': { value: formData.invoiceDate, label: 'Rechnungsdatum' },
+      'BT-27': { value: formData.senderName, label: 'Name des Rechnungsstellers' },
+      'BT-44': { value: formData.recipientName, label: 'Name des Rechnungsempfängers' },
+    };
+
+    const missingFields = Object.entries(requiredFields).filter(([, field]) => !field.value);
+
+    if (missingFields.length > 0) {
+      const missingFieldNames = missingFields.map(([btId, field]) => `${field.label} (${btId})`).join(', ');
+      showMessage(`Wichtige Pflichtfelder fehlen: ${missingFieldNames}`, 'error');
+      return false;
+    }
+    
+    for (const item of formData.lineItems) {
+        if (!item.name || !item.billedQuantity || !item.price || !item.unitCode) {
+            showMessage(`Alle Felder in Rechnungsposition ${item.id} müssen ausgefüllt sein.`, 'error');
+            return false;
+        }
+    }
+    
+    return true;
+  };
+  
+  const escapeXml = (unsafe) => {
+    if (typeof unsafe !== 'string') return unsafe;
+    return unsafe.replace(/[<>&"']/g, (c) => ({'<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;'})[c] || c);
+  };
+
+  const generateXRechnungUBL = async () => {
+    if (!validateFormData()) return;
+
+    setLoading(true);
+    setXrechnungXML('');
+    setSapXml('');
+
+    try {
+      const taxRate = parseFloat(formData.taxRate);
+      if (isNaN(taxRate)) throw new Error('Steuersatz muss eine gültige Zahl sein.');
+
+      const lineItemsXML = formData.lineItems.map((item, index) => `
+    <cac:InvoiceLine>
+        <cbc:ID>${index + 1}</cbc:ID>
+        <cbc:InvoicedQuantity unitCode="${escapeXml(item.unitCode)}">${parseFloat(item.billedQuantity).toFixed(2)}</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${parseFloat(item.netAmount).toFixed(2)}</cbc:LineExtensionAmount>
+        <cac:Item>
+            <cbc:Name>${escapeXml(item.name)}</cbc:Name>
+            <cac:ClassifiedTaxCategory><cbc:ID>S</cbc:ID><cbc:Percent>${taxRate.toFixed(2)}</cbc:Percent><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:ClassifiedTaxCategory>
+        </cac:Item>
+        <cac:Price><cbc:PriceAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${parseFloat(item.price).toFixed(2)}</cbc:PriceAmount></cac:Price>
+    </cac:InvoiceLine>`).join('');
+
+      const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+    <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0</cbc:CustomizationID>
+    <cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:3.0</cbc:ProfileID>
+    <cbc:ID>${escapeXml(formData.reference)}</cbc:ID>
+    <cbc:IssueDate>${formData.invoiceDate}</cbc:IssueDate>
+    <cbc:DueDate>${formData.serviceDate}</cbc:DueDate>
+    <cbc:InvoiceTypeCode>${formData.invoiceTypeCode}</cbc:InvoiceTypeCode>
+    <cbc:DocumentCurrencyCode>${escapeXml(formData.invoiceCurrencyCode)}</cbc:DocumentCurrencyCode>
+    <cbc:BuyerReference>${escapeXml(formData.leitwegId)}</cbc:BuyerReference>
+    <cac:PaymentTerms><cbc:Note>${escapeXml(formData.paymentTerms)}</cbc:Note></cac:PaymentTerms>
+    <cac:AccountingSupplierParty><cac:Party><cbc:EndpointID schemeID="EM">${escapeXml(formData.senderElectronicAddress)}</cbc:EndpointID><cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(formData.senderName)}</cbc:RegistrationName></cac:PartyLegalEntity><cac:PostalAddress><cbc:StreetName>${escapeXml(formData.senderStreet)}</cbc:StreetName><cbc:CityName>${escapeXml(formData.senderCity)}</cbc:CityName><cbc:PostalZone>${escapeXml(formData.senderZip)}</cbc:PostalZone><cac:Country><cbc:IdentificationCode>${escapeXml(formData.senderCountry)}</cbc:IdentificationCode></cac:Country></cac:PostalAddress><cac:PartyTaxScheme><cbc:CompanyID>${escapeXml(formData.senderTaxId)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme><cac:Contact><cbc:Name>${escapeXml(formData.senderContactName)}</cbc:Name><cbc:Telephone>${escapeXml(formData.senderContactPhone)}</cbc:Telephone><cbc:ElectronicMail>${escapeXml(formData.senderContactEmail)}</cbc:ElectronicMail></cac:Contact></cac:Party></cac:AccountingSupplierParty>
+    <cac:AccountingCustomerParty><cac:Party><cbc:EndpointID schemeID="EM">${escapeXml(formData.recipientElectronicAddress)}</cbc:EndpointID><cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(formData.recipientName)}</cbc:RegistrationName></cac:PartyLegalEntity><cac:PostalAddress><cbc:StreetName>${escapeXml(formData.recipientStreet)}</cbc:StreetName><cbc:CityName>${escapeXml(formData.recipientCity)}</cbc:CityName><cbc:PostalZone>${escapeXml(formData.recipientZip)}</cbc:PostalZone><cac:Country><cbc:IdentificationCode>${escapeXml(formData.recipientCountry)}</cbc:IdentificationCode></cac:Country></cac:PostalAddress></cac:Party></cac:AccountingCustomerParty>
+    <cac:PaymentMeans><cbc:PaymentMeansCode>${formData.paymentMeansCode}</cbc:PaymentMeansCode><cac:PayeeFinancialAccount><cbc:ID>${escapeXml(formData.iban)}</cbc:ID><cac:FinancialInstitutionBranch><cbc:ID>${escapeXml(formData.bic)}</cbc:ID></cac:FinancialInstitutionBranch></cac:PayeeFinancialAccount></cac:PaymentMeans>
+    <cac:TaxTotal><cbc:TaxAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalTaxAmount}</cbc:TaxAmount><cac:TaxSubtotal><cbc:TaxableAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalNetAmount}</cbc:TaxableAmount><cbc:TaxAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalTaxAmount}</cbc:TaxAmount><cac:TaxCategory><cbc:ID>S</cbc:ID><cbc:Percent>${taxRate.toFixed(2)}</cbc:Percent><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:TaxCategory></cac:TaxSubtotal></cac:TaxTotal>
+    <cac:LegalMonetaryTotal><cbc:LineExtensionAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalNetAmount}</cbc:LineExtensionAmount><cbc:TaxExclusiveAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalNetAmount}</cbc:TaxExclusiveAmount><cbc:TaxInclusiveAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.grossAmount}</cbc:TaxInclusiveAmount><cbc:PayableAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.grossAmount}</cbc:PayableAmount></cac:LegalMonetaryTotal>
+    ${lineItemsXML}
+</Invoice>`;
+      
+      setXrechnungXML(xmlString);
+      showMessage('Valide XRechnung 3.0.2 UBL erfolgreich erstellt!', 'success');
+    } catch (error) {
+      console.error('Fehler bei der Generierung der XRechnung:', error);
+      showMessage(error.message || 'Fehler bei der Generierung.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const generateInvoiceSummary = async () => {
+    setLoadingSummary(true);
+    try {
+        const prompt = `Fasse die folgenden Rechnungsdaten in Stichpunkten zusammen. Nur Fakten, kein Einleitungssatz, keine Erklärungen.
+- Rechnungssteller: ${formData.senderName}
+- Rechnungsempfänger: ${formData.recipientName}
+- Rechnungsnummer: ${formData.reference}
+- Gesamtbrutto: ${formData.grossAmount} ${formData.invoiceCurrencyCode}
+        `;
+
+        const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        const summary = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if(summary) {
+            setInvoiceSummary(summary);
+            return true;
+        } else {
+            throw new Error("Keine Zusammenfassung erhalten.");
+        }
+    } catch (error) {
+        console.error("Fehler bei der Erstellung der Zusammenfassung:", error);
+        setInvoiceSummary("Fehler: Zusammenfassung konnte nicht erstellt werden.");
+        return false;
+    } finally {
+        setLoadingSummary(false);
+    }
+  };
+  
+  const handleOpenSapModal = async () => {
+    const success = await generateInvoiceSummary();
+    if (success) setShowSapIdModal(true);
+  };
+
+  const getFormValue = (placeholder) => {
+    if (placeholder && placeholder.startsWith('{{') && placeholder.endsWith('}}')) {
+      const key = placeholder.slice(2, -2);
+      if (key === 'buchungskreisId') return buchungskreisId;
+      if (key === 'kreditorId') return kreditorId;
+      return formData[key] || '';
+    }
+    return placeholder;
+  };
+  
+  const handleConfirmSapIdsAndGenerateXml = () => {
+    setShowSapIdModal(false);
+    setXrechnungXML('');
+    
+    const xmlParts = sapMapping.map(row => {
+      const { value, targetXmlField, type } = row;
+      if (type === 'closeSegment') return `</${targetXmlField}>`;
+      if (type === 'openSegment') return `<${targetXmlField}>`;
+      const finalValue = getFormValue(value);
+      return `<${targetXmlField}>${escapeXml(finalValue)}</${targetXmlField}>`;
+    });
+
+    const xmlString = `<?xml version="1.0" encoding="UTF-8"?>\n${xmlParts.join('\n')}`;
+    setSapXml(xmlString);
+    showMessage('SAP-XML erstellt. Bitte im Textfeld prüfen.', 'success');
+  };
+
+  const handleDownload = (content, filename, mimeType) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+        showMessage('XML in die Zwischenablage kopiert!', 'success');
+    }).catch(err => {
+        console.error('Fehler beim Kopieren: ', err);
+        showMessage('Kopieren fehlgeschlagen.', 'error');
+    });
+  };
+  
+  const addMappingRow = (type) => {
+    const newId = Math.max(0, ...sapMapping.map(row => row.id)) + 1;
+    let newRow;
+    if (type === 'field') {
+      newRow = { id: newId, xRechnungField: 'Neues Feld', value: '', targetXmlField: 'NEUESFELD', type: 'field' };
+    } else if (type === 'openSegment') {
+      newRow = { id: newId, xRechnungField: 'Segment öffnen', value: '', targetXmlField: 'NEUESSEGMENT', type: 'openSegment' };
+    } else if (type === 'closeSegment') {
+      newRow = { id: newId, xRechnungField: 'Segment schließen', value: '', targetXmlField: 'NEUESSEGMENT', type: 'closeSegment' };
+    }
+    setSapMapping(prev => [...prev, newRow]);
+  };
+  
+  const showRemoveModal = (index) => {
+    setRowToDelete(index);
+    setShowDeleteModal(true);
+  };
+  
+  const confirmRemoveRow = () => {
+    if (rowToDelete !== null) {
+      setSapMapping(prev => prev.filter((_, i) => i !== rowToDelete));
+      showMessage('Zeile erfolgreich gelöscht!', 'success');
+    }
+    setShowDeleteModal(false);
+    setRowToDelete(null);
+  };
+  
+  const handleMappingChange = (index, field, value) => {
+    setSapMapping(prev => {
+      const newMapping = [...prev];
+      const newRow = { ...newMapping[index] };
+      newRow[field] = value;
+
+      if (field === 'targetXmlField') {
+          newRow.targetXmlField = value.toUpperCase();
+          if (newRow.type === 'closeSegment') newRow.xRechnungField = `Segment schließen (${value.toUpperCase()})`;
+          else if (newRow.type === 'openSegment') newRow.xRechnungField = `Segment öffnen (${value.toUpperCase()})`;
+      }
+      newMapping[index] = newRow;
+      return newMapping;
+    });
+  };
+
+  const handleDragStart = (e, index) => {
+    dragItem.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnter = (e, index) => {
+    e.preventDefault();
+    if (dragItem.current === index) return;
+    
+    const newMapping = [...sapMapping];
+    const draggedItem = newMapping[dragItem.current];
+    newMapping.splice(dragItem.current, 1);
+    newMapping.splice(index, 0, draggedItem);
+    dragItem.current = index;
+    setSapMapping(newMapping);
+  };
+  
+  const handleDragEnd = () => {
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+  
+  const handleDragOver = (e) => e.preventDefault();
+  
+  const handlePrefill = async () => {
+    setLoadingPrefill(true);
+    showMessage('Generiere KI-Werte...', 'info');
+    try {
+        const prompt = "Erstelle ein JSON-Objekt mit vollständigen, realistischen aber fiktiven deutschen Rechnungsdaten. Das Objekt muss exakt dem folgenden JSON-Schema entsprechen. Fülle alle Felder aus, aber lasse 'taxRate' und 'serviceDate' aus.";
+        const payload = {
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "OBJECT",
+                    properties: {
+                        senderName: { type: "STRING" }, senderStreet: { type: "STRING" }, senderZip: { type: "STRING" }, senderCity: { type: "STRING" }, senderTaxId: { type: "STRING" }, senderContactName: { type: "STRING" }, senderContactPhone: { type: "STRING" }, senderContactEmail: { type: "STRING" }, senderElectronicAddress: { type: "STRING" },
+                        recipientName: { type: "STRING" }, recipientStreet: { type: "STRING" }, recipientZip: { type: "STRING" }, recipientCity: { type: "STRING" }, recipientElectronicAddress: { type: "STRING" },
+                        leitwegId: { type: "STRING" }, reference: { type: "STRING" }, invoiceDate: { type: "STRING" }, iban: { type: "STRING" }, bic: { type: "STRING" },
+                        invoiceTypeCode: { type: "STRING" }, invoiceCurrencyCode: { type: "STRING" }, paymentTerms: { type: "STRING" }, paymentMeansCode: { type: "STRING" },
+                        lineItems: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "NUMBER" }, name: { type: "STRING" }, unitCode: { type: "STRING" }, billedQuantity: { type: "STRING" }, price: { type: "STRING" }, netAmount: { type: "STRING" } } } }
+                    }
+                }
+            }
+        };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const result = await response.json();
+        const generatedData = JSON.parse(result?.candidates?.[0]?.content?.parts?.[0]?.text);
+        
+        if (generatedData) {
+            const finalData = { ...generatedData, serviceDate: new Date().toISOString().slice(0, 10), taxRate: '19' };
+            setFormData(prev => ({...prev, ...finalData}));
+            showMessage('Werte erfolgreich mit KI vorbefüllt!', 'success');
+        } else {
+            throw new Error("Keine Daten von KI erhalten.");
+        }
+    } catch (error) {
+        console.error("Fehler bei der Vorbefüllung:", error);
+        showMessage('Fehler bei der Vorbefüllung mit KI-Werten.', 'error');
+    } finally {
+        setLoadingPrefill(false);
+    }
+  };
+
+  const handleReset = () => {
+    setFormData(blankFormData);
+    setXrechnungXML('');
+    setSapXml('');
+    setUnmappedFields([]);
+    showMessage('Alle Felder und Ergebnisse zurückgesetzt.', 'info');
+  };
+  
+  const renderLayoutSelectionPage = () => {
+    const layouts = [
+        { id: 'classic', name: 'Klassisch', description: 'Ein traditionelles und klares Design für formelle Anlässe.', imgSrc: 'https://placehold.co/400x566/333/FFF?text=Klassisch' },
+        { id: 'modern', name: 'Modern', description: 'Großzügiger Weißraum und feine Linien für einen sauberen Look.', imgSrc: 'https://placehold.co/400x566/F3F4F6/111827?text=Modern' },
+        { id: 'minimalist', name: 'Minimalistisch', description: 'Reduziert auf das Wesentliche mit Fokus auf Typografie.', imgSrc: 'https://placehold.co/400x566/FFF/111?text=Minimal' },
+        { id: 'creative', name: 'Kreativ', description: 'Ein asymmetrisches Layout mit einer auffälligen Seitenleiste.', imgSrc: 'https://placehold.co/400x566/1F2937/FFF?text=Kreativ' },
+    ];
+
+    return (
+        <div className="bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg w-full max-w-5xl mx-auto p-6 md:p-8">
+            <div className="flex items-center justify-between border-b border-white/30 pb-4 mb-6">
+                <h2 className="text-3xl font-bold text-gray-800">Layout auswählen</h2>
+                <p className="text-gray-600">Wählen Sie eine Vorlage für die Rechnungsvorschau.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {layouts.map((layout) => (
+                    <div key={layout.id} className="bg-white/30 border border-white/30 rounded-lg overflow-hidden group transform hover:-translate-y-2 transition-transform duration-300">
+                        <img src={layout.imgSrc} alt={layout.name} className="w-full h-64 object-cover object-top" />
+                        <div className="p-6">
+                            <h3 className="text-xl font-semibold text-gray-800">{layout.name}</h3>
+                            <p className="text-gray-600 mt-2 text-sm">{layout.description}</p>
+                            <button 
+                                onClick={() => { setSelectedLayout(layout.id); setCurrentPage('home'); }}
+                                className="mt-4 w-full p-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all duration-200"
+                            >
+                                Layout verwenden
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+  };
+
+  const renderERechnungMappingPage = () => (
+    <div className="bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg w-full max-w-6xl mx-auto p-6 md:p-8">
+        <div className="flex items-center justify-between border-b border-white/30 pb-2 mb-4">
+            <h2 className="text-2xl font-semibold text-gray-800">E-Rechnungs-Mapping (EN 16931)</h2>
+        </div>
+        <p className="text-sm text-gray-600 mb-6">
+            Diese Tabelle zeigt die Zuordnung der Formularfelder zu den Elementen der Standards XRechnung (UBL-Syntax) und ZUGFeRD (CII-Syntax). Beide basieren auf der Norm EN 16931.
+        </p>
+        <div className="overflow-x-auto">
+            <table className="w-full table-auto border-collapse">
+                <thead>
+                    <tr className="border-b border-gray-300/50">
+                        <th className="p-3 text-left font-medium text-gray-800">BT-ID</th>
+                        <th className="p-3 text-left font-medium text-gray-800">Beschreibung</th>
+                        <th className="p-3 text-left font-medium text-gray-800">XRechnung (UBL)</th>
+                        <th className="p-3 text-left font-medium text-gray-800">ZUGFeRD (CII)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {eRechnungMappingData.map((row) => (
+                        <tr key={row.id} className="border-b border-gray-300/30 hover:bg-white/20 transition-colors">
+                            <td className="p-3 font-semibold text-gray-700">{row.btId}</td>
+                            <td className="p-3 text-gray-700">{row.description}</td>
+                            <td className="p-3 font-mono text-gray-600 text-xs">{row.xrechnungPath}</td>
+                            <td className="p-3 font-mono text-gray-600 text-xs">{row.zugferdPath}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
+  );
+
+  const renderSapMappingPage = () => (
+    <div className="bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg w-full max-w-5xl mx-auto p-6 md:p-8 relative">
+      <div className="flex items-center justify-between border-b border-white/30 pb-2 mb-4">
+        <h2 className="text-2xl font-semibold text-gray-800">SAP-Mapping-Tabelle</h2>
+      </div>
+      <p className="text-sm text-gray-600 mb-4">
+        Definieren Sie die Struktur der SAP-XML. Verwenden Sie Platzhalter wie <code className="bg-gray-200/50 text-gray-700 p-1 rounded">{'{{senderName}}'}</code>.
+        Änderungen werden sofort übernommen. Die Reihenfolge bestimmt die XML-Struktur.
+      </p>
+      <div className="flex flex-col md:flex-row md:justify-start gap-4 mb-6">
+        <button onClick={resetToDefaultMapping} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
+          <Import size={20} /><span>Standard wiederherstellen</span>
+        </button>
+        <button onClick={() => addMappingRow('field')} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
+          <PlusCircle size={20} /><span>Feld hinzufügen</span>
+        </button>
+        <button onClick={handleOpenSapModal} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors shadow-md">
+          <Send size={20} /><span>SAP-XML erzeugen</span>
+        </button>
+      </div>
+      <div className="overflow-x-auto mb-4">
+        <table className="w-full table-auto border-collapse">
+          <thead>
+            <tr className="border-b border-gray-300/50">
+              <th className="p-3 text-left font-medium text-gray-800">Beschreibung</th>
+              <th className="p-3 text-left font-medium text-gray-800">Wert (Placeholder)</th>
+              <th className="p-3 text-left font-medium text-gray-800">Ziel-XML-Feld</th>
+              <th className="p-3 text-center font-medium w-16 text-gray-800">Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sapMapping.map((row, index) => (
+              <tr key={row.id} draggable onDragStart={(e) => handleDragStart(e, index)} onDragEnter={(e) => handleDragEnter(e, index)} onDragEnd={handleDragEnd} onDragOver={handleDragOver} className={`border-b border-gray-300/30 hover:bg-white/20 transition-colors cursor-grab ${row.type === 'closeSegment' ? 'bg-red-500/10 text-red-800' : row.type === 'openSegment' ? 'bg-yellow-500/10 text-yellow-800' : ''}`}>
+                <td className="p-2 flex items-center space-x-2">
+                  <Move className="text-gray-500 cursor-move" size={20} />
+                  <input type="text" value={row.xRechnungField || ''} onChange={(e) => handleMappingChange(index, 'xRechnungField', e.target.value)} className="w-full p-2 bg-transparent rounded-lg border border-white/30 focus:outline-none focus:ring-1 focus:ring-blue-500"/>
+                </td>
+                <td className="p-2">
+                  <input type="text" value={row.value || ''} onChange={(e) => handleMappingChange(index, 'value', e.target.value)} disabled={row.type !== 'field'} className="w-full p-2 bg-transparent rounded-lg border border-white/30 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-black/5 disabled:text-gray-500"/>
+                </td>
+                <td className="p-2">
+                  <input type="text" value={row.targetXmlField || ''} onChange={(e) => handleMappingChange(index, 'targetXmlField', e.target.value)} className="w-full p-2 bg-transparent rounded-lg border border-white/30 focus:outline-none focus:ring-1 focus:ring-blue-500"/>
+                </td>
+                <td className="p-2 text-center">
+                  <button onClick={() => showRemoveModal(index)} className="text-red-600 hover:opacity-80"><X size={20} /></button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {sapXml && (
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold text-gray-800 border-b border-white/30 pb-2 mb-4">Generierte SAP-XML</h2>
+          <div className="relative">
+            <textarea className="w-full h-80 p-4 font-mono text-sm bg-white/50 text-gray-800 rounded-xl border border-white/30 resize-none" value={sapXml} readOnly/>
+            <div className="absolute top-2 right-2 flex space-x-2">
+              <button onClick={() => handleCopy(sapXml)} className="p-2 rounded-full bg-black/20 text-gray-700 hover:bg-black/30" title="Kopieren"><Copy size={16} /></button>
+              <button onClick={() => handleDownload(sapXml, 'sap_invoice.xml', 'application/xml')} className="p-2 rounded-full bg-blue-600/80 text-white hover:bg-blue-600" title="Herunterladen"><Download size={16} /></button>
+              <button onClick={() => setSapXml('')} className="p-2 rounded-full bg-white/50 text-gray-700 hover:bg-white/80" title="Leeren"><Trash2 size={16} /></button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white/50 backdrop-blur-xl border border-white/30 rounded-lg p-6 shadow-xl w-80">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Zeile löschen</h3>
+            <p className="text-gray-700 mb-6">Sind Sie sicher, dass Sie diese Zeile löschen möchten? Dieser Vorgang kann nicht rückgängig gemacht werden.</p>
+            <div className="flex justify-end space-x-4">
+              <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 rounded-lg bg-white/50 hover:bg-white/80 text-gray-700">Abbrechen</button>
+              <button onClick={confirmRemoveRow} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Löschen</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderSapIdModal = () => (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white/50 backdrop-blur-xl border border-white/30 rounded-2xl p-6 shadow-xl w-full max-w-3xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold text-gray-800">Zusätzliche SAP-Informationen & Rechnungsprüfung</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <h4 className="font-semibold text-gray-800 border-b border-white/30 pb-1">Rechnungsempfänger</h4>
+                    <p className="text-sm text-gray-700"><span className="font-medium text-gray-600">Name:</span> {formData.recipientName}</p>
+                    <p className="text-sm text-gray-700"><span className="font-medium text-gray-600">Adresse:</span> {formData.recipientStreet}, {formData.recipientZip} {formData.recipientCity}</p>
+                    <div className="pt-2">
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Buchungskreisnummer</label>
+                        <input type="text" value={buchungskreisId || ''} onChange={(e) => setBuchungskreisId(e.target.value)} className="w-full p-3 rounded-xl bg-white/50 text-gray-800 border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <h4 className="font-semibold text-gray-800 border-b border-white/30 pb-1">Rechnungssteller</h4>
+                    <p className="text-sm text-gray-700"><span className="font-medium text-gray-600">Name:</span> {formData.senderName}</p>
+                    <p className="text-sm text-gray-700"><span className="font-medium text-gray-600">Adresse:</span> {formData.senderStreet}, {formData.senderZip} {formData.senderCity}</p>
+                     <div className="pt-2">
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Kreditorennummer</label>
+                        <input type="text" value={kreditorId || ''} onChange={(e) => setKreditorId(e.target.value)} className="w-full p-3 rounded-xl bg-white/50 text-gray-800 border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                </div>
+            </div>
+            <div className="space-y-2 pt-4">
+                <h4 className="font-semibold text-gray-800 border-b border-white/30 pb-1">KI-Zusammenfassung</h4>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{invoiceSummary}</p>
+            </div>
+            <div className="flex justify-end space-x-4 pt-4">
+                <button onClick={() => setShowSapIdModal(false)} className="px-4 py-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold transition-colors">Abbrechen</button>
+                <button onClick={handleConfirmSapIdsAndGenerateXml} className="px-4 py-2 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors">OK & Erzeugen</button>
+            </div>
+        </div>
+    </div>
+  );
+  
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+        case 'home':
+            return <HomePage
+                formData={formData} formRef={formRef} previewContainerRef={previewContainerRef} previewContentRef={previewContentRef} previewTransform={previewTransform}
+                loadingPrefill={loadingPrefill} handlePrefill={handlePrefill} handleReset={handleReset} handleUploadClick={handleUploadClick} fileInputRef={fileInputRef}
+                handleFileUpload={handleFileUpload} handleInputChange={handleInputChange} handleLineItemChange={handleLineItemChange} addLineItem={addLineItem}
+                removeLineItem={removeLineItem} loading={loading} generateXRechnungUBL={generateXRechnungUBL} loadingSummary={loadingSummary}
+                handleOpenSapModal={handleOpenSapModal} sapXml={sapXml} handleCopy={handleCopy} handleDownload={handleDownload} xrechnungXML={xrechnungXML}
+                selectedLayout={selectedLayout} unmappedFields={unmappedFields}
+            />;
+        case 'layoutSelection': return renderLayoutSelectionPage();
+        case 'eRechnungMapping': return renderERechnungMappingPage();
+        case 'sapMapping': return renderSapMappingPage();
+        default: return <div>Seite nicht gefunden</div>;
+    }
+  };
+
+  return (
+    <div className="min-h-screen text-gray-800 font-sans app-background">
+      <div id="feedback-overlay" className={`fixed inset-0 pointer-events-none z-[200] transition-all duration-500 ${uploadStatus === 'success' ? 'glow-success' : uploadStatus === 'incomplete' ? 'glow-incomplete' : 'opacity-0'}`} />
+      <nav className="bg-white/60 backdrop-blur-xl border-b border-white/30 shadow-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <h1 className="text-2xl font-bold text-gray-800 tracking-wider">e-Rechnung</h1>
+            <div className="flex items-center space-x-2">
+              <button onClick={() => setCurrentPage('home')} className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'home' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200/80'}`}><Home size={18} /><span>Home</span></button>
+              <button onClick={() => setCurrentPage('layoutSelection')} className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'layoutSelection' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200/80'}`}><LayoutTemplate size={18} /><span>Layout</span></button>
+              <button onClick={() => setCurrentPage('eRechnungMapping')} className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'eRechnungMapping' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200/80'}`}><FileCode size={18} /><span>E-Rechnungs-Mapping</span></button>
+              <button onClick={() => setCurrentPage('sapMapping')} className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'sapMapping' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200/80'}`}><Table size={18} /><span>SAP-Mapping</span></button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto p-4 md:p-8">
+        {message && (
+          <div className={`fixed top-20 right-4 z-[100] p-4 rounded-lg shadow-lg flex items-start space-x-2 transition-all duration-300 backdrop-blur-xl border border-white/30 text-white ${messageType === 'success' ? 'bg-green-500/80' : messageType === 'error' ? 'bg-red-500/80' : 'bg-blue-500/80'}`}>
+            {messageType === 'success' && <CheckCircle size={20} className="mt-1 flex-shrink-0" />}
+            {messageType === 'error' && <AlertCircle size={20} className="mt-1 flex-shrink-0" />}
+            {messageType === 'info' && <Info size={20} className="mt-1 flex-shrink-0" />}
+            <span className="whitespace-pre-wrap">{message}</span>
+          </div>
+        )}
+
+        {uploadStatus === 'success' && (
+          <div className="fixed inset-0 z-40 overflow-hidden pointer-events-none">
+            {[...Array(50)].map((_, i) => (<div key={i} className="absolute rocket-firework" style={{left: `${Math.random() * 100}vw`, top: `${Math.random() * 100}vh`, animationDelay: `${Math.random() * 0.5}s`}} />))}
+          </div>
+        )}
+
+        {showSapIdModal && renderSapIdModal()}
+
+        <div className="bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg p-6 md:p-10 mb-8">
+          {renderCurrentPage()}
+        </div>
+      </main>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        .app-background {
+          background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070&auto=format&fit=crop');
+          background-size: cover; background-position: center; background-attachment: fixed;
+        }
+        .app-background::before {
+          content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background-color: rgba(0,0,0,0.1); z-index: -1;
+        }
+        .glow-success { box-shadow: inset 0 0 20px 10px rgba(74, 222, 128, 0.7); opacity: 1; }
+        .glow-incomplete { box-shadow: inset 0 0 20px 10px rgba(239, 68, 68, 0.7); opacity: 1; }
+        @keyframes rocket { 0% { transform: translateY(0) scale(0.5); opacity: 1; } 100% { transform: translateY(-100px) scale(1.5); opacity: 0; } }
+        .rocket-firework::before { content: '🚀'; font-size: 2rem; position: absolute; }
+        .rocket-firework { animation: rocket 1s ease-out forwards; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, 0.2); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
+        ::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 0, 0, 0.4); }
+      `}</style>
+    </div>
+  );
+};
+
+export default App;
+// #endregion
