@@ -104,75 +104,631 @@ const eRechnungMappingData = [
     { id: 38, btId: 'BT-153', description: 'Artikelname der Position', xrechnungPath: '.../Item/cbc:Name', zugferdPath: '.../ram:SpecifiedTradeProduct/ram:Name' },
 ].sort((a, b) => parseInt(a.btId.substring(3)) - parseInt(b.btId.substring(3)));
 
-// Standard-Mapping für SAP-XML
+// Verfügbare Platzhalter mit Kategorien für intelligente Verwaltung
+const availablePlaceholders = {
+  rechnungsdaten: [
+    { key: 'invoiceDate', label: 'Rechnungsdatum', example: '2025-01-15' },
+    { key: 'reference', label: 'Rechnungsnummer', example: 'RE-2025-001' },
+    { key: 'serviceDate', label: 'Leistungsdatum', example: '2025-01-15' },
+    { key: 'invoiceTypeCode', label: 'Rechnungstyp', example: '380' },
+    { key: 'invoiceCurrencyCode', label: 'Währung', example: 'EUR' },
+    { key: 'totalNetAmount', label: 'Nettobetrag', example: '1000.00' },
+    { key: 'totalTaxAmount', label: 'Steuerbetrag', example: '190.00' },
+    { key: 'grossAmount', label: 'Bruttobetrag', example: '1190.00' },
+    { key: 'taxRate', label: 'Steuersatz', example: '19' }
+  ],
+  sender: [
+    { key: 'senderName', label: 'Sendername', example: 'Musterfirma GmbH' },
+    { key: 'senderStreet', label: 'Senderstraße', example: 'Hauptstraße 10' },
+    { key: 'senderZip', label: 'Sender PLZ', example: '12345' },
+    { key: 'senderCity', label: 'Senderort', example: 'Berlin' },
+    { key: 'senderCountry', label: 'Senderland', example: 'DE' },
+    { key: 'senderTaxId', label: 'Sender Steuernummer', example: 'DE123456789' },
+    { key: 'senderContactName', label: 'Sender Kontakt', example: 'Max Mustermann' },
+    { key: 'senderContactPhone', label: 'Sender Telefon', example: '+49 30 1234567' },
+    { key: 'senderContactEmail', label: 'Sender E-Mail', example: 'max@firma.de' }
+  ],
+  empfaenger: [
+    { key: 'recipientName', label: 'Empfängername', example: 'Kunde AG' },
+    { key: 'recipientStreet', label: 'Empfängerstraße', example: 'Beispielweg 5' },
+    { key: 'recipientZip', label: 'Empfänger PLZ', example: '67890' },
+    { key: 'recipientCity', label: 'Empfängerort', example: 'München' },
+    { key: 'recipientCountry', label: 'Empfängerland', example: 'DE' },
+    { key: 'leitwegId', label: 'Leitweg-ID', example: '04011000-12345-67' }
+  ],
+  zahlungsdaten: [
+    { key: 'iban', label: 'IBAN', example: 'DE12345678901234567890' },
+    { key: 'bic', label: 'BIC', example: 'DEUTDEFFXXX' },
+    { key: 'paymentTerms', label: 'Zahlungsbedingungen', example: 'Zahlbar in 30 Tagen' },
+    { key: 'paymentMeansCode', label: 'Zahlungsart Code', example: '30' }
+  ],
+  sap_spezifisch: [
+    { key: 'kreditorId', label: 'Kreditorennummer', example: 'K12345' },
+    { key: 'buchungskreisId', label: 'Buchungskreis', example: '1000' }
+  ]
+};
+
+// Hierarchische XML-Struktur für SAP-Mapping (basierend auf ursprünglicher Reihenfolge)
 const defaultSapMapping = [
-    { id: -15, xRechnungField: 'Segment öffnen (DOCUMENT)', value: '', targetXmlField: 'DOCUMENT', type: 'openSegment' },
-    { id: -14, xRechnungField: 'Client', value: '384', targetXmlField: 'CLIENT', type: 'field' },
-    { id: -13, xRechnungField: 'SENDER_GLN', value: '12345', targetXmlField: 'SENDER_GLN', type: 'field' },
-    { id: -12, xRechnungField: 'RECIPIENT_GLN', value: '12345', targetXmlField: 'RECIPIENT_GLN', type: 'field' },
-    { id: -11, xRechnungField: 'SETTLEMENT_PERIOD', value: '0', targetXmlField: 'SETTLEMENT_PERIOD', type: 'field' },
-    { id: -10, xRechnungField: 'TRANSMISSION_TYPE', value: 'TEST', targetXmlField: 'TRANSMISSION_TYPE', type: 'field' },
-    { id: -9, xRechnungField: 'TRANSMISSION_CYCLE', value: '1', targetXmlField: 'TRANSMISSION_CYCLE', type: 'field' },
-    { id: -8, xRechnungField: 'Segment öffnen (DOCUMENT_HEADER)', value: '', targetXmlField: 'DOCUMENT_HEADER', type: 'openSegment' },
-    { id: -7, xRechnungField: 'ARCHIV_NO', value: '123456789', targetXmlField: 'ARCHIV_NO', type: 'field' },
-    { id: -6, xRechnungField: 'Segment öffnen (DOCUMENT_INFO)', value: '', targetXmlField: 'DOCUMENT_INFO', type: 'openSegment' },
-    { id: -5, xRechnungField: 'PROCEDURE', value: 'XML', targetXmlField: 'PROCEDURE', type: 'field' },
-    { id: -4, xRechnungField: 'INPUT_TYPE', value: 'I', targetXmlField: 'INPUT_TYPE', type: 'field' },
-    { id: -3, xRechnungField: 'DOC_TYPE', value: 'DOC_TYPE', targetXmlField: 'DOC_TYPE', type: 'field' },
-    { id: -2, xRechnungField: 'DOC_DATE_ARRIVAL', value: '$TODAY', targetXmlField: 'DOC_DATE_ARRIVAL', type: 'field' },
-    { id: -1, xRechnungField: 'Segment öffnen (ORDER_DELIVERY_LIST)', value: '', targetXmlField: 'ORDER_DELIVERY_LIST', type: 'openSegment' },
-    { id: 39, xRechnungField: 'Segment öffnen (ORDER_DELIVERY_ITEM)', value: '', targetXmlField: 'ORDER_DELIVERY_ITEM', type: 'openSegment' },
-    { id: 40, xRechnungField: 'Segment schließen (ORDER_DELIVERY_ITEM)', value: '', targetXmlField: 'ORDER_DELIVERY_ITEM', type: 'closeSegment' },
-    { id: 41, xRechnungField: 'Segment schließen (ORDER_DELIVERY_LIST)', value: '', targetXmlField: 'ORDER_DELIVERY_LIST', type: 'closeSegment' },
-    { id: 42, xRechnungField: 'Segment schließen (DOCUMENT_INFO)', value: '', targetXmlField: 'DOCUMENT_INFO', type: 'closeSegment' },
-    { id: 43, xRechnungField: 'Segment öffnen (CUSTOMER_SPECIFICATION)', value: '', targetXmlField: 'CUSTOMER_SPECIFICATION', type: 'openSegment' },
-    { id: 44, xRechnungField: 'ENTRY_TYP', value: 'DOC', targetXmlField: 'ENTRY_TYP', type: 'field' },
-    { id: 45, xRechnungField: 'COUNTRY', value: 'DE', targetXmlField: 'COUNTRY', type: 'field' },
-    { id: 46, xRechnungField: 'Segment schließen (CUSTOMER_SPECIFICATION)', value: '', targetXmlField: 'CUSTOMER_SPECIFICATION', type: 'closeSegment' },
-    { id: 1, xRechnungField: 'Segment öffnen (IDoc)', value: '', targetXmlField: 'IDOC', type: 'openSegment' },
-    { id: 2, xRechnungField: 'Segment öffnen (E1INVOICE)', value: '', targetXmlField: 'E1INVOICE', type: 'openSegment' },
-    { id: 3, xRechnungField: 'Rechnungsdatum', value: '{{invoiceDate}}', targetXmlField: 'DOC_DATE', type: 'field' },
-    { id: 4, xRechnungField: 'Segment öffnen (party) - Empfänger', value: '', targetXmlField: 'PARTY', type: 'openSegment' },
-    { id: 5, xRechnungField: 'Empfänger Typ', value: 'Recipient', targetXmlField: 'TYPE', type: 'field' },
-    { id: 6, xRechnungField: 'Empfänger Name', value: '{{recipientName}}', targetXmlField: 'NAME1', type: 'field' },
-    { id: 7, xRechnungField: 'Empfänger Straße', value: '{{recipientStreet}}', targetXmlField: 'STREET', type: 'field' },
-    { id: 8, xRechnungField: 'Empfänger Land', value: 'DE', targetXmlField: 'COUNTRY', type: 'field' },
-    { id: 9, xRechnungField: 'Empfänger PLZ', value: '{{recipientZip}}', targetXmlField: 'ZIP', type: 'field' },
-    { id: 10, xRechnungField: 'Empfänger Ort', value: '{{recipientCity}}', targetXmlField: 'CITY', type: 'field' },
-    { id: 11, xRechnungField: 'Buchungskreisnummer', value: '{{buchungskreisId}}', targetXmlField: 'CUST_INTERNAL_ID', type: 'field' },
-    { id: 12, xRechnungField: 'Segment schließen (party) - Empfänger', value: '', targetXmlField: 'PARTY', type: 'closeSegment' },
-    { id: 13, xRechnungField: 'Segment öffnen (party) - Steller', value: '', targetXmlField: 'PARTY', type: 'openSegment' },
-    { id: 14, xRechnungField: 'Steller Typ', value: 'Sender', targetXmlField: 'TYPE', type: 'field' },
-    { id: 15, xRechnungField: 'Steller Name', value: '{{senderName}}', targetXmlField: 'NAME1', type: 'field' },
-    { id: 16, xRechnungField: 'Steller Straße', value: '{{senderStreet}}', targetXmlField: 'STREET', type: 'field' },
-    { id: 17, xRechnungField: 'Steller Land', value: 'DE', targetXmlField: 'COUNTRY', type: 'field' },
-    { id: 18, xRechnungField: 'Steller PLZ', value: '{{senderZip}}', targetXmlField: 'ZIP', type: 'field' },
-    { id: 19, xRechnungField: 'Steller Ort', value: '{{senderCity}}', targetXmlField: 'CITY', type: 'field' },
-    { id: 20, xRechnungField: 'Kreditorennummer', value: '{{kreditorId}}', targetXmlField: 'CUST_INTERNAL_ID', type: 'field' },
-    { id: 21, xRechnungField: 'Segment schließen (party) - Steller', value: '', targetXmlField: 'PARTY', type: 'closeSegment' },
-    { id: 22, xRechnungField: 'Segment schließen (PARTIES)', value: '', targetXmlField: 'PARTIES', type: 'closeSegment' },
-    { id: 23, xRechnungField: 'Segment öffnen (bank_info)', value: '', targetXmlField: 'BANK_INFO', type: 'openSegment' },
-    { id: 24, xRechnungField: 'IBAN', value: '{{iban}}', targetXmlField: 'BANK_IBAN', type: 'field' },
-    { id: 25, xRechnungField: 'BIC', value: '{{bic}}', targetXmlField: 'BANK_SWIFT_BIC', type: 'field' },
-    { id: 26, xRechnungField: 'Segment schließen (bank_info)', value: '', targetXmlField: 'BANK_INFO', type: 'closeSegment' },
-    { id: 27, xRechnungField: 'Segment öffnen (payment_info)', value: '', targetXmlField: 'PAYMENT_INFO', type: 'openSegment' },
-    { id: 28, xRechnungField: 'Leistungsdatum', value: '{{serviceDate}}', targetXmlField: 'PERFORMANCE_DATE_TO', type: 'field' },
-    { id: 29, xRechnungField: 'Segment schließen (payment_info)', value: '', targetXmlField: 'PAYMENT_INFO', type: 'closeSegment' },
-    { id: 30, xRechnungField: 'Segment schließen (DOCUMENT_HEADER)', value: '', targetXmlField: 'DOCUMENT_HEADER', type: 'closeSegment' },
-    { id: 31, xRechnungField: 'Segment öffnen (document_footer)', value: '', targetXmlField: 'DOCUMENT_FOOTER', type: 'openSegment' },
-    { id: 32, xRechnungField: 'Segment öffnen (document_summary)', value: '', targetXmlField: 'DOCUMENT_SUMMARY', type: 'openSegment' },
-    { id: 33, xRechnungField: 'Währung', value: '{{invoiceCurrencyCode}}', targetXmlField: 'DOC_CURRENCY', type: 'field' },
-    { id: 34, xRechnungField: 'VAT_COUNTRY', value: 'DE', targetXmlField: 'VAT_COUNTRY', type: 'field' },
-    { id: 35, xRechnungField: 'Bruttobetrag', value: '{{grossAmount}}', targetXmlField: 'TOTAL_GROSS', type: 'field' },
-    { id: 36, xRechnungField: 'Nettobetrag', value: '{{totalNetAmount}}', targetXmlField: 'TOTAL_NET', type: 'field' },
-    { id: 37, xRechnungField: 'MwSt Betrag', value: '{{totalTaxAmount}}', targetXmlField: 'TOTAL_VAT', type: 'field' },
-    { id: 38, xRechnungField: 'Segment schließen (DOCUMENT_SUMMARY)', value: '', targetXmlField: 'DOCUMENT_SUMMARY', type: 'closeSegment' }
+  {
+    id: 'doc-root',
+    type: 'container',
+    name: 'DOCUMENT',
+    label: 'Segment öffnen (DOCUMENT)',
+    level: 0,
+    children: [
+      {
+        id: 'client',
+        type: 'field',
+        name: 'CLIENT',
+        label: 'Client',
+        value: '384',
+        level: 1,
+        dataType: 'string'
+      },
+      {
+        id: 'sender-gln',
+        type: 'field',
+        name: 'SENDER_GLN',
+        label: 'SENDER_GLN',
+        value: '12345',
+        level: 1,
+        dataType: 'string'
+      },
+      {
+        id: 'recipient-gln',
+        type: 'field',
+        name: 'RECIPIENT_GLN',
+        label: 'RECIPIENT_GLN',
+        value: '12345',
+        level: 1,
+        dataType: 'string'
+      },
+      {
+        id: 'settlement-period',
+        type: 'field',
+        name: 'SETTLEMENT_PERIOD',
+        label: 'SETTLEMENT_PERIOD',
+        value: '0',
+        level: 1,
+        dataType: 'string'
+      },
+      {
+        id: 'transmission-type',
+        type: 'field',
+        name: 'TRANSMISSION_TYPE',
+        label: 'TRANSMISSION_TYPE',
+        value: 'TEST',
+        level: 1,
+        dataType: 'string'
+      },
+      {
+        id: 'transmission-cycle',
+        type: 'field',
+        name: 'TRANSMISSION_CYCLE',
+        label: 'TRANSMISSION_CYCLE',
+        value: '1',
+        level: 1,
+        dataType: 'string'
+      },
+      {
+        id: 'doc-header',
+        type: 'container',
+        name: 'DOCUMENT_HEADER',
+        label: 'Segment öffnen (DOCUMENT_HEADER)',
+        level: 1,
+        children: [
+          {
+            id: 'archiv-no',
+            type: 'field',
+            name: 'ARCHIV_NO',
+            label: 'ARCHIV_NO',
+            value: '123456789',
+            level: 2,
+            dataType: 'string'
+          },
+          {
+            id: 'doc-info',
+            type: 'container',
+            name: 'DOCUMENT_INFO',
+            label: 'Segment öffnen (DOCUMENT_INFO)',
+            level: 2,
+            children: [
+              {
+                id: 'procedure',
+                type: 'field',
+                name: 'PROCEDURE',
+                label: 'PROCEDURE',
+                value: 'XML',
+                level: 3,
+                dataType: 'string'
+              },
+              {
+                id: 'input-type',
+                type: 'field',
+                name: 'INPUT_TYPE',
+                label: 'INPUT_TYPE',
+                value: 'I',
+                level: 3,
+                dataType: 'string'
+              },
+              {
+                id: 'doc-type',
+                type: 'field',
+                name: 'DOC_TYPE',
+                label: 'DOC_TYPE',
+                value: 'DOC_TYPE',
+                level: 3,
+                dataType: 'string'
+              },
+              {
+                id: 'doc-date-arrival',
+                type: 'field',
+                name: 'DOC_DATE_ARRIVAL',
+                label: 'DOC_DATE_ARRIVAL',
+                value: '$TODAY',
+                level: 3,
+                dataType: 'string'
+              }
+            ]
+          },
+          {
+            id: 'order-delivery-list',
+            type: 'container',
+            name: 'ORDER_DELIVERY_LIST',
+            label: 'Segment öffnen (ORDER_DELIVERY_LIST)',
+            level: 2,
+            children: [
+              {
+                id: 'order-delivery-item',
+                type: 'container',
+                name: 'ORDER_DELIVERY_ITEM',
+                label: 'Segment öffnen (ORDER_DELIVERY_ITEM)',
+                level: 3,
+                children: []
+              }
+            ]
+          },
+          {
+            id: 'customer-spec',
+            type: 'container',
+            name: 'CUSTOMER_SPECIFICATION',
+            label: 'Segment öffnen (CUSTOMER_SPECIFICATION)',
+            level: 2,
+            children: [
+              {
+                id: 'entry-typ',
+                type: 'field',
+                name: 'ENTRY_TYP',
+                label: 'ENTRY_TYP',
+                value: 'DOC',
+                level: 3,
+                dataType: 'string'
+              },
+              {
+                id: 'country',
+                type: 'field',
+                name: 'COUNTRY',
+                label: 'COUNTRY',
+                value: 'DE',
+                level: 3,
+                dataType: 'string'
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'idoc-container',
+        type: 'container',
+        name: 'IDOC',
+        label: 'Segment öffnen (IDoc)',
+        level: 1,
+        children: [
+          {
+            id: 'e1invoice',
+            type: 'container',
+            name: 'E1INVOICE',
+            label: 'Segment öffnen (E1INVOICE)',
+            level: 2,
+            children: [
+              {
+                id: 'doc-date',
+                type: 'field',
+                name: 'DOC_DATE',
+                label: 'Rechnungsdatum',
+                value: '{{invoiceDate}}',
+                level: 3,
+                dataType: 'date'
+              },
+              {
+                id: 'party-recipient',
+                type: 'container',
+                name: 'PARTY',
+                label: 'Segment öffnen (party) - Empfänger',
+                level: 3,
+                children: [
+                  {
+                    id: 'recipient-type',
+                    type: 'field',
+                    name: 'TYPE',
+                    label: 'Empfänger Typ',
+                    value: 'Recipient',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'recipient-name1',
+                    type: 'field',
+                    name: 'NAME1',
+                    label: 'Empfänger Name',
+                    value: '{{recipientName}}',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'recipient-street',
+                    type: 'field',
+                    name: 'STREET',
+                    label: 'Empfänger Straße',
+                    value: '{{recipientStreet}}',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'recipient-country',
+                    type: 'field',
+                    name: 'COUNTRY',
+                    label: 'Empfänger Land',
+                    value: 'DE',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'recipient-zip',
+                    type: 'field',
+                    name: 'ZIP',
+                    label: 'Empfänger PLZ',
+                    value: '{{recipientZip}}',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'recipient-city',
+                    type: 'field',
+                    name: 'CITY',
+                    label: 'Empfänger Ort',
+                    value: '{{recipientCity}}',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'recipient-internal-id',
+                    type: 'field',
+                    name: 'CUST_INTERNAL_ID',
+                    label: 'Buchungskreisnummer',
+                    value: '{{buchungskreisId}}',
+                    level: 4,
+                    dataType: 'string'
+                  }
+                ]
+              },
+              {
+                id: 'party-sender',
+                type: 'container',
+                name: 'PARTY',
+                label: 'Segment öffnen (party) - Steller',
+                level: 3,
+                children: [
+                  {
+                    id: 'sender-type',
+                    type: 'field',
+                    name: 'TYPE',
+                    label: 'Steller Typ',
+                    value: 'Sender',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'sender-name1',
+                    type: 'field',
+                    name: 'NAME1',
+                    label: 'Steller Name',
+                    value: '{{senderName}}',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'sender-street',
+                    type: 'field',
+                    name: 'STREET',
+                    label: 'Steller Straße',
+                    value: '{{senderStreet}}',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'sender-country',
+                    type: 'field',
+                    name: 'COUNTRY',
+                    label: 'Steller Land',
+                    value: 'DE',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'sender-zip',
+                    type: 'field',
+                    name: 'ZIP',
+                    label: 'Steller PLZ',
+                    value: '{{senderZip}}',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'sender-city',
+                    type: 'field',
+                    name: 'CITY',
+                    label: 'Steller Ort',
+                    value: '{{senderCity}}',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'sender-internal-id',
+                    type: 'field',
+                    name: 'CUST_INTERNAL_ID',
+                    label: 'Kreditorennummer',
+                    value: '{{kreditorId}}',
+                    level: 4,
+                    dataType: 'string'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'bank-info',
+        type: 'container',
+        name: 'BANK_INFO',
+        label: 'Segment öffnen (bank_info)',
+        level: 1,
+        children: [
+          {
+            id: 'bank-iban',
+            type: 'field',
+            name: 'BANK_IBAN',
+            label: 'IBAN',
+            value: '{{iban}}',
+            level: 2,
+            dataType: 'string'
+          },
+          {
+            id: 'bank-bic',
+            type: 'field',
+            name: 'BANK_SWIFT_BIC',
+            label: 'BIC',
+            value: '{{bic}}',
+            level: 2,
+            dataType: 'string'
+          }
+        ]
+      },
+      {
+        id: 'payment-info',
+        type: 'container',
+        name: 'PAYMENT_INFO',
+        label: 'Segment öffnen (payment_info)',
+        level: 1,
+        children: [
+          {
+            id: 'performance-date',
+            type: 'field',
+            name: 'PERFORMANCE_DATE_TO',
+            label: 'Leistungsdatum',
+            value: '{{serviceDate}}',
+            level: 2,
+            dataType: 'date'
+          }
+        ]
+      },
+      {
+        id: 'doc-footer',
+        type: 'container',
+        name: 'DOCUMENT_FOOTER',
+        label: 'Segment öffnen (document_footer)',
+        level: 1,
+        children: [
+          {
+            id: 'doc-summary',
+            type: 'container',
+            name: 'DOCUMENT_SUMMARY',
+            label: 'Segment öffnen (document_summary)',
+            level: 2,
+            children: [
+              {
+                id: 'doc-currency',
+                type: 'field',
+                name: 'DOC_CURRENCY',
+                label: 'Währung',
+                value: '{{invoiceCurrencyCode}}',
+                level: 3,
+                dataType: 'string'
+              },
+              {
+                id: 'vat-country',
+                type: 'field',
+                name: 'VAT_COUNTRY',
+                label: 'VAT_COUNTRY',
+                value: 'DE',
+                level: 3,
+                dataType: 'string'
+              },
+              {
+                id: 'total-gross',
+                type: 'field',
+                name: 'TOTAL_GROSS',
+                label: 'Bruttobetrag',
+                value: '{{grossAmount}}',
+                level: 3,
+                dataType: 'currency'
+              },
+              {
+                id: 'total-net',
+                type: 'field',
+                name: 'TOTAL_NET',
+                label: 'Nettobetrag',
+                value: '{{totalNetAmount}}',
+                level: 3,
+                dataType: 'currency'
+              },
+              {
+                id: 'total-vat',
+                type: 'field',
+                name: 'TOTAL_VAT',
+                label: 'MwSt Betrag',
+                value: '{{totalTaxAmount}}',
+                level: 3,
+                dataType: 'currency'
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
 ];
 
 // #endregion
 
 // #region HELPER COMPONENTS & FUNCTIONS
 // ============================================================================
+
+// XML Escape Funktion (muss früh definiert werden)
+const escapeXml = (unsafe) => {
+  if (typeof unsafe !== 'string') return unsafe;
+  return unsafe.replace(/[<>&"']/g, (c) => ({'<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;'})[c] || c);
+};
+
+// Platzhalter-Selector Komponente
+const PlaceholderSelector = ({ value, onChange, disabled = false }) => (
+  <div className="relative">
+    <div className="text-xs text-gray-600 font-medium mb-1">Oder Platzhalter auswählen:</div>
+    <select 
+      value={value && value.startsWith('{{') ? value : ''} 
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      className="w-full p-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-500"
+    >
+      <option value="">-- Platzhalter auswählen --</option>
+      {Object.entries(availablePlaceholders).map(([category, items]) => (
+        <optgroup key={category} label={category.charAt(0).toUpperCase() + category.slice(1)}>
+          {items.map(item => (
+            <option key={item.key} value={`{{${item.key}}}`}>
+              {item.label} (z.B. {item.example})
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
+  </div>
+);
+
+// Verbesserte XML-Generierung mit rekursiver Struktur
+const generateSapXmlFromMapping = (mapping, formData, additionalData = {}) => {
+  const replaceVariables = (template, data) => {
+    if (!template || typeof template !== 'string') return template;
+    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+      const value = data[key] || additionalData[key];
+      if (value === undefined) {
+        console.warn(`Platzhalter ${key} nicht gefunden`);
+        return match;
+      }
+      return escapeXml(String(value));
+    });
+  };
+
+  const generateXmlRecursive = (items, level = 0) => {
+    const indent = '  '.repeat(level);
+    let xml = '';
+
+    items.forEach(item => {
+      if (item.type === 'container' && item.children && item.children.length > 0) {
+        xml += `${indent}<${item.name}>\n`;
+        xml += generateXmlRecursive(item.children, level + 1);
+        xml += `${indent}</${item.name}>\n`;
+      } else if (item.type === 'field' && item.name) {
+        const value = replaceVariables(item.value || '', formData);
+        xml += `${indent}<${item.name}>${value}</${item.name}>\n`;
+      }
+    });
+
+    return xml;
+  };
+
+  const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  return xmlHeader + generateXmlRecursive(mapping);
+};
+
+// XML-Vorschau Generierung für Live-Preview
+const generateXmlPreview = (mapping, maxLines = 20) => {
+  const generatePreviewRecursive = (items, level = 0) => {
+    const indent = '  '.repeat(level);
+    let lines = [];
+
+    items.forEach((item, index) => {
+      if (lines.length >= maxLines) return;
+      
+      if (item.type === 'container') {
+        lines.push(`${indent}<${item.name}>`);
+        if (item.children && item.children.length > 0 && lines.length < maxLines) {
+          lines.push(...generatePreviewRecursive(item.children, level + 1));
+        }
+        if (lines.length < maxLines) {
+          lines.push(`${indent}</${item.name}>`);
+        }
+      } else if (item.type === 'field') {
+        const displayValue = item.value || '[leer]';
+        lines.push(`${indent}<${item.name}>${displayValue}</${item.name}>`);
+      }
+    });
+
+    return lines;
+  };
+
+  const lines = generatePreviewRecursive(mapping);
+  if (lines.length >= maxLines) {
+    lines.push('  ... (weitere Zeilen)');
+  }
+  return lines.join('\n');
+};
+
+// Hilfsfunktion zum Finden von Elementen in der Hierarchie
+const findElementById = (mapping, id) => {
+  for (const item of mapping) {
+    if (item.id === id) return item;
+    if (item.children) {
+      const found = findElementById(item.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+// Hilfsfunktion zum Aktualisieren von Elementen in der Hierarchie
+const updateElementInMapping = (mapping, id, field, value) => {
+  return mapping.map(item => {
+    if (item.id === id) {
+      return { ...item, [field]: value };
+    }
+    if (item.children) {
+      return { ...item, children: updateElementInMapping(item.children, id, field, value) };
+    }
+    return item;
+  });
+};
 
 // Hilfskomponente für Formularfelder mit BT-ID
 const FormField = ({ name, label, value, onChange, placeholder, type = "text", btId, children, disabled = false, isUnmapped = false }) => (
@@ -931,6 +1487,63 @@ const App = () => {
     showMessage('Mapping-Tabelle auf Standardwerte zurückgesetzt!', 'success');
   };
 
+  // Neue Handler-Funktionen für hierarchisches SAP-Mapping
+  const updateMappingElement = (id, field, value) => {
+    setSapMapping(prev => updateElementInMapping(prev, id, field, value));
+  };
+
+  const addRootElement = (type) => {
+    const newElement = {
+      id: `new-${Date.now()}`,
+      type: type,
+      name: type === 'container' ? 'NEW_CONTAINER' : 'NEW_FIELD',
+      label: type === 'container' ? 'Neuer Container' : 'Neues Feld',
+      value: type === 'field' ? '' : undefined,
+      level: 0,
+      children: type === 'container' ? [] : undefined
+    };
+    setSapMapping(prev => [...prev, newElement]);
+  };
+
+  const addChildElement = (parentId, type) => {
+    const newElement = {
+      id: `child-${Date.now()}`,
+      type: type,
+      name: type === 'container' ? 'NEW_CONTAINER' : 'NEW_FIELD',
+      label: type === 'container' ? 'Neuer Container' : 'Neues Feld',
+      value: type === 'field' ? '' : undefined,
+      level: 1, // wird dynamisch berechnet
+      children: type === 'container' ? [] : undefined
+    };
+
+    const addChild = (items) => {
+      return items.map(item => {
+        if (item.id === parentId && item.type === 'container') {
+          return {
+            ...item,
+            children: [...(item.children || []), newElement]
+          };
+        }
+        if (item.children) {
+          return {
+            ...item,
+            children: addChild(item.children)
+          };
+        }
+        return item;
+      });
+    };
+
+    setSapMapping(prev => addChild(prev));
+  };
+
+  const removeMappingElement = (id) => {
+    setRowToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+
+
   const handleFileUpload = (e) => {
     console.log('=== DATEI UPLOAD GESTARTET ===');
     const file = e.target.files[0];
@@ -1391,10 +2004,7 @@ const App = () => {
     return true;
   };
   
-  const escapeXml = (unsafe) => {
-    if (typeof unsafe !== 'string') return unsafe;
-    return unsafe.replace(/[<>&"']/g, (c) => ({'<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;'})[c] || c);
-  };
+
 
   const generateXRechnungUBL = async () => {
     if (!validateFormData()) return;
@@ -1593,12 +2203,24 @@ const App = () => {
   };
   
   const confirmRemoveRow = () => {
-    if (rowToDelete !== null) {
-      setSapMapping(prev => prev.filter((_, i) => i !== rowToDelete));
-      showMessage('Zeile erfolgreich gelöscht!', 'success');
+    if (rowToDelete) {
+      const removeElement = (items) => {
+        return items.filter(item => {
+          if (item.id === rowToDelete) {
+            return false;
+          }
+          if (item.children) {
+            item.children = removeElement(item.children);
+          }
+          return true;
+        });
+      };
+
+      setSapMapping(prev => removeElement(prev));
+      setRowToDelete(null);
+      showMessage('Element erfolgreich gelöscht!', 'success');
     }
     setShowDeleteModal(false);
-    setRowToDelete(null);
   };
   
   const handleMappingChange = (index, field, value) => {
@@ -1922,78 +2544,227 @@ const App = () => {
     </div>
   );
 
+  // Hierarchische Baum-Darstellung für SAP-Mapping
+  const renderMappingTree = (items, level = 0) => {
+    return items.map((item) => (
+      <div key={item.id} className="mb-2">
+        <div 
+          className={`flex items-start space-x-3 p-4 rounded-lg border transition-all duration-200 ${
+            item.type === 'container' 
+              ? 'bg-blue-50/50 border-blue-200 hover:bg-blue-50/80' 
+              : 'bg-green-50/50 border-green-200 hover:bg-green-50/80'
+          }`}
+          style={{ marginLeft: `${level * 20}px` }}
+        >
+          {/* Typ-Badge */}
+          <span className={`px-2 py-1 rounded text-xs font-semibold ${
+            item.type === 'container' 
+              ? 'bg-blue-100 text-blue-800' 
+              : 'bg-green-100 text-green-800'
+          }`}>
+            {item.type === 'container' ? 'Container' : 'Feld'}
+          </span>
+          
+          {/* Element-Name */}
+          <div className="flex-1 min-w-0">
+            <input 
+              type="text"
+              value={item.name || ''} 
+              onChange={(e) => updateMappingElement(item.id, 'name', e.target.value)}
+              placeholder="XML-Element Name"
+              className="w-full p-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="text-xs text-gray-500 mt-1">{item.label || 'Keine Beschreibung'}</div>
+          </div>
+          
+          {/* Wert/Platzhalter (nur für Felder) */}
+          {item.type === 'field' && (
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="text-xs text-gray-600 font-medium">Wert:</div>
+              <input 
+                type="text"
+                value={item.value || ''} 
+                onChange={(e) => updateMappingElement(item.id, 'value', e.target.value)}
+                placeholder="Statischen Wert eingeben oder Platzhalter wählen"
+                className="w-full p-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <PlaceholderSelector 
+                value={item.value || ''} 
+                onChange={(value) => updateMappingElement(item.id, 'value', value)}
+              />
+            </div>
+          )}
+          
+          {/* Aktionen */}
+          <div className="flex space-x-2">
+            {item.type === 'container' && (
+              <button
+                onClick={() => addChildElement(item.id, 'field')}
+                className="p-2 rounded bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+                title="Feld hinzufügen"
+              >
+                <PlusCircle size={16} />
+              </button>
+            )}
+            {item.type === 'container' && (
+              <button
+                onClick={() => addChildElement(item.id, 'container')}
+                className="p-2 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                title="Container hinzufügen"
+              >
+                <PlusCircle size={16} />
+              </button>
+            )}
+            <button
+              onClick={() => removeMappingElement(item.id)}
+              className="p-2 rounded bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+              title="Element löschen"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+        
+        {/* Kinder rekursiv rendern */}
+        {item.children && item.children.length > 0 && (
+          <div className="ml-4 mt-2">
+            {renderMappingTree(item.children, level + 1)}
+          </div>
+        )}
+      </div>
+    ));
+  };
+
   const renderSapMappingPage = () => (
-    <div className="bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg w-full max-w-5xl mx-auto p-6 md:p-8 relative">
+    <div className="bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg w-full max-w-6xl mx-auto p-6 md:p-8 relative">
       <div className="flex items-center justify-between border-b border-white/30 pb-2 mb-4">
-        <h2 className="text-2xl font-semibold text-gray-800">SAP-Mapping-Tabelle</h2>
+        <h2 className="text-2xl font-semibold text-gray-800">SAP-XML Struktur Designer</h2>
       </div>
-      <p className="text-sm text-gray-600 mb-4">
-        Definieren Sie die Struktur der SAP-XML. Verwenden Sie Platzhalter wie <code className="bg-gray-200/50 text-gray-700 p-1 rounded">{'{{senderName}}'}</code>.
-        Änderungen werden sofort übernommen. Die Reihenfolge bestimmt die XML-Struktur.
+      
+      <p className="text-sm text-gray-600 mb-6">
+        Definieren Sie die hierarchische Struktur der SAP-XML. Verwenden Sie die Dropdown-Menüs zur Auswahl von Platzhaltern 
+        oder geben Sie statische Werte ein. Die Struktur wird in Echtzeit als XML-Vorschau angezeigt.
       </p>
-      <div className="flex flex-col md:flex-row md:justify-start gap-4 mb-6">
-        <button onClick={resetToDefaultMapping} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
-          <Import size={20} /><span>Standard wiederherstellen</span>
+      
+      {/* Aktions-Buttons */}
+      <div className="flex flex-wrap gap-4 mb-6">
+        <button 
+          onClick={resetToDefaultMapping} 
+          className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors"
+        >
+          <Import size={20} />
+          <span>Standard wiederherstellen</span>
         </button>
-        <button onClick={() => addMappingRow('field')} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
-          <PlusCircle size={20} /><span>Feld hinzufügen</span>
+        <button 
+          onClick={() => addRootElement('container')} 
+          className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow-md transition-colors"
+        >
+          <PlusCircle size={20} />
+          <span>Container hinzufügen</span>
         </button>
-        <button onClick={handleOpenSapModal} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors shadow-md">
-          <Send size={20} /><span>SAP-XML erzeugen</span>
+        <button 
+          onClick={() => addRootElement('field')} 
+          className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-green-600 text-white hover:bg-green-700 font-semibold shadow-md transition-colors"
+        >
+          <PlusCircle size={20} />
+          <span>Feld hinzufügen</span>
+        </button>
+        <button 
+          onClick={handleOpenSapModal} 
+          className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-orange-600 text-white font-semibold hover:bg-orange-700 transition-colors shadow-md"
+        >
+          <Send size={20} />
+          <span>SAP-XML erzeugen</span>
         </button>
       </div>
-      <div className="overflow-x-auto mb-4">
-        <table className="w-full table-auto border-collapse">
-          <thead>
-            <tr className="border-b border-gray-300/50">
-              <th className="p-3 text-left font-medium text-gray-800">Beschreibung</th>
-              <th className="p-3 text-left font-medium text-gray-800">Wert (Placeholder)</th>
-              <th className="p-3 text-left font-medium text-gray-800">Ziel-XML-Feld</th>
-              <th className="p-3 text-center font-medium w-16 text-gray-800">Aktion</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sapMapping.map((row, index) => (
-              <tr key={row.id} draggable onDragStart={(e) => handleDragStart(e, index)} onDragEnter={(e) => handleDragEnter(e, index)} onDragEnd={handleDragEnd} onDragOver={handleDragOver} className={`border-b border-gray-300/30 hover:bg-white/20 transition-colors cursor-grab ${row.type === 'closeSegment' ? 'bg-red-500/10 text-red-800' : row.type === 'openSegment' ? 'bg-yellow-500/10 text-yellow-800' : ''}`}>
-                <td className="p-2 flex items-center space-x-2">
-                  <Move className="text-gray-500 cursor-move" size={20} />
-                  <input type="text" value={row.xRechnungField || ''} onChange={(e) => handleMappingChange(index, 'xRechnungField', e.target.value)} className="w-full p-2 bg-transparent rounded-lg border border-white/30 focus:outline-none focus:ring-1 focus:ring-blue-500"/>
-                </td>
-                <td className="p-2">
-                  <input type="text" value={row.value || ''} onChange={(e) => handleMappingChange(index, 'value', e.target.value)} disabled={row.type !== 'field'} className="w-full p-2 bg-transparent rounded-lg border border-white/30 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-black/5 disabled:text-gray-500"/>
-                </td>
-                <td className="p-2">
-                  <input type="text" value={row.targetXmlField || ''} onChange={(e) => handleMappingChange(index, 'targetXmlField', e.target.value)} className="w-full p-2 bg-transparent rounded-lg border border-white/30 focus:outline-none focus:ring-1 focus:ring-blue-500"/>
-                </td>
-                <td className="p-2 text-center">
-                  <button onClick={() => showRemoveModal(index)} className="text-red-600 hover:opacity-80"><X size={20} /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Hauptbereich: Struktur-Editor (2/3 der Breite) */}
+        <div className="lg:col-span-2">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">XML-Struktur bearbeiten</h3>
+          <div className="max-h-[600px] overflow-y-auto border border-gray-200 rounded-lg p-4 bg-white/20">
+            {sapMapping.length > 0 ? (
+              renderMappingTree(sapMapping)
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <FileCode size={48} className="mx-auto mb-4 opacity-50" />
+                <p>Noch keine XML-Struktur definiert.</p>
+                <p className="text-sm">Fügen Sie Container oder Felder hinzu, um zu beginnen.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Seitliche Spalte: Kompakte XML-Vorschau (1/3 der Breite) */}
+        <div className="lg:col-span-1">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Live XML-Vorschau</h3>
+          <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 font-mono text-xs max-h-[600px] overflow-y-auto sticky top-4">
+            <pre className="whitespace-pre-wrap text-gray-700 leading-tight">
+              {sapMapping.length > 0 ? generateXmlPreview(sapMapping, 40) : '<!-- Keine Struktur definiert -->'}
+            </pre>
+          </div>
+        </div>
       </div>
+
+      {/* Generierte SAP-XML Ausgabe */}
       {sapXml && (
         <div className="mt-8">
           <h2 className="text-xl font-semibold text-gray-800 border-b border-white/30 pb-2 mb-4">Generierte SAP-XML</h2>
           <div className="relative">
-            <textarea className="w-full h-80 p-4 font-mono text-sm bg-white/50 text-gray-800 rounded-xl border border-white/30 resize-none" value={sapXml} readOnly/>
+            <textarea 
+              className="w-full h-80 p-4 font-mono text-sm bg-white/50 text-gray-800 rounded-xl border border-white/30 resize-none" 
+              value={sapXml} 
+              readOnly
+            />
             <div className="absolute top-2 right-2 flex space-x-2">
-              <button onClick={() => handleCopy(sapXml)} className="p-2 rounded-full bg-black/20 text-gray-700 hover:bg-black/30" title="Kopieren"><Copy size={16} /></button>
-              <button onClick={() => handleDownload(sapXml, 'sap_invoice.xml', 'application/xml')} className="p-2 rounded-full bg-blue-600/80 text-white hover:bg-blue-600" title="Herunterladen"><Download size={16} /></button>
-              <button onClick={() => setSapXml('')} className="p-2 rounded-full bg-white/50 text-gray-700 hover:bg-white/80" title="Leeren"><Trash2 size={16} /></button>
+              <button 
+                onClick={() => handleCopy(sapXml)} 
+                className="p-2 rounded-full bg-black/20 text-gray-700 hover:bg-black/30" 
+                title="Kopieren"
+              >
+                <Copy size={16} />
+              </button>
+              <button 
+                onClick={() => handleDownload(sapXml, 'sap_invoice.xml', 'application/xml')} 
+                className="p-2 rounded-full bg-blue-600/80 text-white hover:bg-blue-600" 
+                title="Herunterladen"
+              >
+                <Download size={16} />
+              </button>
+              <button 
+                onClick={() => setSapXml('')} 
+                className="p-2 rounded-full bg-white/50 text-gray-700 hover:bg-white/80" 
+                title="Leeren"
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
           </div>
         </div>
       )}
+      
+      {/* Lösch-Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white/50 backdrop-blur-xl border border-white/30 rounded-lg p-6 shadow-xl w-80">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Zeile löschen</h3>
-            <p className="text-gray-700 mb-6">Sind Sie sicher, dass Sie diese Zeile löschen möchten? Dieser Vorgang kann nicht rückgängig gemacht werden.</p>
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Element löschen</h3>
+            <p className="text-gray-700 mb-6">
+              Sind Sie sicher, dass Sie dieses Element löschen möchten? 
+              Alle Unterelemente werden ebenfalls entfernt. Dieser Vorgang kann nicht rückgängig gemacht werden.
+            </p>
             <div className="flex justify-end space-x-4">
-              <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 rounded-lg bg-white/50 hover:bg-white/80 text-gray-700">Abbrechen</button>
-              <button onClick={confirmRemoveRow} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Löschen</button>
+              <button 
+                onClick={() => setShowDeleteModal(false)} 
+                className="px-4 py-2 rounded-lg bg-white/50 hover:bg-white/80 text-gray-700"
+              >
+                Abbrechen
+              </button>
+              <button 
+                onClick={confirmRemoveRow} 
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+              >
+                Löschen
+              </button>
             </div>
           </div>
         </div>
@@ -2084,7 +2855,31 @@ const App = () => {
 
         {uploadStatus === 'success' && (
           <div className="fixed inset-0 z-40 overflow-hidden pointer-events-none">
-            {[...Array(50)].map((_, i) => (<div key={i} className="absolute rocket-firework" style={{left: `${Math.random() * 100}vw`, top: `${Math.random() * 100}vh`, animationDelay: `${Math.random() * 0.5}s`}} />))}
+            {/* Professionelle Erfolgs-Animation */}
+            <div className="success-particles">
+              {[...Array(30)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className="particle" 
+                  style={{
+                    left: `${Math.random() * 100}vw`, 
+                    top: `${Math.random() * 100}vh`, 
+                    animationDelay: `${Math.random() * 2}s`,
+                    '--random-x': `${(Math.random() - 0.5) * 200}px`,
+                    '--random-y': `${(Math.random() - 0.5) * 200}px`
+                  }} 
+                />
+              ))}
+            </div>
+            
+            {/* Zentrale Erfolgs-Nachricht */}
+            <div className="success-message-overlay">
+              <div className="success-checkmark">
+                <CheckCircle size={64} />
+              </div>
+              <h3 className="success-title">Upload erfolgreich!</h3>
+              <p className="success-subtitle">E-Rechnung wurde verarbeitet</p>
+            </div>
           </div>
         )}
 
@@ -2109,9 +2904,84 @@ const App = () => {
         }
         .glow-success { box-shadow: inset 0 0 20px 10px rgba(74, 222, 128, 0.7); opacity: 1; }
         .glow-incomplete { box-shadow: inset 0 0 20px 10px rgba(239, 68, 68, 0.7); opacity: 1; }
-        @keyframes rocket { 0% { transform: translateY(0) scale(0.5); opacity: 1; } 100% { transform: translateY(-100px) scale(1.5); opacity: 0; } }
-        .rocket-firework::before { content: '🚀'; font-size: 2rem; position: absolute; }
-        .rocket-firework { animation: rocket 1s ease-out forwards; }
+        
+        /* Professionelle Erfolgs-Animation */
+        @keyframes particleFloat {
+          0% { 
+            transform: translateY(0) translateX(0) scale(0); 
+            opacity: 1; 
+          }
+          50% { 
+            transform: translateY(var(--random-y)) translateX(var(--random-x)) scale(1); 
+            opacity: 0.8; 
+          }
+          100% { 
+            transform: translateY(calc(var(--random-y) * 2)) translateX(calc(var(--random-x) * 2)) scale(0); 
+            opacity: 0; 
+          }
+        }
+        
+        @keyframes fadeInScale {
+          0% { 
+            transform: scale(0.5) translateY(20px); 
+            opacity: 0; 
+          }
+          100% { 
+            transform: scale(1) translateY(0); 
+            opacity: 1; 
+          }
+        }
+        
+        @keyframes checkmarkPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+        
+        .particle {
+          position: absolute;
+          width: 8px;
+          height: 8px;
+          background: linear-gradient(45deg, #10b981, #34d399);
+          border-radius: 50%;
+          animation: particleFloat 2s ease-out forwards;
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+        
+        .particle:nth-child(odd) {
+          background: linear-gradient(45deg, #3b82f6, #60a5fa);
+          box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        .success-message-overlay {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-align: center;
+          animation: fadeInScale 0.6s ease-out forwards;
+          z-index: 50;
+        }
+        
+        .success-checkmark {
+          color: #10b981;
+          margin-bottom: 1rem;
+          animation: checkmarkPulse 1.5s ease-in-out infinite;
+          filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.3));
+        }
+        
+        .success-title {
+          font-size: 2rem;
+          font-weight: bold;
+          color: #1f2937;
+          margin-bottom: 0.5rem;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .success-subtitle {
+          font-size: 1.125rem;
+          color: #6b7280;
+          font-weight: 500;
+        }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, 0.2); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
