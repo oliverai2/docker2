@@ -4,15 +4,12 @@ import {
   FileText,
   Table,
   Home,
-  X,
   Loader2,
   CheckCircle,
   AlertCircle,
   Copy,
   PlusCircle,
   Trash2,
-  Import,
-  Move,
   Upload,
   Info,
   Sparkles,
@@ -612,29 +609,7 @@ const escapeXml = (unsafe) => {
   return unsafe.replace(/[<>&"']/g, (c) => ({'<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;'})[c] || c);
 };
 
-// Platzhalter-Selector Komponente
-const PlaceholderSelector = ({ value, onChange, disabled = false }) => (
-  <div className="relative">
-    <div className="text-xs text-gray-600 font-medium mb-1">Oder Platzhalter auswählen:</div>
-    <select 
-      value={value && value.startsWith('{{') ? value : ''} 
-      onChange={(e) => onChange(e.target.value)}
-      disabled={disabled}
-      className="w-full p-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-500"
-    >
-      <option value="">-- Platzhalter auswählen --</option>
-      {Object.entries(availablePlaceholders).map(([category, items]) => (
-        <optgroup key={category} label={category.charAt(0).toUpperCase() + category.slice(1)}>
-          {items.map(item => (
-            <option key={item.key} value={`{{${item.key}}}`}>
-              {item.label} (z.B. {item.example})
-            </option>
-          ))}
-        </optgroup>
-      ))}
-    </select>
-  </div>
-);
+
 
 // Verbesserte XML-Generierung mit flacher Struktur (ohne Hierarchie)
 const generateSapXmlFromMapping = (mapping, formData, additionalData = {}) => {
@@ -1360,8 +1335,7 @@ const App = () => {
   const [previewTransform, setPreviewTransform] = useState(0);
   const [unmappedFields, setUnmappedFields] = useState([]);
   const [uploadStatus, setUploadStatus] = useState(null); // 'success', 'incomplete', null
-  const dragItem = useRef(null);
-  const dragOverItem = useRef(null);
+
 
   // Effect for auto-calculation of totals
   useEffect(() => {
@@ -1490,65 +1464,7 @@ const App = () => {
       setMessageType(type);
   };
   
-  const resetToDefaultMapping = () => {
-    setSapMapping(defaultSapMapping);
-    showMessage('Mapping-Tabelle auf Standardwerte zurückgesetzt!', 'success');
-  };
 
-  // Neue Handler-Funktionen für hierarchisches SAP-Mapping
-  const updateMappingElement = (id, field, value) => {
-    setSapMapping(prev => updateElementInMapping(prev, id, field, value));
-  };
-
-  const addRootElement = (type) => {
-    const newElement = {
-      id: `new-${Date.now()}`,
-      type: type,
-      name: type === 'container' ? 'NEW_CONTAINER' : 'NEW_FIELD',
-      label: type === 'container' ? 'Neuer Container' : 'Neues Feld',
-      value: type === 'field' ? '' : undefined,
-      level: 0,
-      children: type === 'container' ? [] : undefined
-    };
-    setSapMapping(prev => [...prev, newElement]);
-  };
-
-  const addChildElement = (parentId, type) => {
-    const newElement = {
-      id: `child-${Date.now()}`,
-      type: type,
-      name: type === 'container' ? 'NEW_CONTAINER' : 'NEW_FIELD',
-      label: type === 'container' ? 'Neuer Container' : 'Neues Feld',
-      value: type === 'field' ? '' : undefined,
-      level: 1, // wird dynamisch berechnet
-      children: type === 'container' ? [] : undefined
-    };
-
-    const addChild = (items) => {
-      return items.map(item => {
-        if (item.id === parentId && item.type === 'container') {
-          return {
-            ...item,
-            children: [...(item.children || []), newElement]
-          };
-        }
-        if (item.children) {
-          return {
-            ...item,
-            children: addChild(item.children)
-          };
-        }
-        return item;
-      });
-    };
-
-    setSapMapping(prev => addChild(prev));
-  };
-
-  const removeMappingElement = (id) => {
-    setRowToDelete(id);
-    setShowDeleteModal(true);
-  };
 
 
 
@@ -2144,15 +2060,7 @@ const App = () => {
     }
   };
 
-  const getFormValue = (placeholder) => {
-    if (placeholder && placeholder.startsWith('{{') && placeholder.endsWith('}}')) {
-      const key = placeholder.slice(2, -2);
-      if (key === 'buchungskreisId') return buchungskreisId;
-      if (key === 'kreditorId') return kreditorId;
-      return formData[key] || '';
-    }
-    return placeholder;
-  };
+
   
   const handleConfirmSapIdsAndGenerateXml = () => {
     setShowSapIdModal(false);
@@ -2189,23 +2097,7 @@ const App = () => {
     });
   };
   
-  const addMappingRow = (type) => {
-    const newId = Math.max(0, ...sapMapping.map(row => row.id)) + 1;
-    let newRow;
-    if (type === 'field') {
-      newRow = { id: newId, xRechnungField: 'Neues Feld', value: '', targetXmlField: 'NEUESFELD', type: 'field' };
-    } else if (type === 'openSegment') {
-      newRow = { id: newId, xRechnungField: 'Segment öffnen', value: '', targetXmlField: 'NEUESSEGMENT', type: 'openSegment' };
-    } else if (type === 'closeSegment') {
-      newRow = { id: newId, xRechnungField: 'Segment schließen', value: '', targetXmlField: 'NEUESSEGMENT', type: 'closeSegment' };
-    }
-    setSapMapping(prev => [...prev, newRow]);
-  };
-  
-  const showRemoveModal = (index) => {
-    setRowToDelete(index);
-    setShowDeleteModal(true);
-  };
+
   
   const confirmRemoveRow = () => {
     if (rowToDelete) {
@@ -2228,45 +2120,7 @@ const App = () => {
     setShowDeleteModal(false);
   };
   
-  const handleMappingChange = (index, field, value) => {
-    setSapMapping(prev => {
-      const newMapping = [...prev];
-      const newRow = { ...newMapping[index] };
-      newRow[field] = value;
 
-      if (field === 'targetXmlField') {
-          newRow.targetXmlField = value.toUpperCase();
-          if (newRow.type === 'closeSegment') newRow.xRechnungField = `Segment schließen (${value.toUpperCase()})`;
-          else if (newRow.type === 'openSegment') newRow.xRechnungField = `Segment öffnen (${value.toUpperCase()})`;
-      }
-      newMapping[index] = newRow;
-      return newMapping;
-    });
-  };
-
-  const handleDragStart = (e, index) => {
-    dragItem.current = index;
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragEnter = (e, index) => {
-    e.preventDefault();
-    if (dragItem.current === index) return;
-    
-    const newMapping = [...sapMapping];
-    const draggedItem = newMapping[dragItem.current];
-    newMapping.splice(dragItem.current, 1);
-    newMapping.splice(index, 0, draggedItem);
-    dragItem.current = index;
-    setSapMapping(newMapping);
-  };
-  
-  const handleDragEnd = () => {
-    dragItem.current = null;
-    dragOverItem.current = null;
-  };
-  
-  const handleDragOver = (e) => e.preventDefault();
   
   // Hilfsfunktion für zufällige Auswahl aus Array
   const getRandomItem = (array) => array[Math.floor(Math.random() * array.length)];
@@ -2274,120 +2128,9 @@ const App = () => {
   // Hilfsfunktion für zufällige Zahlen
   const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
   
-  // Hilfsfunktion für zufällige deutsche PLZ
-  const getRandomPostalCode = () => String(getRandomNumber(10000, 99999));
-  
-  // Hilfsfunktion für zufällige IBAN
-  const getRandomIBAN = () => {
-    const bankCode = String(getRandomNumber(10000000, 99999999));
-    const accountNumber = String(getRandomNumber(1000000000, 9999999999));
-    return `DE${getRandomNumber(10, 99)}${bankCode}${accountNumber}`;
-  };
-  
-  // Hilfsfunktion für zufällige BIC
-  const getRandomBIC = () => {
-    const codes = ['DEUTDEFF', 'COBADEFF', 'DRESDEFF', 'BYLADEFF', 'GENODEF1', 'SPKRDEFF'];
-    return getRandomItem(codes) + String(getRandomNumber(100, 999));
-  };
 
-  const generateMockInvoiceData = () => {
-    const companies = [
-      'TechSolutions GmbH', 'Digital Innovations AG', 'Moderne Systeme GmbH', 'Kreative Medien GmbH',
-      'Professionelle Dienste AG', 'Qualitäts-Service GmbH', 'Experten-Beratung GmbH', 'Premium Solutions AG'
-    ];
-    
-    const streets = [
-      'Hauptstraße', 'Bahnhofstraße', 'Kirchgasse', 'Schulstraße', 'Gartenweg', 'Mühlenstraße',
-      'Industriestraße', 'Marktplatz', 'Lindenallee', 'Rosenweg', 'Bergstraße', 'Waldweg'
-    ];
-    
-    const cities = [
-      'München', 'Hamburg', 'Berlin', 'Köln', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund',
-      'Essen', 'Leipzig', 'Bremen', 'Dresden', 'Hannover', 'Nürnberg', 'Duisburg', 'Bochum'
-    ];
-    
-    const firstNames = [
-      'Michael', 'Thomas', 'Andreas', 'Wolfgang', 'Klaus', 'Jürgen', 'Stefan', 'Peter',
-      'Sabine', 'Petra', 'Andrea', 'Monika', 'Gabriele', 'Susanne', 'Claudia', 'Birgit'
-    ];
-    
-    const lastNames = [
-      'Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker',
-      'Schulz', 'Hoffmann', 'Schäfer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf'
-    ];
-    
-    const services = [
-      { name: 'Beratungsleistung', unit: 'HUR', price: '125.00' },
-      { name: 'Softwareentwicklung', unit: 'HUR', price: '95.00' },
-      { name: 'Projektmanagement', unit: 'HUR', price: '110.00' },
-      { name: 'IT-Support', unit: 'HUR', price: '85.00' },
-      { name: 'Webdesign', unit: 'HUR', price: '75.00' },
-      { name: 'Datenanalyse', unit: 'HUR', price: '105.00' },
-      { name: 'Schulung', unit: 'HUR', price: '90.00' },
-      { name: 'Wartung', unit: 'HUR', price: '65.00' }
-    ];
 
-    const senderCompany = getRandomItem(companies);
-    const recipientCompany = getRandomItem(companies.filter(c => c !== senderCompany));
-    const contactFirstName = getRandomItem(firstNames);
-    const contactLastName = getRandomItem(lastNames);
-    
-    // Generiere 2-4 Rechnungspositionen
-    const lineItems = [];
-    const numItems = getRandomNumber(2, 4);
-    for (let i = 0; i < numItems; i++) {
-      const service = getRandomItem(services);
-      const quantity = getRandomNumber(5, 40);
-      const price = parseFloat(service.price);
-      const netAmount = (quantity * price).toFixed(2);
-      
-      lineItems.push({
-        id: i + 1,
-        name: service.name,
-        unitCode: service.unit,
-        billedQuantity: quantity.toString(),
-        price: service.price,
-        netAmount: netAmount
-      });
-    }
-    
-    const invoiceNumber = `RE-${new Date().getFullYear()}-${String(getRandomNumber(1000, 9999))}`;
-    const leitwegId = `${getRandomNumber(100000, 999999)}-${getRandomNumber(100000, 999999)}-${getRandomNumber(10, 99)}`;
-    
-    return {
-      // Sender (Rechnungssteller)
-      senderName: senderCompany,
-      senderStreet: `${getRandomItem(streets)} ${getRandomNumber(1, 150)}`,
-      senderZip: getRandomPostalCode(),
-      senderCity: getRandomItem(cities),
-      senderTaxId: `DE${getRandomNumber(100000000, 999999999)}`,
-      senderContactName: `${contactFirstName} ${contactLastName}`,
-      senderContactPhone: `+49 ${getRandomNumber(30, 89)} ${getRandomNumber(10000000, 99999999)}`,
-      senderContactEmail: `${contactFirstName.toLowerCase()}.${contactLastName.toLowerCase()}@${senderCompany.toLowerCase().replace(/[^a-z]/g, '')}.de`,
-      senderElectronicAddress: `${senderCompany.toLowerCase().replace(/[^a-z]/g, '')}@company.de`,
-      
-      // Empfänger
-      recipientName: recipientCompany,
-      recipientStreet: `${getRandomItem(streets)} ${getRandomNumber(1, 200)}`,
-      recipientZip: getRandomPostalCode(),
-      recipientCity: getRandomItem(cities),
-      recipientElectronicAddress: `${recipientCompany.toLowerCase().replace(/[^a-z]/g, '')}@kunde.de`,
-      
-      // Rechnungsdaten
-      leitwegId: leitwegId,
-      reference: invoiceNumber,
-      invoiceDate: new Date(Date.now() - getRandomNumber(1, 30) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-      iban: getRandomIBAN(),
-      bic: getRandomBIC(),
-      invoiceTypeCode: '380',
-      invoiceCurrencyCode: 'EUR',
-      paymentTerms: `Zahlbar innerhalb von ${getRandomNumber(14, 30)} Tagen ohne Abzug.`,
-      paymentMeansCode: '58',
-      
-      // Rechnungspositionen
-      lineItems: lineItems
-    };
-  };
+
 
   const handlePrefill = async () => {
     setLoadingPrefill(true);
@@ -2549,96 +2292,7 @@ const App = () => {
     </div>
   );
 
-  // Hierarchische Baum-Darstellung für SAP-Mapping
-  const renderMappingTree = (items, level = 0) => {
-    return items.map((item) => (
-      <div key={item.id} className="mb-2">
-        <div 
-          className={`flex items-start space-x-3 p-4 rounded-lg border transition-all duration-200 ${
-            item.type === 'container' 
-              ? 'bg-blue-50/50 border-blue-200 hover:bg-blue-50/80' 
-              : 'bg-green-50/50 border-green-200 hover:bg-green-50/80'
-          }`}
-          style={{ marginLeft: `${level * 20}px` }}
-        >
-          {/* Typ-Badge */}
-          <span className={`px-2 py-1 rounded text-xs font-semibold ${
-            item.type === 'container' 
-              ? 'bg-blue-100 text-blue-800' 
-              : 'bg-green-100 text-green-800'
-          }`}>
-            {item.type === 'container' ? 'Container' : 'Feld'}
-          </span>
-          
-          {/* Element-Name */}
-          <div className="flex-1 min-w-0">
-            <input 
-              type="text"
-              value={item.name || ''} 
-              onChange={(e) => updateMappingElement(item.id, 'name', e.target.value)}
-              placeholder="XML-Element Name"
-              className="w-full p-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="text-xs text-gray-500 mt-1">{item.label || 'Keine Beschreibung'}</div>
-          </div>
-          
-          {/* Wert/Platzhalter (nur für Felder) */}
-          {item.type === 'field' && (
-            <div className="flex-1 min-w-0 space-y-2">
-              <div className="text-xs text-gray-600 font-medium">Wert:</div>
-              <input 
-                type="text"
-                value={item.value || ''} 
-                onChange={(e) => updateMappingElement(item.id, 'value', e.target.value)}
-                placeholder="Statischen Wert eingeben oder Platzhalter wählen"
-                className="w-full p-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <PlaceholderSelector 
-                value={item.value || ''} 
-                onChange={(value) => updateMappingElement(item.id, 'value', value)}
-              />
-            </div>
-          )}
-          
-          {/* Aktionen */}
-          <div className="flex space-x-2">
-            {item.type === 'container' && (
-              <button
-                onClick={() => addChildElement(item.id, 'field')}
-                className="p-2 rounded bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
-                title="Feld hinzufügen"
-              >
-                <PlusCircle size={16} />
-              </button>
-            )}
-            {item.type === 'container' && (
-              <button
-                onClick={() => addChildElement(item.id, 'container')}
-                className="p-2 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                title="Container hinzufügen"
-              >
-                <PlusCircle size={16} />
-              </button>
-            )}
-            <button
-              onClick={() => removeMappingElement(item.id)}
-              className="p-2 rounded bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
-              title="Element löschen"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        </div>
-        
-        {/* Kinder rekursiv rendern */}
-        {item.children && item.children.length > 0 && (
-          <div className="ml-4 mt-2">
-            {renderMappingTree(item.children, level + 1)}
-          </div>
-        )}
-      </div>
-    ));
-  };
+
 
   const renderSapMappingPage = () => (
     <div className="bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg w-full max-w-6xl mx-auto p-6 md:p-8 relative">
