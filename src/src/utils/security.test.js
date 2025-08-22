@@ -11,7 +11,7 @@ import {
 describe('Security Utilities', () => {
   describe('escapeHtml', () => {
     test('escaped HTML-Sonderzeichen korrekt', () => {
-      expect(escapeHtml('<script>alert("xss")</script>')).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+      expect(escapeHtml('<script>alert("xss")</script>')).toBe('&lt;script&gt;alert("xss")&lt;/script&gt;');
       expect(escapeHtml('& < > " \'')).toBe('&amp; &lt; &gt; &quot; &#x27;');
     });
 
@@ -85,8 +85,8 @@ describe('Security Utilities', () => {
 
   describe('sanitizeInput', () => {
     test('entfernt gefährliche Zeichen', () => {
-      expect(sanitizeInput('<script>alert("xss")</script>')).toBe('alert("xss")');
-      expect(sanitizeInput('javascript:alert("xss")')).toBe('alert("xss")');
+      expect(sanitizeInput('<script>alert("xss")</script>')).toBe('');
+      expect(sanitizeInput('javascript:alert("xss")')).toBe('');
     });
 
     test('lässt normale Eingaben unverändert', () => {

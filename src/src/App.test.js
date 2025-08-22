@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import App from './App';
+import App from '../App';
 
 // Mock für FileReader
 const mockFileReader = {
@@ -22,6 +22,23 @@ Object.assign(navigator, {
     writeText: jest.fn(() => Promise.resolve()),
   },
 });
+
+// Mock für ResizeObserver
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
+// Mock für getBoundingClientRect
+Element.prototype.getBoundingClientRect = jest.fn(() => ({
+  width: 100,
+  height: 100,
+  top: 0,
+  left: 0,
+  bottom: 100,
+  right: 100,
+}));
 
 describe('App Component', () => {
   beforeEach(() => {

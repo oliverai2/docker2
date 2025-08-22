@@ -186,14 +186,16 @@ describe('Error Handler Utilities', () => {
       expect(errorHandler).not.toHaveBeenCalled();
     });
 
-    test('behandelt synchrone Fehler korrekt', () => {
+    test('behandelt synchrone Fehler korrekt', async () => {
       const mockFunction = jest.fn().mockImplementation(() => {
         throw new Error('Sync error');
       });
       const errorHandler = jest.fn();
       
       const wrappedFunction = withErrorHandling(mockFunction, errorHandler);
-      wrappedFunction('test');
+      
+      // Synchrone Funktionen werden als async behandelt
+      await expect(wrappedFunction('test')).rejects.toThrow();
       
       expect(mockFunction).toHaveBeenCalledWith('test');
       expect(errorHandler).toHaveBeenCalled();

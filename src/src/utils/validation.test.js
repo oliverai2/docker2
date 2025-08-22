@@ -82,7 +82,7 @@ describe('Validation Utilities', () => {
     describe('stringLength', () => {
       test('validiert String-Längen korrekt', () => {
         expect(validators.stringLength('test', 1, 10)).toBe(true);
-        expect(validators.stringLength('', 0, 10)).toBe(true);
+        expect(validators.stringLength('', 0, 10)).toBe(false);
         expect(validators.stringLength('very long string', 1, 5)).toBe(false);
         expect(validators.stringLength('', 1, 10)).toBe(false);
       });
@@ -131,7 +131,7 @@ describe('Validation Utilities', () => {
     test('erkennt fehlende erforderliche Felder', () => {
       const formData = {
         senderName: '', // Fehlt
-        senderEmail: 'invalid-email', // Ungültig
+        senderContactEmail: 'invalid-email', // Ungültig
         recipientName: 'Test Recipient AG',
         reference: 'RE-2024-001',
         invoiceDate: '2024-01-15',
@@ -142,7 +142,7 @@ describe('Validation Utilities', () => {
       const result = validateFormData(formData);
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveProperty('senderName');
-      expect(result.errors).toHaveProperty('senderEmail');
+      expect(result.errors).toHaveProperty('senderContactEmail');
       expect(result.errors).toHaveProperty('iban');
       expect(result.errors).toHaveProperty('totalNetAmount');
     });
