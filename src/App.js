@@ -636,12 +636,12 @@ const PlaceholderSelector = ({ value, onChange, disabled = false }) => (
   </div>
 );
 
-// Verbesserte XML-Generierung mit rekursiver Struktur
+// Verbesserte XML-Generierung mit flacher Struktur (ohne Hierarchie)
 const generateSapXmlFromMapping = (mapping, formData, additionalData = {}) => {
   const replaceVariables = (template, data) => {
     if (!template || typeof template !== 'string') return template;
     return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-      const value = data[key] || additionalData[key];
+      const value = data[key];
       if (value === undefined) {
         console.warn(`Platzhalter ${key} nicht gefunden`);
         return match;
@@ -650,26 +650,34 @@ const generateSapXmlFromMapping = (mapping, formData, additionalData = {}) => {
     });
   };
 
-  const generateXmlRecursive = (items, level = 0) => {
-    const indent = '  '.repeat(level);
-    let xml = '';
-
+  // Sammle alle Felder flach (ohne Hierarchie)
+  const collectAllFields = (items) => {
+    let fields = [];
+    
     items.forEach(item => {
-      if (item.type === 'container' && item.children && item.children.length > 0) {
-        xml += `${indent}<${item.name}>\n`;
-        xml += generateXmlRecursive(item.children, level + 1);
-        xml += `${indent}</${item.name}>\n`;
-      } else if (item.type === 'field' && item.name) {
-        const value = replaceVariables(item.value || '', formData);
-        xml += `${indent}<${item.name}>${value}</${item.name}>\n`;
+      if (item.type === 'field' && item.name) {
+        fields.push(item);
+      } else if (item.type === 'container' && item.children && item.children.length > 0) {
+        // Rekursiv durch Container gehen, aber Container selbst nicht hinzufügen
+        fields.push(...collectAllFields(item.children));
       }
     });
-
-    return xml;
+    
+    return fields;
   };
 
+  // Sammle alle Felder aus der gesamten Mapping-Struktur
+  const allFields = collectAllFields(mapping);
+  
+  // Generiere flache XML ohne Hierarchie
+  let xml = '';
+  allFields.forEach(field => {
+    const value = replaceVariables(field.value || '', { ...formData, ...additionalData });
+    xml += `<${field.name}>${value}</${field.name}>\n`;
+  });
+
   const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>\n';
-  return xmlHeader + generateXmlRecursive(mapping);
+  return xmlHeader + xml;
 };
 
 // XML-Vorschau Generierung für Live-Preview
@@ -2150,15 +2158,12 @@ const App = () => {
     setShowSapIdModal(false);
     setXrechnungXML('');
     
-    const xmlParts = sapMapping.map(row => {
-      const { value, targetXmlField, type } = row;
-      if (type === 'closeSegment') return `</${targetXmlField}>`;
-      if (type === 'openSegment') return `<${targetXmlField}>`;
-      const finalValue = getFormValue(value);
-      return `<${targetXmlField}>${escapeXml(finalValue)}</${targetXmlField}>`;
+    // Verwende die neue hierarchische XML-Generierung
+    const xmlString = generateSapXmlFromMapping(sapMapping, formData, {
+      kreditorId: kreditorId,
+      buchungskreisId: buchungskreisId
     });
-
-    const xmlString = `<?xml version="1.0" encoding="UTF-8"?>\n${xmlParts.join('\n')}`;
+    
     setSapXml(xmlString);
     showMessage('SAP-XML erstellt. Bitte im Textfeld prüfen.', 'success');
   };
@@ -2642,33 +2647,11 @@ const App = () => {
       </div>
       
       <p className="text-sm text-gray-600 mb-6">
-        Definieren Sie die hierarchische Struktur der SAP-XML. Verwenden Sie die Dropdown-Menüs zur Auswahl von Platzhaltern 
-        oder geben Sie statische Werte ein. Die Struktur wird in Echtzeit als XML-Vorschau angezeigt.
+        Die SAP-XML wird basierend auf der Standard-Struktur generiert. Die Live-Vorschau zeigt die aktuelle XML-Struktur an.
       </p>
       
-      {/* Aktions-Buttons */}
+      {/* Aktions-Buttons - nur noch SAP-XML erzeugen */}
       <div className="flex flex-wrap gap-4 mb-6">
-        <button 
-          onClick={resetToDefaultMapping} 
-          className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors"
-        >
-          <Import size={20} />
-          <span>Standard wiederherstellen</span>
-        </button>
-        <button 
-          onClick={() => addRootElement('container')} 
-          className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow-md transition-colors"
-        >
-          <PlusCircle size={20} />
-          <span>Container hinzufügen</span>
-        </button>
-        <button 
-          onClick={() => addRootElement('field')} 
-          className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-green-600 text-white hover:bg-green-700 font-semibold shadow-md transition-colors"
-        >
-          <PlusCircle size={20} />
-          <span>Feld hinzufügen</span>
-        </button>
         <button 
           onClick={handleOpenSapModal} 
           className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-orange-600 text-white font-semibold hover:bg-orange-700 transition-colors shadow-md"
@@ -2678,31 +2661,13 @@ const App = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Hauptbereich: Struktur-Editor (2/3 der Breite) */}
-        <div className="lg:col-span-2">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">XML-Struktur bearbeiten</h3>
-          <div className="max-h-[600px] overflow-y-auto border border-gray-200 rounded-lg p-4 bg-white/20">
-            {sapMapping.length > 0 ? (
-              renderMappingTree(sapMapping)
-            ) : (
-              <div className="text-center text-gray-500 py-8">
-                <FileCode size={48} className="mx-auto mb-4 opacity-50" />
-                <p>Noch keine XML-Struktur definiert.</p>
-                <p className="text-sm">Fügen Sie Container oder Felder hinzu, um zu beginnen.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Seitliche Spalte: Kompakte XML-Vorschau (1/3 der Breite) */}
-        <div className="lg:col-span-1">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Live XML-Vorschau</h3>
-          <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 font-mono text-xs max-h-[600px] overflow-y-auto sticky top-4">
-            <pre className="whitespace-pre-wrap text-gray-700 leading-tight">
-              {sapMapping.length > 0 ? generateXmlPreview(sapMapping, 40) : '<!-- Keine Struktur definiert -->'}
-            </pre>
-          </div>
+      {/* Vollständige Breite für Live XML-Vorschau */}
+      <div className="w-full">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Live XML-Vorschau</h3>
+        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 font-mono text-sm max-h-[600px] overflow-y-auto">
+          <pre className="whitespace-pre-wrap text-gray-700 leading-tight">
+            {sapMapping.length > 0 ? generateXmlPreview(sapMapping, 40) : '<!-- Keine Struktur definiert -->'}
+          </pre>
         </div>
       </div>
 
