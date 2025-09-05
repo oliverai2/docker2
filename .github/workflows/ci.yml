@@ -1,0 +1,81 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build development image
+      run: docker-compose build dev
+      
+    - name: Build production image
+      run: docker-compose build prod
+      
+    - name: Run development container tests
+      run: |
+        docker-compose up -d dev
+        sleep 30
+        curl -f http://localhost:3000 || exit 1
+        docker-compose down
+        
+    - name: Run production container tests
+      run: |
+        docker-compose up -d prod
+        sleep 30
+        curl -f http://localhost:8080 || exit 1
+        docker-compose down
+
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run security audit
+      run: |
+        cd src
+        npm install
+        npm audit --audit-level moderate
+        
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: src/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd src
+        npm ci
+        
+    - name: Run linting
+      run: |
+        cd src
+        npm run code:lint
+        
+    - name: Run tests
+      run: |
+        cd src
+        npm test -- --coverage --watchAll=false
+

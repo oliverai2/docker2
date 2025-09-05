@@ -45,7 +45,7 @@ pids
 coverage/
 
 # Docker
-.dockerignore
+# .dockerignore - now tracked in git
 
 # Temporary files
 *.tmp

@@ -5,13 +5,13 @@ FROM node:18-alpine AS build
 WORKDIR /app
 
 # Copy package.json
-COPY package.json ./
+COPY src/package.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy the rest of the application source code
-COPY . .
+COPY src/ .
 
 # Build the application for production
 RUN npm run build
