@@ -102,6 +102,7 @@ const eRechnungMappingData = [
 ].sort((a, b) => parseInt(a.btId.substring(3)) - parseInt(b.btId.substring(3)));
 
 // Verfügbare Platzhalter mit Kategorien für intelligente Verwaltung
+// eslint-disable-next-line no-unused-vars
 const availablePlaceholders = {
   rechnungsdaten: [
     { key: 'invoiceDate', label: 'Rechnungsdatum', example: '2025-01-15' },
@@ -266,23 +267,23 @@ const defaultSapMapping = [
                 value: '$TODAY',
                 level: 3,
                 dataType: 'string'
-              }
-            ]
-          },
-          {
-            id: 'order-delivery-list',
-            type: 'container',
-            name: 'ORDER_DELIVERY_LIST',
-            label: 'Segment öffnen (ORDER_DELIVERY_LIST)',
-            level: 2,
-            children: [
+              },
               {
-                id: 'order-delivery-item',
+                id: 'order-delivery-list',
                 type: 'container',
-                name: 'ORDER_DELIVERY_ITEM',
-                label: 'Segment öffnen (ORDER_DELIVERY_ITEM)',
+                name: 'ORDER_DELIVERY_LIST',
+                label: 'Segment öffnen (ORDER_DELIVERY_LIST)',
                 level: 3,
-                children: []
+                children: [
+                  {
+                    id: 'order-delivery-item',
+                    type: 'container',
+                    name: 'ORDER_DELIVERY_ITEM',
+                    label: 'Segment öffnen (ORDER_DELIVERY_ITEM)',
+                    level: 4,
+                    children: []
+                  }
+                ]
               }
             ]
           },
@@ -312,171 +313,135 @@ const defaultSapMapping = [
                 dataType: 'string'
               }
             ]
-          }
-        ]
-      },
-      {
-        id: 'idoc-container',
-        type: 'container',
-        name: 'IDOC',
-        label: 'Segment öffnen (IDoc)',
-        level: 1,
-        children: [
+          },
           {
-            id: 'e1invoice',
+            id: 'parties-container',
             type: 'container',
-            name: 'E1INVOICE',
-            label: 'Segment öffnen (E1INVOICE)',
+            name: 'PARTIES',
+            label: 'Segment öffnen (PARTIES)',
             level: 2,
             children: [
               {
-                id: 'doc-date',
-                type: 'field',
-                name: 'DOC_DATE',
-                label: 'Rechnungsdatum',
-                value: '{{invoiceDate}}',
-                level: 3,
-                dataType: 'date'
-              },
-              {
-                id: 'party-recipient',
+                id: 'party-buyer',
                 type: 'container',
                 name: 'PARTY',
-                label: 'Segment öffnen (party) - Empfänger',
+                label: 'Segment öffnen (party) - Käufer',
                 level: 3,
                 children: [
                   {
-                    id: 'recipient-type',
+                    id: 'buyer-type',
                     type: 'field',
                     name: 'TYPE',
-                    label: 'Empfänger Typ',
-                    value: 'Recipient',
+                    label: 'Käufer Typ',
+                    value: 'BUYER',
                     level: 4,
                     dataType: 'string'
                   },
                   {
-                    id: 'recipient-name1',
+                    id: 'buyer-name1',
                     type: 'field',
                     name: 'NAME1',
-                    label: 'Empfänger Name',
+                    label: 'Käufer Name',
                     value: '{{recipientName}}',
                     level: 4,
                     dataType: 'string'
                   },
                   {
-                    id: 'recipient-street',
+                    id: 'buyer-street',
                     type: 'field',
                     name: 'STREET',
-                    label: 'Empfänger Straße',
+                    label: 'Käufer Straße',
                     value: '{{recipientStreet}}',
                     level: 4,
                     dataType: 'string'
                   },
                   {
-                    id: 'recipient-country',
+                    id: 'buyer-country',
                     type: 'field',
                     name: 'COUNTRY',
-                    label: 'Empfänger Land',
-                    value: 'DE',
+                    label: 'Käufer Land',
+                    value: '{{recipientCountry}}',
                     level: 4,
                     dataType: 'string'
                   },
                   {
-                    id: 'recipient-zip',
+                    id: 'buyer-zip',
                     type: 'field',
                     name: 'ZIP',
-                    label: 'Empfänger PLZ',
+                    label: 'Käufer PLZ',
                     value: '{{recipientZip}}',
                     level: 4,
                     dataType: 'string'
                   },
                   {
-                    id: 'recipient-city',
+                    id: 'buyer-city',
                     type: 'field',
                     name: 'CITY',
-                    label: 'Empfänger Ort',
+                    label: 'Käufer Ort',
                     value: '{{recipientCity}}',
-                    level: 4,
-                    dataType: 'string'
-                  },
-                  {
-                    id: 'recipient-internal-id',
-                    type: 'field',
-                    name: 'CUST_INTERNAL_ID',
-                    label: 'Buchungskreisnummer',
-                    value: '{{buchungskreisId}}',
                     level: 4,
                     dataType: 'string'
                   }
                 ]
               },
               {
-                id: 'party-sender',
+                id: 'party-supplier',
                 type: 'container',
                 name: 'PARTY',
-                label: 'Segment öffnen (party) - Steller',
+                label: 'Segment öffnen (party) - Lieferant',
                 level: 3,
                 children: [
                   {
-                    id: 'sender-type',
+                    id: 'supplier-type',
                     type: 'field',
                     name: 'TYPE',
-                    label: 'Steller Typ',
-                    value: 'Sender',
+                    label: 'Lieferant Typ',
+                    value: 'SUPPLIER',
                     level: 4,
                     dataType: 'string'
                   },
                   {
-                    id: 'sender-name1',
+                    id: 'supplier-name1',
                     type: 'field',
                     name: 'NAME1',
-                    label: 'Steller Name',
+                    label: 'Lieferant Name',
                     value: '{{senderName}}',
                     level: 4,
                     dataType: 'string'
                   },
                   {
-                    id: 'sender-street',
+                    id: 'supplier-street',
                     type: 'field',
                     name: 'STREET',
-                    label: 'Steller Straße',
+                    label: 'Lieferant Straße',
                     value: '{{senderStreet}}',
                     level: 4,
                     dataType: 'string'
                   },
                   {
-                    id: 'sender-country',
+                    id: 'supplier-country',
                     type: 'field',
                     name: 'COUNTRY',
-                    label: 'Steller Land',
-                    value: 'DE',
+                    label: 'Lieferant Land',
+                    value: '{{senderCountry}}',
                     level: 4,
                     dataType: 'string'
                   },
                   {
-                    id: 'sender-zip',
+                    id: 'supplier-zip',
                     type: 'field',
                     name: 'ZIP',
-                    label: 'Steller PLZ',
+                    label: 'Lieferant PLZ',
                     value: '{{senderZip}}',
                     level: 4,
                     dataType: 'string'
                   },
                   {
-                    id: 'sender-city',
+                    id: 'supplier-city',
                     type: 'field',
                     name: 'CITY',
-                    label: 'Steller Ort',
+                    label: 'Lieferant Ort',
                     value: '{{senderCity}}',
-                    level: 4,
-                    dataType: 'string'
-                  },
-                  {
-                    id: 'sender-internal-id',
-                    type: 'field',
-                    name: 'CUST_INTERNAL_ID',
-                    label: 'Kreditorennummer',
-                    value: '{{kreditorId}}',
                     level: 4,
                     dataType: 'string'
                   }
@@ -528,6 +493,42 @@ const defaultSapMapping = [
             value: '{{serviceDate}}',
             level: 2,
             dataType: 'date'
+          },
+          {
+            id: 'document-freetext',
+            type: 'container',
+            name: 'DOCUMENT_FREETEXT',
+            label: 'Segment öffnen (DOCUMENT_FREETEXT)',
+            level: 2,
+            children: [
+              {
+                id: 'doc-freetext',
+                type: 'container',
+                name: 'DOC_FREETEXT',
+                label: 'Segment öffnen (DOC_FREETEXT)',
+                level: 3,
+                children: [
+                  {
+                    id: 'doc-freetext-id',
+                    type: 'field',
+                    name: 'DOC_FREETEXT_ID',
+                    label: 'DOC_FREETEXT_ID',
+                    value: '1',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'doc-freetext-txt',
+                    type: 'field',
+                    name: 'DOC_FREETEXT_TXT',
+                    label: 'DOC_FREETEXT_TXT',
+                    value: '{{additionalNotes}}',
+                    level: 4,
+                    dataType: 'string'
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -589,8 +590,95 @@ const defaultSapMapping = [
                 value: '{{totalTaxAmount}}',
                 level: 3,
                 dataType: 'currency'
+              },
+              {
+                id: 'total-paym-gross',
+                type: 'field',
+                name: 'TOTAL_PAYM_GROSS',
+                label: 'Gesamtbetrag',
+                value: '{{grossAmount}}',
+                level: 3,
+                dataType: 'currency'
               }
             ]
+          },
+          {
+            id: 'tax-item-list',
+            type: 'container',
+            name: 'TAX_ITEM_LIST',
+            label: 'Segment öffnen (TAX_ITEM_LIST)',
+            level: 2,
+            children: [
+              {
+                id: 'tax-item',
+                type: 'container',
+                name: 'TAX_ITEM',
+                label: 'Segment öffnen (TAX_ITEM)',
+                level: 3,
+                children: [
+                  {
+                    id: 'net-vat',
+                    type: 'field',
+                    name: 'NET',
+                    label: 'NET',
+                    value: '{{totalTaxAmount}}',
+                    level: 4,
+                    dataType: 'currency',
+                    attributes: {
+                      'VAT-RATE': '{{taxRate}}'
+                    }
+                  },
+                  {
+                    id: 'vat-amount',
+                    type: 'field',
+                    name: 'VAT',
+                    label: 'VAT',
+                    value: '{{totalTaxAmount}}',
+                    level: 4,
+                    dataType: 'currency',
+                    attributes: {
+                      'VAT-RATE': '{{taxRate}}'
+                    }
+                  },
+                  {
+                    id: 'vat-category',
+                    type: 'field',
+                    name: 'VAT_CATEGORY',
+                    label: 'VAT_CATEGORY',
+                    value: 'S',
+                    level: 4,
+                    dataType: 'string'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'x-ein',
+        type: 'container',
+        name: 'X_EIN',
+        label: 'Segment öffnen (X_EIN)',
+        level: 1,
+        children: [
+          {
+            id: 'countrycode',
+            type: 'field',
+            name: 'COUNTRYCODE',
+            label: 'COUNTRYCODE',
+            value: 'DE',
+            level: 2,
+            dataType: 'string'
+          },
+          {
+            id: 'einv-id',
+            type: 'field',
+            name: 'EINV_ID',
+            label: 'EINV_ID',
+            value: 'MVP App',
+            level: 2,
+            dataType: 'string'
           }
         ]
       }
@@ -611,7 +699,7 @@ const escapeXml = (unsafe) => {
 
 
 
-// Verbesserte XML-Generierung mit flacher Struktur (ohne Hierarchie)
+// XML-Generierung mit hierarchischer Struktur (basierend auf Live-Vorschau)
 const generateSapXmlFromMapping = (mapping, formData, additionalData = {}) => {
   const replaceVariables = (template, data) => {
     if (!template || typeof template !== 'string') return template;
@@ -625,53 +713,52 @@ const generateSapXmlFromMapping = (mapping, formData, additionalData = {}) => {
     });
   };
 
-  // Sammle alle Felder flach (ohne Hierarchie)
-  const collectAllFields = (items) => {
-    let fields = [];
-    
+  // Generiere hierarchische XML (wie in der Live-Vorschau)
+  const generateXmlRecursive = (items, level = 0) => {
+    const indent = '  '.repeat(level);
+    let xml = '';
+
     items.forEach(item => {
-      if (item.type === 'field' && item.name) {
-        fields.push(item);
-      } else if (item.type === 'container' && item.children && item.children.length > 0) {
-        // Rekursiv durch Container gehen, aber Container selbst nicht hinzufügen
-        fields.push(...collectAllFields(item.children));
+      if (item.type === 'container') {
+        xml += `${indent}<${item.name}>\n`;
+        if (item.children && item.children.length > 0) {
+          xml += generateXmlRecursive(item.children, level + 1);
+        }
+        xml += `${indent}</${item.name}>\n`;
+      } else if (item.type === 'field') {
+        const value = replaceVariables(item.value || '', { ...formData, ...additionalData });
+        let attributes = '';
+        if (item.attributes) {
+          attributes = ' ' + Object.entries(item.attributes)
+            .map(([key, val]) => `${key}="${replaceVariables(val, { ...formData, ...additionalData })}"`)
+            .join(' ');
+        }
+        xml += `${indent}<${item.name}${attributes}>${value}</${item.name}>\n`;
       }
     });
-    
-    return fields;
+
+    return xml;
   };
 
-  // Sammle alle Felder aus der gesamten Mapping-Struktur
-  const allFields = collectAllFields(mapping);
-  
-  // Generiere flache XML ohne Hierarchie
-  let xml = '';
-  allFields.forEach(field => {
-    const value = replaceVariables(field.value || '', { ...formData, ...additionalData });
-    xml += `<${field.name}>${value}</${field.name}>\n`;
-  });
-
+  // Generiere die vollständige XML mit korrekter Hierarchie
+  const xmlContent = generateXmlRecursive(mapping);
   const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>\n';
-  return xmlHeader + xml;
+  return xmlHeader + xmlContent;
 };
 
 // XML-Vorschau Generierung für Live-Preview
-const generateXmlPreview = (mapping, maxLines = 20) => {
+const generateXmlPreview = (mapping) => {
   const generatePreviewRecursive = (items, level = 0) => {
     const indent = '  '.repeat(level);
     let lines = [];
 
     items.forEach((item, index) => {
-      if (lines.length >= maxLines) return;
-      
       if (item.type === 'container') {
         lines.push(`${indent}<${item.name}>`);
-        if (item.children && item.children.length > 0 && lines.length < maxLines) {
+        if (item.children && item.children.length > 0) {
           lines.push(...generatePreviewRecursive(item.children, level + 1));
         }
-        if (lines.length < maxLines) {
-          lines.push(`${indent}</${item.name}>`);
-        }
+        lines.push(`${indent}</${item.name}>`);
       } else if (item.type === 'field') {
         const displayValue = item.value || '[leer]';
         lines.push(`${indent}<${item.name}>${displayValue}</${item.name}>`);
@@ -682,13 +769,11 @@ const generateXmlPreview = (mapping, maxLines = 20) => {
   };
 
   const lines = generatePreviewRecursive(mapping);
-  if (lines.length >= maxLines) {
-    lines.push('  ... (weitere Zeilen)');
-  }
   return lines.join('\n');
 };
 
 // Hilfsfunktion zum Finden von Elementen in der Hierarchie
+// eslint-disable-next-line no-unused-vars
 const findElementById = (mapping, id) => {
   for (const item of mapping) {
     if (item.id === id) return item;
@@ -701,6 +786,7 @@ const findElementById = (mapping, id) => {
 };
 
 // Hilfsfunktion zum Aktualisieren von Elementen in der Hierarchie
+// eslint-disable-next-line no-unused-vars
 const updateElementInMapping = (mapping, id, field, value) => {
   return mapping.map(item => {
     if (item.id === id) {
@@ -1629,6 +1715,7 @@ const App = () => {
         }
         
         // Bereinige das XML (entferne mögliche PDF-spezifische Zeichen und Null-Bytes)
+        // eslint-disable-next-line no-control-regex
         xmlContent = xmlContent
             .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')  // Entferne Steuerzeichen
             .replace(/\0/g, '')  // Entferne Null-Bytes
@@ -2123,9 +2210,11 @@ const App = () => {
 
   
   // Hilfsfunktion für zufällige Auswahl aus Array
+  // eslint-disable-next-line no-unused-vars
   const getRandomItem = (array) => array[Math.floor(Math.random() * array.length)];
   
   // Hilfsfunktion für zufällige Zahlen
+  // eslint-disable-next-line no-unused-vars
   const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
   
 
