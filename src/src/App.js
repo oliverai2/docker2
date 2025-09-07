@@ -1716,6 +1716,7 @@ const App = () => {
         
         // Bereinige das XML (entferne mögliche PDF-spezifische Zeichen und Null-Bytes)
         xmlContent = xmlContent
+            // eslint-disable-next-line no-control-regex
             .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')  // Entferne Steuerzeichen
             .replace(/\0/g, '')  // Entferne Null-Bytes
             .trim();
