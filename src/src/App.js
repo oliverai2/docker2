@@ -16,7 +16,9 @@ import {
   RotateCcw,
   FileCode,
   Send,
-  LayoutTemplate
+  LayoutTemplate,
+  Settings,
+  ChevronDown
 } from 'lucide-react';
 
 // #region CONSTANTS & DATA
@@ -381,6 +383,24 @@ const defaultSapMapping = [
                     value: '{{recipientCity}}',
                     level: 4,
                     dataType: 'string'
+                  },
+                  {
+                    id: 'buyer-vat-id',
+                    type: 'field',
+                    name: 'VAT_ID',
+                    label: 'Käufer USt-IdNr',
+                    value: '',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'buyer-cust-internal-id',
+                    type: 'field',
+                    name: 'CUST_INTERNAL_ID',
+                    label: 'Käufer Customer Internal ID',
+                    value: '{{buchungskreisId}}',
+                    level: 4,
+                    dataType: 'string'
                   }
                 ]
               },
@@ -442,6 +462,24 @@ const defaultSapMapping = [
                     name: 'CITY',
                     label: 'Lieferant Ort',
                     value: '{{senderCity}}',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'supplier-vat-id',
+                    type: 'field',
+                    name: 'VAT_ID',
+                    label: 'Lieferant USt-IdNr',
+                    value: '{{senderTaxId}}',
+                    level: 4,
+                    dataType: 'string'
+                  },
+                  {
+                    id: 'supplier-cust-internal-id',
+                    type: 'field',
+                    name: 'CUST_INTERNAL_ID',
+                    label: 'Lieferant Customer Internal ID',
+                    value: '{{kreditorId}}',
                     level: 4,
                     dataType: 'string'
                   }
@@ -747,7 +785,7 @@ const generateSapXmlFromMapping = (mapping, formData, additionalData = {}) => {
 };
 
 // XML-Vorschau Generierung für Live-Preview
-const generateXmlPreview = (mapping) => {
+const generateXmlPreview = (mapping, formData, additionalData = {}) => {
   const generatePreviewRecursive = (items, level = 0) => {
     const indent = '  '.repeat(level);
     let lines = [];
@@ -760,7 +798,24 @@ const generateXmlPreview = (mapping) => {
         }
         lines.push(`${indent}</${item.name}>`);
       } else if (item.type === 'field') {
-        const displayValue = item.value || '[leer]';
+        let displayValue = item.value || '[leer]';
+        
+        // Ersetze Template-Variablen mit aktuellen Daten
+        if (displayValue && typeof displayValue === 'string') {
+          displayValue = displayValue.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+            // Zuerst in additionalData suchen (kreditorId, buchungskreisId)
+            if (additionalData && additionalData[key] !== undefined) {
+              return additionalData[key] || '[leer]';
+            }
+            // Dann in formData suchen
+            if (formData && formData[key] !== undefined) {
+              return formData[key] || '[leer]';
+            }
+            // Falls nicht gefunden, original Template zeigen
+            return match;
+          });
+        }
+        
         lines.push(`${indent}<${item.name}>${displayValue}</${item.name}>`);
       }
     });
@@ -1150,7 +1205,14 @@ const HomePage = ({
     handleDownload,
     xrechnungXML,
     selectedLayout,
-    unmappedFields
+    unmappedFields,
+    activeXmlTab,
+    setActiveXmlTab,
+    setSapXml,
+    setXrechnungXML,
+    dataSource,
+    showXRechnungButton,
+    xrechnungTabEnabled
 }) => (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1161,17 +1223,17 @@ const HomePage = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <button onClick={handlePrefill} disabled={loadingPrefill} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors disabled:bg-gray-200/50 disabled:cursor-not-allowed">
-                  {loadingPrefill ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />}
-                  <span>KI-Werte</span>
+              <button onClick={handleUploadClick} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
+                <Upload size={20} />
+                <span>XML/PDF laden</span>
               </button>
               <button onClick={handleReset} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
                   <RotateCcw size={20} />
                   <span>Zurücksetzen</span>
               </button>
-              <button onClick={handleUploadClick} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
-                <Upload size={20} />
-                <span>XML/PDF laden</span>
+              <button onClick={handlePrefill} disabled={loadingPrefill} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors disabled:bg-gray-200/50 disabled:cursor-not-allowed">
+                  {loadingPrefill ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />}
+                  <span>KI-Werte</span>
               </button>
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xml,.pdf" className="hidden"/>
           </div>
@@ -1296,28 +1358,18 @@ const HomePage = ({
 
           {/* Action buttons */}
           <div className="flex flex-col gap-4 mt-6">
-            <button onClick={generateXRechnungUBL} disabled={loading} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl">
-              {loading ? <Loader2 className="animate-spin" size={20} /> : <FileText size={20} />}
-              <span>1. XRechnung UBL erstellen</span>
-            </button>
+            {showXRechnungButton && (
+              <button onClick={generateXRechnungUBL} disabled={loading} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl">
+                {loading ? <Loader2 className="animate-spin" size={20} /> : <FileText size={20} />}
+                <span>1. XRechnung UBL erstellen</span>
+              </button>
+            )}
             <button onClick={handleOpenSapModal} disabled={loadingSummary} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
               {loadingSummary ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
-              <span>2. SAP-XML erzeugen</span>
+              <span>{showXRechnungButton ? '2. ' : ''}SAP-XML erzeugen</span>
             </button>
           </div>
           
-          {sapXml && (
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold text-gray-800 border-b border-white/30 pb-2 mb-4">Generierte SAP-XML</h3>
-              <div className="relative">
-                <textarea className="w-full h-40 p-4 font-mono text-sm bg-white/50 text-gray-800 rounded-xl border border-white/30 resize-none" value={sapXml} readOnly/>
-                <div className="absolute top-2 right-2 flex space-x-2">
-                  <button onClick={() => handleCopy(sapXml)} className="p-2 rounded-full bg-black/20 text-gray-700 hover:bg-black/30" title="Kopieren"><Copy size={16} /></button>
-                  <button onClick={() => handleDownload(sapXml, 'sap_invoice.xml', 'application/xml')} className="p-2 rounded-full bg-blue-600/80 text-white hover:bg-blue-600" title="Herunterladen"><Download size={16} /></button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Right side: HTML Preview */}
@@ -1339,15 +1391,84 @@ const HomePage = ({
         </div>
       </div>
       
-      {/* XRechnung XML Output at the bottom */}
+      {/* Vereinheitlichte Vorschau */}
       <div className="mt-8">
-        <h2 className="text-2xl font-semibold text-gray-800 border-b border-white/30 pb-2 mb-4">XRechnung XML-Ausgabe (UBL)</h2>
+        <h2 className="text-2xl font-semibold text-gray-800 border-b border-white/30 pb-2 mb-4">Vorschau</h2>
+        
+        {/* Tab-Navigation */}
+        <div className="flex space-x-2 mb-4">
+          <button 
+            onClick={() => xrechnungTabEnabled && setActiveXmlTab('xrechnung')} 
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              !xrechnungTabEnabled 
+                ? 'bg-gray-200/50 text-gray-400 cursor-not-allowed' 
+                : activeXmlTab === 'xrechnung' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-white/50 text-gray-700 hover:bg-white/80'
+            }`}
+            disabled={!xrechnungTabEnabled}
+          >
+            XRechnung XML
+          </button>
+          
+          {/* Tote Buttons ohne Funktion */}
+          <button 
+            className="px-4 py-2 rounded-lg bg-gray-200/50 text-gray-400 cursor-not-allowed"
+            disabled={true}
+          >
+            Zugferd PDF
+          </button>
+          <button 
+            className="px-4 py-2 rounded-lg bg-gray-200/50 text-gray-400 cursor-not-allowed"
+            disabled={true}
+          >
+            EN16931
+          </button>
+          
+          <button 
+            onClick={() => setActiveXmlTab('sap')} 
+            className={`px-4 py-2 rounded-lg transition-colors ${activeXmlTab === 'sap' ? 'bg-blue-600 text-white' : 'bg-white/50 text-gray-700 hover:bg-white/80'}`}
+            disabled={!sapXml}
+          >
+            SAP XML
+          </button>
+        </div>
+
+        {/* Vorschau-Inhalt */}
         <div className="relative">
-          <textarea className="w-full h-80 p-4 font-mono text-sm bg-white/50 text-gray-800 rounded-xl border border-white/30 resize-none" value={xrechnungXML} readOnly placeholder="Generierte XRechnung-XML wird hier angezeigt..."/>
-          {xrechnungXML && (
+          <textarea 
+            className="w-full h-80 p-4 font-mono text-sm bg-white/50 text-gray-800 rounded-xl border border-white/30 resize-none" 
+            value={activeXmlTab === 'xrechnung' ? xrechnungXML : sapXml} 
+            readOnly 
+            placeholder={activeXmlTab === 'xrechnung' ? "Generierte XRechnung-XML wird hier angezeigt..." : "Generierte SAP-XML wird hier angezeigt..."}
+          />
+          {(activeXmlTab === 'xrechnung' ? xrechnungXML : sapXml) && (
             <div className="absolute top-2 right-2 flex space-x-2">
-              <button onClick={() => handleCopy(xrechnungXML)} className="p-2 rounded-full bg-black/20 text-gray-700 hover:bg-black/30" title="Kopieren"><Copy size={16} /></button>
-              <button onClick={() => handleDownload(xrechnungXML, 'xrechnung.xml', 'application/xml')} className="p-2 rounded-full bg-blue-600/80 text-white hover:bg-blue-600" title="Herunterladen"><Download size={16} /></button>
+              <button 
+                onClick={() => handleCopy(activeXmlTab === 'xrechnung' ? xrechnungXML : sapXml)} 
+                className="p-2 rounded-full bg-black/20 text-gray-700 hover:bg-black/30" 
+                title="Kopieren"
+              >
+                <Copy size={16} />
+              </button>
+              <button 
+                onClick={() => handleDownload(
+                  activeXmlTab === 'xrechnung' ? xrechnungXML : sapXml, 
+                  activeXmlTab === 'xrechnung' ? 'xrechnung.xml' : 'sap.xml', 
+                  'application/xml'
+                )} 
+                className="p-2 rounded-full bg-blue-600/80 text-white hover:bg-blue-600" 
+                title="Herunterladen"
+              >
+                <Download size={16} />
+              </button>
+              <button 
+                onClick={() => activeXmlTab === 'xrechnung' ? setXrechnungXML('') : setSapXml('')} 
+                className="p-2 rounded-full bg-white/50 text-gray-700 hover:bg-white/80" 
+                title="Leeren"
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
           )}
         </div>
@@ -1399,6 +1520,8 @@ const App = () => {
 
   const [xrechnungXML, setXrechnungXML] = useState('');
   const [sapXml, setSapXml] = useState('');
+  const [activeXmlTab, setActiveXmlTab] = useState('xrechnung');
+  const [dataSource, setDataSource] = useState(null); // 'upload' oder 'ki' oder null
   const [loading, setLoading] = useState(false);
   const [loadingPrefill, setLoadingPrefill] = useState(false);
   const [currentPage, setCurrentPage] = useState('home'); // 'home', 'eRechnungMapping', 'sapMapping', 'layoutSelection'
@@ -1410,7 +1533,11 @@ const App = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [rowToDelete, setRowToDelete] = useState(null);
   const fileInputRef = useRef(null);
+  const adminMenuRef = useRef(null);
   const [showSapIdModal, setShowSapIdModal] = useState(false);
+  const [showAdminMenu, setShowAdminMenu] = useState(false);
+  const [showXRechnungButton, setShowXRechnungButton] = useState(true);
+  const [xrechnungTabEnabled, setXrechnungTabEnabled] = useState(true);
   const [kreditorId, setKreditorId] = useState('');
   const [buchungskreisId, setBuchungskreisId] = useState('');
   const [invoiceSummary, setInvoiceSummary] = useState('');
@@ -1451,6 +1578,20 @@ const App = () => {
       if (messageTimeoutRef.current) clearTimeout(messageTimeoutRef.current);
     };
   }, [message]);
+  
+  // Handle admin menu click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
+        setShowAdminMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   
   // Effect for parallax scroll effect
   useEffect(() => {
@@ -1606,15 +1747,22 @@ const App = () => {
     console.log('=== XML-VERARBEITUNG GESTARTET ===');
     const reader = new FileReader();
     reader.onload = (event) => {
-        console.log('XML-Datei gelesen, Größe:', event.target.result.length, 'Zeichen');
         const xmlContent = event.target.result;
+        console.log('XML-Datei gelesen, Größe:', xmlContent.length, 'Zeichen');
+        console.log('Encoding-Test - erste 100 Zeichen:', xmlContent.substring(0, 100));
+        
+        // Prüfe auf häufige Encoding-Probleme
+        if (xmlContent.includes('�')) {
+            console.warn('Mögliche Encoding-Probleme erkannt (Replacement Characters gefunden)');
+        }
+        
         parseXmlContent(xmlContent);
     };
     reader.onerror = (error) => {
         console.error('Fehler beim Lesen der XML-Datei:', error);
         showMessage('Fehler beim Lesen der XML-Datei.', 'error');
     };
-    reader.readAsText(file);
+    reader.readAsText(file, 'UTF-8');
   };
 
   const processPdfFile = (file) => {
@@ -1654,8 +1802,9 @@ const App = () => {
 
   const extractXmlFromPdf = async (pdfData) => {
     try {
-        // Konvertiere PDF-Daten zu String für die Suche
-        const pdfString = Array.from(pdfData, byte => String.fromCharCode(byte)).join('');
+        // Konvertiere PDF-Daten zu String für die Suche (UTF-8 kompatibel)
+        const decoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false });
+        const pdfString = decoder.decode(pdfData);
         
         console.log('PDF-Größe:', pdfData.length, 'bytes');
         
@@ -1748,8 +1897,18 @@ const App = () => {
 
   const parseXmlContent = (xmlContent) => {
     try {
+        // Normalisiere XML-Content für bessere Sonderzeichen-Behandlung
+        const normalizedXml = xmlContent.normalize('NFC');
+        
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlContent, "application/xml");
+        const xmlDoc = parser.parseFromString(normalizedXml, "application/xml");
+        
+        // Prüfe auf Parser-Fehler
+        const parserError = xmlDoc.getElementsByTagName('parsererror');
+        if (parserError.length > 0) {
+            console.error('XML Parser Fehler:', parserError[0].textContent);
+            throw new Error('XML-Parsing fehlgeschlagen: ' + parserError[0].textContent);
+        }
         
         const ublNamespace = 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2';
         const ciiNamespace = 'urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100';
@@ -1774,12 +1933,24 @@ const App = () => {
             setUnmappedFields(parsedResult.unmapped);
             setXrechnungXML(xmlContent);
 
+            // Nach erfolgreichem Upload: SAP-XML automatisch generieren
+            const autoGeneratedSapXml = generateSapXmlFromMapping(sapMapping, parsedResult.data, {
+                kreditorId: '',
+                buchungskreisId: ''
+            });
+            setSapXml(autoGeneratedSapXml);
+            
+            // XRechnung Tab deaktivieren und SAP Tab aktivieren
+            setXrechnungTabEnabled(false);
+            setActiveXmlTab('sap');
+            setDataSource('upload');
+
             if (parsedResult.unmapped.length === 0) {
                 setUploadStatus('success');
-                showMessage('Rechnungsdaten erfolgreich erfasst', 'success', detectedFormat);
+                showMessage('Rechnungsdaten erfolgreich erfasst und SAP-XML automatisch erstellt', 'success', detectedFormat);
             } else {
                 setUploadStatus('incomplete');
-                const fieldLabels = { senderName: 'Name (Sender)', recipientName: 'Name (Empfänger)', leitwegId: 'Leitweg-ID' };
+                const fieldLabels = { senderName: 'Name (Sender)', recipientName: 'Name (Empfänger)', leitwegId: 'Leitweg-ID', reference: 'Rechnungsnummer', invoiceDate: 'Rechnungsdatum', grossAmount: 'Gesamtbetrag' };
                 const missingFieldsMsg = parsedResult.unmapped.map(f => fieldLabels[f] || f).join(', ');
                 showMessage(`Folgende Felder konnten nicht zugeordnet werden:\n- ${missingFieldsMsg}`, 'error', detectedFormat);
             }
@@ -1968,6 +2139,7 @@ const App = () => {
   
   const handleUploadClick = () => {
     console.log('Upload-Button geklickt');
+    setShowXRechnungButton(false); // XRechnung Button ausblenden wenn XML/PDF geladen wird
     fileInputRef.current.click();
   };
 
@@ -2060,6 +2232,7 @@ const App = () => {
 </Invoice>`;
       
       setXrechnungXML(xmlString);
+      setActiveXmlTab('xrechnung'); // Automatisch zum XRechnung-Tab wechseln
       showMessage('Valide XRechnung 3.0.2 UBL erfolgreich erstellt!', 'success');
     } catch (error) {
       console.error('Fehler bei der Generierung der XRechnung:', error);
@@ -2153,14 +2326,19 @@ const App = () => {
     setShowSapIdModal(false);
     setXrechnungXML('');
     
-    // Verwende die neue hierarchische XML-Generierung
+    // Verwende die neue hierarchische XML-Generierung mit aktuellen IDs
     const xmlString = generateSapXmlFromMapping(sapMapping, formData, {
       kreditorId: kreditorId,
       buchungskreisId: buchungskreisId
     });
     
+    // Aktualisiere die SAP-XML Vorschau mit neuen IDs
     setSapXml(xmlString);
-    showMessage('SAP-XML erstellt. Bitte im Textfeld prüfen.', 'success');
+    setActiveXmlTab('sap'); // Automatisch zum SAP-Tab wechseln
+    setDataSource('manual'); // Markiere als manuell generiert
+    
+    // Erfolgreiche Aktualisierung anzeigen
+    showMessage(`SAP-XML mit Kreditor-ID "${kreditorId}" und Buchungskreis "${buchungskreisId}" erstellt.`, 'success');
   };
 
   const handleDownload = (content, filename, mimeType) => {
@@ -2223,6 +2401,8 @@ const App = () => {
 
   const handlePrefill = async () => {
     setLoadingPrefill(true);
+    setShowXRechnungButton(true); // XRechnung Button wieder einblenden bei KI-Werte
+    setXrechnungTabEnabled(true); // XRechnung Tab wieder aktivieren
     showMessage('Generiere Zufallswerte...', 'info');
     try {
         // Simuliere kurze Ladezeit für bessere UX
@@ -2309,6 +2489,8 @@ const App = () => {
     setFormData(blankFormData);
     setXrechnungXML('');
     setSapXml('');
+    setShowXRechnungButton(true); // XRechnung Button wieder einblenden bei Zurücksetzen
+    setXrechnungTabEnabled(true); // XRechnung Tab wieder aktivieren
     setUnmappedFields([]);
     showMessage('Alle Felder und Ergebnisse zurückgesetzt.', 'info');
   };
@@ -2409,47 +2591,11 @@ const App = () => {
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Live XML-Vorschau</h3>
         <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 font-mono text-sm max-h-[600px] overflow-y-auto">
           <pre className="whitespace-pre-wrap text-gray-700 leading-tight">
-            {sapMapping.length > 0 ? generateXmlPreview(sapMapping, 40) : '<!-- Keine Struktur definiert -->'}
+            {sapMapping.length > 0 ? generateXmlPreview(sapMapping, formData, { kreditorId, buchungskreisId }) : '<!-- Keine Struktur definiert -->'}
           </pre>
         </div>
       </div>
 
-      {/* Generierte SAP-XML Ausgabe */}
-      {sapXml && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold text-gray-800 border-b border-white/30 pb-2 mb-4">Generierte SAP-XML</h2>
-          <div className="relative">
-            <textarea 
-              className="w-full h-80 p-4 font-mono text-sm bg-white/50 text-gray-800 rounded-xl border border-white/30 resize-none" 
-              value={sapXml} 
-              readOnly
-            />
-            <div className="absolute top-2 right-2 flex space-x-2">
-              <button 
-                onClick={() => handleCopy(sapXml)} 
-                className="p-2 rounded-full bg-black/20 text-gray-700 hover:bg-black/30" 
-                title="Kopieren"
-              >
-                <Copy size={16} />
-              </button>
-              <button 
-                onClick={() => handleDownload(sapXml, 'sap_invoice.xml', 'application/xml')} 
-                className="p-2 rounded-full bg-blue-600/80 text-white hover:bg-blue-600" 
-                title="Herunterladen"
-              >
-                <Download size={16} />
-              </button>
-              <button 
-                onClick={() => setSapXml('')} 
-                className="p-2 rounded-full bg-white/50 text-gray-700 hover:bg-white/80" 
-                title="Leeren"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       
       {/* Lösch-Modal */}
       {showDeleteModal && (
@@ -2491,7 +2637,17 @@ const App = () => {
                     <p className="text-sm text-gray-700"><span className="font-medium text-gray-600">Adresse:</span> {formData.recipientStreet}, {formData.recipientZip} {formData.recipientCity}</p>
                     <div className="pt-2">
                         <label className="block text-sm font-medium text-gray-600 mb-1">Buchungskreisnummer</label>
-                        <input type="text" value={buchungskreisId || ''} onChange={(e) => setBuchungskreisId(e.target.value)} className="w-full p-3 rounded-xl bg-white/50 text-gray-800 border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="text" value={buchungskreisId || ''} onChange={(e) => {
+                          setBuchungskreisId(e.target.value);
+                          // Live-Update der SAP-XML Vorschau
+                          if (sapXml) {
+                            const updatedXml = generateSapXmlFromMapping(sapMapping, formData, {
+                              kreditorId: kreditorId,
+                              buchungskreisId: e.target.value
+                            });
+                            setSapXml(updatedXml);
+                          }
+                        }} className="w-full p-3 rounded-xl bg-white/50 text-gray-800 border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                 </div>
                 <div className="space-y-2">
@@ -2500,7 +2656,17 @@ const App = () => {
                     <p className="text-sm text-gray-700"><span className="font-medium text-gray-600">Adresse:</span> {formData.senderStreet}, {formData.senderZip} {formData.senderCity}</p>
                      <div className="pt-2">
                         <label className="block text-sm font-medium text-gray-600 mb-1">Kreditorennummer</label>
-                        <input type="text" value={kreditorId || ''} onChange={(e) => setKreditorId(e.target.value)} className="w-full p-3 rounded-xl bg-white/50 text-gray-800 border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="text" value={kreditorId || ''} onChange={(e) => {
+                          setKreditorId(e.target.value);
+                          // Live-Update der SAP-XML Vorschau
+                          if (sapXml) {
+                            const updatedXml = generateSapXmlFromMapping(sapMapping, formData, {
+                              kreditorId: e.target.value,
+                              buchungskreisId: buchungskreisId
+                            });
+                            setSapXml(updatedXml);
+                          }
+                        }} className="w-full p-3 rounded-xl bg-white/50 text-gray-800 border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                 </div>
             </div>
@@ -2525,7 +2691,8 @@ const App = () => {
                 handleFileUpload={handleFileUpload} handleInputChange={handleInputChange} handleLineItemChange={handleLineItemChange} addLineItem={addLineItem}
                 removeLineItem={removeLineItem} loading={loading} generateXRechnungUBL={generateXRechnungUBL} loadingSummary={loadingSummary}
                 handleOpenSapModal={handleOpenSapModal} sapXml={sapXml} handleCopy={handleCopy} handleDownload={handleDownload} xrechnungXML={xrechnungXML}
-                selectedLayout={selectedLayout} unmappedFields={unmappedFields}
+                selectedLayout={selectedLayout} unmappedFields={unmappedFields} activeXmlTab={activeXmlTab} setActiveXmlTab={setActiveXmlTab} setSapXml={setSapXml}
+                setXrechnungXML={setXrechnungXML} dataSource={dataSource} showXRechnungButton={showXRechnungButton} xrechnungTabEnabled={xrechnungTabEnabled}
             />;
         case 'layoutSelection': return renderLayoutSelectionPage();
         case 'eRechnungMapping': return renderERechnungMappingPage();
@@ -2540,12 +2707,47 @@ const App = () => {
       <nav className="bg-white/60 backdrop-blur-xl border-b border-white/30 shadow-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold text-gray-800 tracking-wider">e-Rechnung</h1>
+            <h1 className="text-2xl font-bold text-gray-800 tracking-wider">mvp e-Rechnung DE</h1>
             <div className="flex items-center space-x-2">
               <button onClick={() => setCurrentPage('home')} className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'home' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200/80'}`}><Home size={18} /><span>Home</span></button>
-              <button onClick={() => setCurrentPage('layoutSelection')} className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'layoutSelection' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200/80'}`}><LayoutTemplate size={18} /><span>Layout</span></button>
-              <button onClick={() => setCurrentPage('eRechnungMapping')} className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'eRechnungMapping' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200/80'}`}><FileCode size={18} /><span>E-Rechnungs-Mapping</span></button>
-              <button onClick={() => setCurrentPage('sapMapping')} className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'sapMapping' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200/80'}`}><Table size={18} /><span>SAP-Mapping</span></button>
+              
+              {/* Admin Dropdown Menu */}
+              <div className="relative" ref={adminMenuRef}>
+                <button 
+                  onClick={() => setShowAdminMenu(!showAdminMenu)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${['layoutSelection', 'eRechnungMapping', 'sapMapping'].includes(currentPage) ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200/80'}`}
+                >
+                  <Settings size={18} />
+                  <span>Admin</span>
+                  <ChevronDown size={14} className={`transition-transform ${showAdminMenu ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {showAdminMenu && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white/90 backdrop-blur-xl border border-white/30 rounded-lg shadow-lg py-1 z-50">
+                    <button 
+                      onClick={() => { setCurrentPage('layoutSelection'); setShowAdminMenu(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100/80 flex items-center space-x-2 ${currentPage === 'layoutSelection' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'}`}
+                    >
+                      <LayoutTemplate size={16} />
+                      <span>Layout</span>
+                    </button>
+                    <button 
+                      onClick={() => { setCurrentPage('eRechnungMapping'); setShowAdminMenu(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100/80 flex items-center space-x-2 ${currentPage === 'eRechnungMapping' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'}`}
+                    >
+                      <FileCode size={16} />
+                      <span>E-Rechnungs-Mapping</span>
+                    </button>
+                    <button 
+                      onClick={() => { setCurrentPage('sapMapping'); setShowAdminMenu(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100/80 flex items-center space-x-2 ${currentPage === 'sapMapping' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'}`}
+                    >
+                      <Table size={16} />
+                      <span>SAP-Mapping</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
