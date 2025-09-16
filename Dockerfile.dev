@@ -5,13 +5,13 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package.json and package-lock.json to leverage Docker cache
-COPY src/package.json ./
+COPY package.json package-lock.json ./
 
 # Install application dependencies
 RUN npm install
 
 # Copy the rest of the application source code into the container
-COPY src/ .
+COPY . .
 
 # The React development server runs on port 3000
 EXPOSE 3000

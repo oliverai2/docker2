@@ -6,8 +6,9 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     volumes:
-      # Mount the source code for hot-reloading
+      # Mount the source code for hot-reloading, but exclude node_modules
       - .:/app
+      - /app/node_modules
     ports:
       # Map port 3000 on the host to port 3000 in the container
       - "3000:3000"
