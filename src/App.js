@@ -1202,12 +1202,14 @@ const HomePage = ({
     handleCopy,
     handleDownload,
     xrechnungXML,
+    en16931XML,
     selectedLayout,
     unmappedFields,
     activeXmlTab,
     setActiveXmlTab,
     setSapXml,
     setXrechnungXML,
+    setEn16931XML,
     dataSource,
     showXRechnungButton,
     xrechnungTabEnabled
@@ -1359,7 +1361,7 @@ const HomePage = ({
             {showXRechnungButton && (
               <button onClick={generateXRechnungUBL} disabled={loading} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl">
                 {loading ? <Loader2 className="animate-spin" size={20} /> : <FileText size={20} />}
-                <span>1. XRechnung UBL erstellen</span>
+                <span>e-Rechnung erstellen</span>
               </button>
             )}
             <button onClick={handleOpenSapModal} disabled={loadingSummary} className="p-3 flex items-center justify-center space-x-2 rounded-xl bg-white/50 hover:bg-white/80 text-gray-700 font-semibold shadow-sm transition-colors">
@@ -1421,8 +1423,9 @@ const HomePage = ({
             Zugferd PDF
           </button>
           <button 
-            className="px-4 py-2 rounded-lg bg-gray-200/50 text-gray-400 cursor-not-allowed"
-            disabled={true}
+            onClick={() => setActiveXmlTab('en16931')} 
+            className={`px-4 py-2 rounded-lg transition-colors ${activeXmlTab === 'en16931' ? 'bg-blue-600 text-white' : 'bg-white/50 text-gray-700 hover:bg-white/80'}`}
+            disabled={!en16931XML}
           >
             EN16931
           </button>
@@ -1440,14 +1443,22 @@ const HomePage = ({
         <div className="relative">
           <textarea 
             className="w-full h-80 p-4 font-mono text-sm bg-white/50 text-gray-800 rounded-xl border border-white/30 resize-none" 
-            value={activeXmlTab === 'xrechnung' ? xrechnungXML : sapXml} 
+            value={activeXmlTab === 'xrechnung' ? xrechnungXML : activeXmlTab === 'en16931' ? en16931XML : sapXml} 
             readOnly 
-            placeholder={activeXmlTab === 'xrechnung' ? "Generierte XRechnung-XML wird hier angezeigt..." : "Generierte SAP-XML wird hier angezeigt..."}
+            placeholder={
+              activeXmlTab === 'xrechnung' ? "Generierte XRechnung-XML wird hier angezeigt..." : 
+              activeXmlTab === 'en16931' ? "Generierte EN16931-XML wird hier angezeigt..." :
+              "Generierte SAP-XML wird hier angezeigt..."
+            }
           />
-          {(activeXmlTab === 'xrechnung' ? xrechnungXML : sapXml) && (
+          {(activeXmlTab === 'xrechnung' ? xrechnungXML : activeXmlTab === 'en16931' ? en16931XML : sapXml) && (
             <div className="absolute top-2 right-2 flex space-x-2">
               <button 
-                onClick={() => handleCopy(activeXmlTab === 'xrechnung' ? xrechnungXML : sapXml)} 
+                onClick={() => handleCopy(
+                  activeXmlTab === 'xrechnung' ? xrechnungXML : 
+                  activeXmlTab === 'en16931' ? en16931XML : 
+                  sapXml
+                )} 
                 className="p-2 rounded-full bg-black/20 text-gray-700 hover:bg-black/30" 
                 title="Kopieren"
               >
@@ -1455,8 +1466,12 @@ const HomePage = ({
               </button>
               <button 
                 onClick={() => handleDownload(
-                  activeXmlTab === 'xrechnung' ? xrechnungXML : sapXml, 
-                  activeXmlTab === 'xrechnung' ? 'xrechnung.xml' : 'sap.xml', 
+                  activeXmlTab === 'xrechnung' ? xrechnungXML : 
+                  activeXmlTab === 'en16931' ? en16931XML : 
+                  sapXml, 
+                  activeXmlTab === 'xrechnung' ? 'xrechnung.xml' : 
+                  activeXmlTab === 'en16931' ? 'en16931.xml' :
+                  'sap.xml', 
                   'application/xml'
                 )} 
                 className="p-2 rounded-full bg-blue-600/80 text-white hover:bg-blue-600" 
@@ -1465,7 +1480,11 @@ const HomePage = ({
                 <Download size={16} />
               </button>
               <button 
-                onClick={() => activeXmlTab === 'xrechnung' ? setXrechnungXML('') : setSapXml('')} 
+                onClick={() => 
+                  activeXmlTab === 'xrechnung' ? setXrechnungXML('') : 
+                  activeXmlTab === 'en16931' ? setEn16931XML('') :
+                  setSapXml('')
+                } 
                 className="p-2 rounded-full bg-white/50 text-gray-700 hover:bg-white/80" 
                 title="Leeren"
               >
@@ -1521,6 +1540,7 @@ const App = () => {
   });
 
   const [xrechnungXML, setXrechnungXML] = useState('');
+  const [en16931XML, setEn16931XML] = useState('');
   const [sapXml, setSapXml] = useState('');
   const [activeXmlTab, setActiveXmlTab] = useState('xrechnung');
   const [dataSource, setDataSource] = useState(null); // 'upload' oder 'ki' oder null
@@ -2196,6 +2216,7 @@ const App = () => {
 
     setLoading(true);
     setXrechnungXML('');
+    setEn16931XML('');
     setSapXml('');
 
     try {
@@ -2234,8 +2255,128 @@ const App = () => {
 </Invoice>`;
       
       setXrechnungXML(xmlString);
+      
+      // Parallel EN16931 generieren (ohne separaten Loading-State)
+      const en16931LineItemsXML = formData.lineItems.map((item, index) => `
+    <InvoiceLine>
+        <ID>${index + 1}</ID>
+        <InvoicedQuantity unitCode="${escapeXml(item.unitCode)}">${parseFloat(item.billedQuantity).toFixed(2)}</InvoicedQuantity>
+        <LineExtensionAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${parseFloat(item.netAmount).toFixed(2)}</LineExtensionAmount>
+        <Item>
+            <Name>${escapeXml(item.name)}</Name>
+            <ClassifiedTaxCategory>
+                <ID>S</ID>
+                <Percent>${taxRate.toFixed(2)}</Percent>
+                <TaxScheme>
+                    <ID>VAT</ID>
+                </TaxScheme>
+            </ClassifiedTaxCategory>
+        </Item>
+        <Price>
+            <PriceAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${parseFloat(item.price).toFixed(2)}</PriceAmount>
+        </Price>
+    </InvoiceLine>`).join('');
+
+      const en16931XmlString = `<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+    <CustomizationID>urn:cen.eu:en16931:2017</CustomizationID>
+    <ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:3.0</ProfileID>
+    <ID>${escapeXml(formData.reference)}</ID>
+    <IssueDate>${formData.invoiceDate}</IssueDate>
+    <DueDate>${formData.serviceDate}</DueDate>
+    <InvoiceTypeCode>${formData.invoiceTypeCode}</InvoiceTypeCode>
+    <DocumentCurrencyCode>${escapeXml(formData.invoiceCurrencyCode)}</DocumentCurrencyCode>
+    <BuyerReference>${escapeXml(formData.leitwegId)}</BuyerReference>
+    <PaymentTerms>
+        <Note>${escapeXml(formData.paymentTerms)}</Note>
+    </PaymentTerms>
+    <AccountingSupplierParty>
+        <Party>
+            <EndpointID schemeID="EM">${escapeXml(formData.senderElectronicAddress)}</EndpointID>
+            <PartyLegalEntity>
+                <RegistrationName>${escapeXml(formData.senderName)}</RegistrationName>
+            </PartyLegalEntity>
+            <PostalAddress>
+                <StreetName>${escapeXml(formData.senderStreet)}</StreetName>
+                <CityName>${escapeXml(formData.senderCity)}</CityName>
+                <PostalZone>${escapeXml(formData.senderZip)}</PostalZone>
+                <Country>
+                    <IdentificationCode>${escapeXml(formData.senderCountry)}</IdentificationCode>
+                </Country>
+            </PostalAddress>
+            <PartyTaxScheme>
+                <CompanyID>${escapeXml(formData.senderTaxId)}</CompanyID>
+                <TaxScheme>
+                    <ID>VAT</ID>
+                </TaxScheme>
+            </PartyTaxScheme>
+            <Contact>
+                <Name>${escapeXml(formData.senderContactName)}</Name>
+                <Telephone>${escapeXml(formData.senderContactPhone)}</Telephone>
+                <ElectronicMail>${escapeXml(formData.senderContactEmail)}</ElectronicMail>
+            </Contact>
+        </Party>
+    </AccountingSupplierParty>
+    <AccountingCustomerParty>
+        <Party>
+            <EndpointID schemeID="EM">${escapeXml(formData.recipientElectronicAddress)}</EndpointID>
+            <PartyLegalEntity>
+                <RegistrationName>${escapeXml(formData.recipientName)}</RegistrationName>
+            </PartyLegalEntity>
+            <PostalAddress>
+                <StreetName>${escapeXml(formData.recipientStreet)}</StreetName>
+                <CityName>${escapeXml(formData.recipientCity)}</CityName>
+                <PostalZone>${escapeXml(formData.recipientZip)}</PostalZone>
+                <Country>
+                    <IdentificationCode>${escapeXml(formData.recipientCountry)}</IdentificationCode>
+                </Country>
+            </PostalAddress>
+        </Party>
+    </AccountingCustomerParty>
+    <PaymentMeans>
+        <PaymentMeansCode>${formData.paymentMeansCode}</PaymentMeansCode>
+        <PayeeFinancialAccount>
+            <ID>${escapeXml(formData.iban)}</ID>
+            <FinancialInstitutionBranch>
+                <ID>${escapeXml(formData.bic)}</ID>
+            </FinancialInstitutionBranch>
+        </PayeeFinancialAccount>
+    </PaymentMeans>
+    <TaxTotal>
+        <TaxAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalTaxAmount}</TaxAmount>
+        <TaxSubtotal>
+            <TaxableAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalNetAmount}</TaxableAmount>
+            <TaxAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalTaxAmount}</TaxAmount>
+            <TaxCategory>
+                <ID>S</ID>
+                <Percent>${taxRate.toFixed(2)}</Percent>
+                <TaxScheme>
+                    <ID>VAT</ID>
+                </TaxScheme>
+            </TaxCategory>
+        </TaxSubtotal>
+    </TaxTotal>
+    <LegalMonetaryTotal>
+        <LineExtensionAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalNetAmount}</LineExtensionAmount>
+        <TaxExclusiveAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalNetAmount}</TaxExclusiveAmount>
+        <TaxInclusiveAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.grossAmount}</TaxInclusiveAmount>
+        <PayableAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.grossAmount}</PayableAmount>
+    </LegalMonetaryTotal>
+    ${en16931LineItemsXML}
+</Invoice>`;
+      
+      setEn16931XML(en16931XmlString);
       setActiveXmlTab('xrechnung'); // Automatisch zum XRechnung-Tab wechseln
-      showMessage('Valide XRechnung 3.0.2 UBL erfolgreich erstellt!', 'success');
+      
+      showMessage('Valide XRechnung 3.0.2 UBL und EN16931 erfolgreich erstellt!', 'success');
+      
+      // Scroll zur Vorschau-Sektion
+      setTimeout(() => {
+        const previewSection = document.querySelector('h2[class*="text-2xl"]:last-of-type');
+        if (previewSection && previewSection.textContent.includes('Vorschau')) {
+          previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     } catch (error) {
       console.error('Fehler bei der Generierung der XRechnung:', error);
       showMessage(error.message || 'Fehler bei der Generierung.', 'error');
@@ -2243,7 +2384,7 @@ const App = () => {
       setLoading(false);
     }
   };
-  
+
   const generateInvoiceSummary = async () => {
     setLoadingSummary(true);
     try {
@@ -2695,8 +2836,8 @@ const App = () => {
                 handleFileUpload={handleFileUpload} handleInputChange={handleInputChange} handleLineItemChange={handleLineItemChange} addLineItem={addLineItem}
                 removeLineItem={removeLineItem} loading={loading} generateXRechnungUBL={generateXRechnungUBL} loadingSummary={loadingSummary}
                 handleOpenSapModal={handleOpenSapModal} sapXml={sapXml} handleCopy={handleCopy} handleDownload={handleDownload} xrechnungXML={xrechnungXML}
-                selectedLayout={selectedLayout} unmappedFields={unmappedFields} activeXmlTab={activeXmlTab} setActiveXmlTab={setActiveXmlTab} setSapXml={setSapXml}
-                setXrechnungXML={setXrechnungXML} dataSource={dataSource} showXRechnungButton={showXRechnungButton} xrechnungTabEnabled={xrechnungTabEnabled}
+                en16931XML={en16931XML} selectedLayout={selectedLayout} unmappedFields={unmappedFields} activeXmlTab={activeXmlTab} setActiveXmlTab={setActiveXmlTab} setSapXml={setSapXml}
+                setXrechnungXML={setXrechnungXML} setEn16931XML={setEn16931XML} dataSource={dataSource} showXRechnungButton={showXRechnungButton} xrechnungTabEnabled={xrechnungTabEnabled}
             />;
         case 'layoutSelection': return renderLayoutSelectionPage();
         case 'eRechnungMapping': return renderERechnungMappingPage();
