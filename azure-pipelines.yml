@@ -1,0 +1,113 @@
+# Azure DevOps Pipeline für E-Rechnung React App
+# Vereinfachte Version ohne Container Registry
+
+trigger:
+  branches:
+    include:
+    - master
+    - main
+    - develop
+
+variables:
+  # Docker-Variablen
+  imageRepository: 'e-rechnung-app'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  dockerfileDevPath: '$(Build.SourcesDirectory)/Dockerfile.dev'
+  tag: '$(Build.BuildId)'
+
+stages:
+# ==========================================
+# BUILD STAGE - Docker Images erstellen
+# ==========================================
+- stage: Build
+  displayName: 'Build Docker Images'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build Job'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    # Checkout des Codes
+    - checkout: self
+      displayName: 'Checkout Repository'
+    
+    # Node.js Setup für Tests
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Setup Node.js'
+    
+    # Dependencies installieren
+    - script: |
+        npm ci
+      displayName: 'Install Dependencies'
+      workingDirectory: '$(Build.SourcesDirectory)'
+    
+    # Tests ausführen (optional) - nur Syntax-Check
+    - script: |
+        npm run build
+      displayName: 'Build React App'
+      workingDirectory: '$(Build.SourcesDirectory)'
+    
+    # Development Docker Image bauen (nur lokal)
+    - script: |
+        docker build -f $(dockerfileDevPath) -t $(imageRepository):dev-$(tag) .
+        docker build -f $(dockerfilePath) -t $(imageRepository):prod-$(tag) .
+        echo "✅ Docker Images erfolgreich erstellt:"
+        echo "   - $(imageRepository):dev-$(tag)"
+        echo "   - $(imageRepository):prod-$(tag)"
+        docker images | grep $(imageRepository)
+      displayName: 'Build Docker Images'
+      workingDirectory: '$(Build.SourcesDirectory)'
+    
+    # Build-Artefakte speichern
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: '$(Build.SourcesDirectory)/build'
+        artifactName: 'react-build'
+        publishLocation: 'Container'
+      displayName: 'Publish Build Artifacts'
+      condition: succeededOrFailed()
+
+# ==========================================
+# DEPLOY TO DEVELOPMENT
+# ==========================================
+- stage: TestAndValidate
+  displayName: 'Test and Validate'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: TestJob
+    displayName: 'Validation Tests'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - script: |
+        echo "🎯 Build erfolgreich abgeschlossen!"
+        echo "✅ React App wurde kompiliert"
+        echo "✅ Docker Images wurden erstellt"
+        echo ""
+        echo "📦 Verfügbare Images:"
+        echo "   - $(imageRepository):dev-$(tag)"
+        echo "   - $(imageRepository):prod-$(tag)"
+        echo ""
+        echo "🚀 Nächste Schritte:"
+        echo "   1. Images können nun deployed werden"
+        echo "   2. Development Environment: Port 3000"
+        echo "   3. Production Environment: Port 80"
+        echo ""
+        echo "✨ Pipeline erfolgreich abgeschlossen!"
+      displayName: 'Build Summary'
+    
+    # Validierung, dass Build-Dateien existieren
+    - script: |
+        if [ -d "$(Build.SourcesDirectory)/build" ]; then
+          echo "✅ Build-Verzeichnis gefunden"
+          ls -la $(Build.SourcesDirectory)/build/
+        else
+          echo "❌ Build-Verzeichnis nicht gefunden"
+          exit 1
+        fi
+      displayName: 'Validate Build Output'
