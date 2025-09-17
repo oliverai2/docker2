@@ -8,11 +8,11 @@ RUN apk add --no-cache python3 make g++
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json und package-lock.json zuerst für besseres Docker Layer Caching
-COPY package.json package-lock.json ./
+# Copy package.json* zuerst für besseres Docker Layer Caching
+COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production --silent
+# Install dependencies (inkl. devDependencies für Tailwind/PostCSS)
+RUN npm ci --silent
 
 # Copy alle notwendigen Dateien für den Build
 COPY public/ ./public/
@@ -20,6 +20,7 @@ COPY src/ ./src/
 COPY tailwind.config.js postcss.config.js ./
 
 # Build die Anwendung für Production
+ENV CI=true
 RUN npm run build
 
 # Stage 2: Serve the application using Nginx
