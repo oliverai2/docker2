@@ -1,20 +1,29 @@
-# Use an official Node runtime as a parent image
+# Development Dockerfile für React-Anwendung
 FROM node:18-alpine
 
-# Set the working directory in the container
+# Installiere Abhängigkeiten für native Pakete
+RUN apk add --no-cache python3 make g++
+
+# Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json to leverage Docker cache
+# Copy package.json und package-lock.json für besseres Caching
 COPY package.json package-lock.json ./
 
-# Install application dependencies
-RUN npm install
+# Install alle dependencies (einschließlich devDependencies)
+RUN npm ci --silent
 
-# Copy the rest of the application source code into the container
-COPY . .
+# Copy alle Source-Dateien
+COPY public/ ./public/
+COPY src/ ./src/
+COPY tailwind.config.js postcss.config.js ./
 
-# The React development server runs on port 3000
+# React development server läuft auf Port 3000
 EXPOSE 3000
 
-# Command to run the development server
+# Healthcheck für Development
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+
+# Command für den Development Server
 CMD ["npm", "start"]

@@ -1,31 +1,36 @@
 # Git files
 .git
 .gitignore
+README.md
 
-# Node modules - these will be installed inside the container
+# Node modules - werden im Container installiert
 node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Build output - this is generated inside the container
+# Build output - wird im Container generiert
 build
+dist
 
-# Environment variables
+# Environment variables - sicherheitsrelevant
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# NPM debug log
-npm-debug.log
-yarn-debug.log*
-yarn-error.log*
+# Test coverage
+coverage/
+.nyc_output
 
-# IDE files
+# IDE und Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.vimrc
 
 # OS generated files
 .DS_Store
@@ -40,9 +45,21 @@ Thumbs.db
 logs
 *.log
 
-# Coverage directory
-coverage/
+# Docker files (vermeidet rekursive Kopien)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Entwicklungstools
+.eslintrc*
+.prettierrc*
+jest.config.js
+tsconfig.json
 
 # Temporary files
 *.tmp
 *.temp
+.cache
+
+# Sicherheits- und Analyse-Tools
+.snyk
