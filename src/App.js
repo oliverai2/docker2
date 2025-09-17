@@ -63,44 +63,44 @@ const blankFormData = {
 
 // Mapping-Daten für E-Rechnungs-Standards (EN 16931)
 const eRechnungMappingData = [
-    { id: 1, btId: 'BT-1', description: 'Rechnungsnummer', xrechnungPath: 'cbc:ID', zugferdPath: 'rsm:ExchangedDocument/ram:ID' },
-    { id: 2, btId: 'BT-2', description: 'Rechnungsdatum', xrechnungPath: 'cbc:IssueDate', zugferdPath: 'rsm:ExchangedDocument/ram:IssueDateTime' },
-    { id: 3, btId: 'BT-3', description: 'Rechnungstyp', xrechnungPath: 'cbc:InvoiceTypeCode', zugferdPath: 'rsm:ExchangedDocument/ram:TypeCode' },
-    { id: 4, btId: 'BT-5', description: 'Währung', xrechnungPath: 'cbc:DocumentCurrencyCode', zugferdPath: '.../ram:InvoiceCurrencyCode' },
-    { id: 5, btId: 'BT-10', description: 'Leitweg-ID', xrechnungPath: 'cbc:BuyerReference', zugferdPath: '.../ram:BuyerReference' },
-    { id: 6, btId: 'BT-20', description: 'Zahlungsbedingungen', xrechnungPath: 'cac:PaymentTerms/cbc:Note', zugferdPath: '.../ram:ApplicableTradePaymentTerms/ram:Description' },
-    { id: 7, btId: 'BT-27', description: 'Name des Verkäufers', xrechnungPath: 'cac:AccountingSupplierParty/.../cbc:Name', zugferdPath: '.../ram:SellerTradeParty/ram:Name' },
-    { id: 8, btId: 'BT-31', description: 'USt-IdNr. des Verkäufers', xrechnungPath: '.../PartyTaxScheme/cbc:CompanyID', zugferdPath: '.../ram:SpecifiedTaxRegistration/ram:ID' },
-    { id: 9, btId: 'BT-34', description: 'Elektronische Adresse (Verkäufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID' },
-    { id: 10, btId: 'BT-35', description: 'Straße des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne' },
-    { id: 11, btId: 'BT-37', description: 'Ort des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName' },
-    { id: 12, btId: 'BT-38', description: 'PLZ des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode' },
-    { id: 13, btId: 'BT-40', description: 'Land des Verkäufers', xrechnungPath: '.../Country/cbc:IdentificationCode', zugferdPath: '.../ram:PostalTradeAddress/ram:CountryID' },
-    { id: 14, btId: 'BT-41', description: 'Kontaktpunkt des Verkäufers', xrechnungPath: '.../Contact/cbc:Name', zugferdPath: '.../ram:DefinedTradeContact/ram:PersonName' },
-    { id: 15, btId: 'BT-42', description: 'Telefon des Verkäufers', xrechnungPath: '.../Contact/cbc:Telephone', zugferdPath: '.../ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber' },
-    { id: 16, btId: 'BT-43', description: 'E-Mail des Verkäufers', xrechnungPath: '.../Contact/cbc:ElectronicMail', zugferdPath: '.../ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID' },
-    { id: 17, btId: 'BT-44', description: 'Name des Käufers', xrechnungPath: 'cac:AccountingCustomerParty/.../cbc:Name', zugferdPath: '.../ram:BuyerTradeParty/ram:Name' },
-    { id: 18, btId: 'BT-49', description: 'Elektronische Adresse (Käufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID' },
-    { id: 19, btId: 'BT-50', description: 'Straße des Käufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne' },
-    { id: 20, btId: 'BT-52', description: 'Ort des Käufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName' },
-    { id: 21, btId: 'BT-53', description: 'PLZ des Käufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode' },
-    { id: 22, btId: 'BT-55', description: 'Land des Käufers', xrechnungPath: '.../Country/cbc:IdentificationCode', zugferdPath: '.../ram:PostalTradeAddress/ram:CountryID' },
-    { id: 23, btId: 'BT-72', description: 'Liefer-/Leistungsdatum', xrechnungPath: 'cbc:DueDate', zugferdPath: '.../ram:ActualDeliverySupplyChainEvent/ram:OccurrenceDateTime' },
-    { id: 24, btId: 'BT-81', description: 'Zahlungsart (Code)', xrechnungPath: '.../PaymentMeans/cbc:PaymentMeansCode', zugferdPath: '.../ram:PaymentMeansCode' },
-    { id: 25, btId: 'BT-84', description: 'IBAN', xrechnungPath: '.../PayeeFinancialAccount/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:IBANID' },
-    { id: 26, btId: 'BT-86', description: 'BIC / SWIFT-Code', xrechnungPath: '.../FinancialInstitutionBranch/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:ProprietaryID' },
-    { id: 27, btId: 'BT-106', description: 'Summe Nettobeträge Positionen', xrechnungPath: '.../LegalMonetaryTotal/cbc:LineExtensionAmount', zugferdPath: '.../ram:GrandTotalAmount' },
-    { id: 28, btId: 'BT-109', description: 'Rechnungsnettobetrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:TaxExclusiveAmount', zugferdPath: '.../ram:TaxBasisTotalAmount' },
-    { id: 29, btId: 'BT-110', description: 'Gesamtsteuerbetrag', xrechnungPath: '.../TaxTotal/cbc:TaxAmount', zugferdPath: '.../ram:TaxTotalAmount[@currencyID]' },
-    { id: 30, btId: 'BT-112', description: 'Rechnungsbruttobetrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:TaxInclusiveAmount', zugferdPath: '.../ram:GrandTotalAmount' },
-    { id: 31, btId: 'BT-115', description: 'Zu zahlender Betrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:PayableAmount', zugferdPath: '.../ram:DuePayableAmount' },
-    { id: 32, btId: 'BT-126', description: 'Positionsnummer', xrechnungPath: '.../InvoiceLine/cbc:ID', zugferdPath: '.../ram:AssociatedDocumentLineDocument/ram:LineID' },
-    { id: 33, btId: 'BT-129', description: 'Menge der Position', xrechnungPath: '.../cbc:InvoicedQuantity', zugferdPath: '.../ram:BilledQuantity' },
-    { id: 34, btId: 'BT-130', description: 'Einheit der Position', xrechnungPath: '.../cbc:InvoicedQuantity/@unitCode', zugferdPath: '.../ram:BilledQuantity/@unitCode' },
-    { id: 35, btId: 'BT-131', description: 'Nettobetrag der Position', xrechnungPath: '.../cbc:LineExtensionAmount', zugferdPath: '.../ram:SpecifiedTradeSettlementLineMonetarySummation/ram:LineTotalAmount' },
-    { id: 36, btId: 'BT-146', description: 'Preis der Position', xrechnungPath: '.../Price/cbc:PriceAmount', zugferdPath: '.../ram:GrossPriceProductTradePrice/ram:ChargeAmount' },
-    { id: 37, btId: 'BT-152', description: 'Steuersatz der Position (%)', xrechnungPath: '.../cbc:Percent', zugferdPath: '.../ram:ApplicableTradeTax/ram:RateApplicablePercent' },
-    { id: 38, btId: 'BT-153', description: 'Artikelname der Position', xrechnungPath: '.../Item/cbc:Name', zugferdPath: '.../ram:SpecifiedTradeProduct/ram:Name' },
+    { id: 1, btId: 'BT-1', en16931: 'Invoice number', description: 'Rechnungsnummer', xrechnungPath: 'cbc:ID', zugferdPath: 'rsm:ExchangedDocument/ram:ID' },
+    { id: 2, btId: 'BT-2', en16931: 'Invoice issue date', description: 'Rechnungsdatum', xrechnungPath: 'cbc:IssueDate', zugferdPath: 'rsm:ExchangedDocument/ram:IssueDateTime' },
+    { id: 3, btId: 'BT-3', en16931: 'Invoice type code', description: 'Rechnungstyp', xrechnungPath: 'cbc:InvoiceTypeCode', zugferdPath: 'rsm:ExchangedDocument/ram:TypeCode' },
+    { id: 4, btId: 'BT-5', en16931: 'Invoice currency code', description: 'Währung', xrechnungPath: 'cbc:DocumentCurrencyCode', zugferdPath: '.../ram:InvoiceCurrencyCode' },
+    { id: 5, btId: 'BT-10', en16931: 'Buyer reference', description: 'Leitweg-ID', xrechnungPath: 'cbc:BuyerReference', zugferdPath: '.../ram:BuyerReference' },
+    { id: 6, btId: 'BT-20', en16931: 'Payment terms', description: 'Zahlungsbedingungen', xrechnungPath: 'cac:PaymentTerms/cbc:Note', zugferdPath: '.../ram:ApplicableTradePaymentTerms/ram:Description' },
+    { id: 7, btId: 'BT-27', en16931: 'Seller name', description: 'Name des Verkäufers', xrechnungPath: 'cac:AccountingSupplierParty/.../cbc:Name', zugferdPath: '.../ram:SellerTradeParty/ram:Name' },
+    { id: 8, btId: 'BT-31', en16931: 'Seller VAT identifier', description: 'USt-IdNr. des Verkäufers', xrechnungPath: '.../PartyTaxScheme/cbc:CompanyID', zugferdPath: '.../ram:SpecifiedTaxRegistration/ram:ID' },
+    { id: 9, btId: 'BT-34', en16931: 'Seller electronic address', description: 'Elektronische Adresse (Verkäufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID' },
+    { id: 10, btId: 'BT-35', en16931: 'Seller address line 1', description: 'Straße des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne' },
+    { id: 11, btId: 'BT-37', en16931: 'Seller city', description: 'Ort des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName' },
+    { id: 12, btId: 'BT-38', en16931: 'Seller post code', description: 'PLZ des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode' },
+    { id: 13, btId: 'BT-40', en16931: 'Seller country code', description: 'Land des Verkäufers', xrechnungPath: '.../Country/cbc:IdentificationCode', zugferdPath: '.../ram:PostalTradeAddress/ram:CountryID' },
+    { id: 14, btId: 'BT-41', en16931: 'Seller contact point', description: 'Kontaktpunkt des Verkäufers', xrechnungPath: '.../Contact/cbc:Name', zugferdPath: '.../ram:DefinedTradeContact/ram:PersonName' },
+    { id: 15, btId: 'BT-42', en16931: 'Seller contact telephone number', description: 'Telefon des Verkäufers', xrechnungPath: '.../Contact/cbc:Telephone', zugferdPath: '.../ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber' },
+    { id: 16, btId: 'BT-43', en16931: 'Seller contact email address', description: 'E-Mail des Verkäufers', xrechnungPath: '.../Contact/cbc:ElectronicMail', zugferdPath: '.../ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID' },
+    { id: 17, btId: 'BT-44', en16931: 'Buyer name', description: 'Name des Käufers', xrechnungPath: 'cac:AccountingCustomerParty/.../cbc:Name', zugferdPath: '.../ram:BuyerTradeParty/ram:Name' },
+    { id: 18, btId: 'BT-49', en16931: 'Buyer electronic address', description: 'Elektronische Adresse (Käufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID' },
+    { id: 19, btId: 'BT-50', en16931: 'Buyer address line 1', description: 'Straße des Käufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne' },
+    { id: 20, btId: 'BT-52', en16931: 'Buyer city', description: 'Ort des Käufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName' },
+    { id: 21, btId: 'BT-53', en16931: 'Buyer post code', description: 'PLZ des Käufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode' },
+    { id: 22, btId: 'BT-55', en16931: 'Buyer country code', description: 'Land des Käufers', xrechnungPath: '.../Country/cbc:IdentificationCode', zugferdPath: '.../ram:PostalTradeAddress/ram:CountryID' },
+    { id: 23, btId: 'BT-72', en16931: 'Actual delivery date', description: 'Liefer-/Leistungsdatum', xrechnungPath: 'cbc:DueDate', zugferdPath: '.../ram:ActualDeliverySupplyChainEvent/ram:OccurrenceDateTime' },
+    { id: 24, btId: 'BT-81', en16931: 'Payment means type code', description: 'Zahlungsart (Code)', xrechnungPath: '.../PaymentMeans/cbc:PaymentMeansCode', zugferdPath: '.../ram:PaymentMeansCode' },
+    { id: 25, btId: 'BT-84', en16931: 'Payment account identifier', description: 'IBAN', xrechnungPath: '.../PayeeFinancialAccount/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:IBANID' },
+    { id: 26, btId: 'BT-86', en16931: 'Payment service provider identifier', description: 'BIC / SWIFT-Code', xrechnungPath: '.../FinancialInstitutionBranch/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:ProprietaryID' },
+    { id: 27, btId: 'BT-106', en16931: 'Sum of Invoice line net amount', description: 'Summe Nettobeträge Positionen', xrechnungPath: '.../LegalMonetaryTotal/cbc:LineExtensionAmount', zugferdPath: '.../ram:GrandTotalAmount' },
+    { id: 28, btId: 'BT-109', en16931: 'Invoice total amount without VAT', description: 'Rechnungsnettobetrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:TaxExclusiveAmount', zugferdPath: '.../ram:TaxBasisTotalAmount' },
+    { id: 29, btId: 'BT-110', en16931: 'Invoice total VAT amount', description: 'Gesamtsteuerbetrag', xrechnungPath: '.../TaxTotal/cbc:TaxAmount', zugferdPath: '.../ram:TaxTotalAmount[@currencyID]' },
+    { id: 30, btId: 'BT-112', en16931: 'Invoice total amount with VAT', description: 'Rechnungsbruttobetrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:TaxInclusiveAmount', zugferdPath: '.../ram:GrandTotalAmount' },
+    { id: 31, btId: 'BT-115', en16931: 'Amount due for payment', description: 'Zu zahlender Betrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:PayableAmount', zugferdPath: '.../ram:DuePayableAmount' },
+    { id: 32, btId: 'BT-126', en16931: 'Invoice line identifier', description: 'Positionsnummer', xrechnungPath: '.../InvoiceLine/cbc:ID', zugferdPath: '.../ram:AssociatedDocumentLineDocument/ram:LineID' },
+    { id: 33, btId: 'BT-129', en16931: 'Invoiced quantity', description: 'Menge der Position', xrechnungPath: '.../cbc:InvoicedQuantity', zugferdPath: '.../ram:BilledQuantity' },
+    { id: 34, btId: 'BT-130', en16931: 'Invoiced quantity unit of measure code', description: 'Einheit der Position', xrechnungPath: '.../cbc:InvoicedQuantity/@unitCode', zugferdPath: '.../ram:BilledQuantity/@unitCode' },
+    { id: 35, btId: 'BT-131', en16931: 'Invoice line net amount', description: 'Nettobetrag der Position', xrechnungPath: '.../cbc:LineExtensionAmount', zugferdPath: '.../ram:SpecifiedTradeSettlementLineMonetarySummation/ram:LineTotalAmount' },
+    { id: 36, btId: 'BT-146', en16931: 'Item net price', description: 'Preis der Position', xrechnungPath: '.../Price/cbc:PriceAmount', zugferdPath: '.../ram:GrossPriceProductTradePrice/ram:ChargeAmount' },
+    { id: 37, btId: 'BT-152', en16931: 'Invoiced item VAT rate', description: 'Steuersatz der Position (%)', xrechnungPath: '.../cbc:Percent', zugferdPath: '.../ram:ApplicableTradeTax/ram:RateApplicablePercent' },
+    { id: 38, btId: 'BT-153', en16931: 'Item name', description: 'Artikelname der Position', xrechnungPath: '.../Item/cbc:Name', zugferdPath: '.../ram:SpecifiedTradeProduct/ram:Name' },
 ].sort((a, b) => parseInt(a.btId.substring(3)) - parseInt(b.btId.substring(3)));
 
 // Verfügbare Platzhalter mit Kategorien für intelligente Verwaltung
@@ -980,7 +980,6 @@ const LayoutClassic = ({ formData }) => (
         </div>
       </section>
       <footer className="mt-12 pt-6 border-t-2 border-gray-100 text-center text-xs text-gray-500">
-        Vielen Dank für Ihren Auftrag!
       </footer>
     </div>
 );
@@ -1103,7 +1102,6 @@ const LayoutMinimalist = ({ formData }) => (
         </section>
         <footer className="mt-10 pt-10 border-t border-black text-center">
             <p>IBAN: {formData.iban}</p>
-            <p>Vielen Dank.</p>
         </footer>
     </div>
 );
@@ -1219,7 +1217,7 @@ const HomePage = ({
         {/* Left side: Form */}
         <div className="space-y-6" ref={formRef}>
           <div className="flex justify-between items-center border-b border-white/30 pb-2 mb-4">
-              <h2 className="text-2xl font-semibold text-gray-800">Rechnungsdatenerfassung</h2>
+              <h2 className="text-2xl font-semibold text-gray-800">Rechnungsdaten</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -1373,19 +1371,23 @@ const HomePage = ({
         </div>
 
         {/* Right side: HTML Preview */}
-        <div className="h-full">
-            <div className="sticky top-20 h-[calc(100vh-160px)] overflow-hidden" ref={previewContainerRef}>
+        <div className="h-full -mx-2">
+            <div className="sticky top-20 h-[calc(100vh-100px)] overflow-hidden px-1" ref={previewContainerRef}>
                 <div 
                   ref={previewContentRef} 
                   style={{ 
-                    transform: `translateY(${previewTransform}px)`, 
+                    transform: `translateY(${previewTransform}px) scale(1.05)`, 
+                    transformOrigin: 'top left',
                     transition: 'transform 0.2s ease-out' 
                   }}
                 >
-                    <div className="flex justify-between items-center border-b border-white/30 pb-2 mb-4">
+                    <div className="flex justify-between items-center border-b border-white/30 pb-2 mb-4 px-1">
                         <h2 className="text-2xl font-semibold text-gray-800">Rechnungsvorschau</h2>
                     </div>
-                    <InvoicePreview formData={formData} layout={selectedLayout} />
+                    <div className="px-1">
+                        <InvoicePreview formData={formData} layout={selectedLayout} />
+                    </div>
+                    <div className="h-16 md:h-24" />
                 </div>
             </div>
         </div>
@@ -2543,6 +2545,7 @@ const App = () => {
                 <thead>
                     <tr className="border-b border-gray-300/50">
                         <th className="p-3 text-left font-medium text-gray-800">BT-ID</th>
+                        <th className="p-3 text-left font-medium text-gray-800">EN 16931 (Grundformat)</th>
                         <th className="p-3 text-left font-medium text-gray-800">Beschreibung</th>
                         <th className="p-3 text-left font-medium text-gray-800">XRechnung (UBL)</th>
                         <th className="p-3 text-left font-medium text-gray-800">ZUGFeRD (CII)</th>
@@ -2552,6 +2555,7 @@ const App = () => {
                     {eRechnungMappingData.map((row) => (
                         <tr key={row.id} className="border-b border-gray-300/30 hover:bg-white/20 transition-colors">
                             <td className="p-3 font-semibold text-gray-700">{row.btId}</td>
+                            <td className="p-3 font-mono text-blue-600 text-xs">{row.en16931}</td>
                             <td className="p-3 text-gray-700">{row.description}</td>
                             <td className="p-3 font-mono text-gray-600 text-xs">{row.xrechnungPath}</td>
                             <td className="p-3 font-mono text-gray-600 text-xs">{row.zugferdPath}</td>
