@@ -2655,7 +2655,12 @@ const App = () => {
                 <cac:Country>
                     <cbc:IdentificationCode>${escapeXml(enhancedFormData.senderCountry)}</cbc:IdentificationCode>
                 </cac:Country>
-            </cac:PostalAddress>` : ''}
+            </cac:PostalAddress>` : `
+            <cac:PostalAddress>
+                <cac:Country>
+                    <cbc:IdentificationCode>${escapeXml(enhancedFormData.senderCountry)}</cbc:IdentificationCode>
+                </cac:Country>
+            </cac:PostalAddress>`}
             <cac:PartyTaxScheme>
                 <cbc:CompanyID>${escapeXml(enhancedFormData.senderTaxId)}</cbc:CompanyID>
                 <cac:TaxScheme>
@@ -2684,7 +2689,12 @@ const App = () => {
                 <cac:Country>
                     <cbc:IdentificationCode>${escapeXml(enhancedFormData.recipientCountry)}</cbc:IdentificationCode>
                 </cac:Country>
-            </cac:PostalAddress>` : ''}
+            </cac:PostalAddress>` : `
+            <cac:PostalAddress>
+                <cac:Country>
+                    <cbc:IdentificationCode>${escapeXml(enhancedFormData.recipientCountry)}</cbc:IdentificationCode>
+                </cac:Country>
+            </cac:PostalAddress>`}
         </cac:Party>
     </cac:AccountingCustomerParty>${generateDeliveryInfo()}
     ${enhancedFormData.iban || enhancedFormData.bic ? `<cac:PaymentMeans>
