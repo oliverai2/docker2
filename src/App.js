@@ -94,35 +94,39 @@ const eRechnungMappingData = [
     { id: 19, btId: 'BT-115', en16931: 'Amount due for payment', description: 'Zu zahlender Betrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:PayableAmount', zugferdPath: '.../ram:DuePayableAmount', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], autoCalculated: true },
     { id: 20, btId: 'BT-131', en16931: 'Invoice line net amount', description: 'Nettobetrag der Position', xrechnungPath: '.../cbc:LineExtensionAmount', zugferdPath: '.../ram:SpecifiedTradeSettlementLineMonetarySummation/ram:LineTotalAmount', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], autoCalculated: true },
 
+    // === ZAHLUNGS- UND STEUERFELDER (jetzt mandatory da eigener Block) ===
+    { id: 21, btId: 'BT-20', en16931: 'Payment terms', description: 'Zahlungsbedingungen', xrechnungPath: 'cac:PaymentTerms/cbc:Note', zugferdPath: '.../ram:ApplicableTradePaymentTerms/ram:Description', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: 'Zahlbar innerhalb von 30 Tagen' },
+    { id: 22, btId: 'BT-81', en16931: 'Payment means type code', description: 'Zahlungsart (Code)', xrechnungPath: '.../PaymentMeans/cbc:PaymentMeansCode', zugferdPath: '.../ram:PaymentMeansCode', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: '58' },
+    { id: 23, btId: 'BT-84', en16931: 'Payment account identifier', description: 'IBAN', xrechnungPath: '.../PayeeFinancialAccount/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:IBANID', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 24, btId: 'BT-86', en16931: 'Payment service provider identifier', description: 'BIC / SWIFT-Code', xrechnungPath: '.../FinancialInstitutionBranch/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:ProprietaryID', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 25, btId: 'BT-152', en16931: 'Invoiced item VAT rate', description: 'Steuersatz der Position (%)', xrechnungPath: '.../cbc:Percent', zugferdPath: '.../ram:ApplicableTradeTax/ram:RateApplicablePercent', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: '19' },
+
     // === OPTIONALE FELDER MIT DEFAULTS ===
-    { id: 21, btId: 'BT-20', en16931: 'Payment terms', description: 'Zahlungsbedingungen', xrechnungPath: 'cac:PaymentTerms/cbc:Note', zugferdPath: '.../ram:ApplicableTradePaymentTerms/ram:Description', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: 'Zahlbar innerhalb von 30 Tagen' },
-    { id: 22, btId: 'BT-72', en16931: 'Actual delivery date', description: 'Liefer-/Leistungsdatum', xrechnungPath: 'cac:Delivery/cbc:ActualDeliveryDate', zugferdPath: '.../ram:ActualDeliverySupplyChainEvent/ram:OccurrenceDateTime', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: 'invoiceDate' },
-    { id: 23, btId: 'BT-81', en16931: 'Payment means type code', description: 'Zahlungsart (Code)', xrechnungPath: '.../PaymentMeans/cbc:PaymentMeansCode', zugferdPath: '.../ram:PaymentMeansCode', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: '58' },
-    { id: 24, btId: 'BT-84', en16931: 'Payment account identifier', description: 'IBAN', xrechnungPath: '.../PayeeFinancialAccount/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:IBANID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 25, btId: 'BT-86', en16931: 'Payment service provider identifier', description: 'BIC / SWIFT-Code', xrechnungPath: '.../FinancialInstitutionBranch/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:ProprietaryID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
     { id: 26, btId: 'BT-130', en16931: 'Invoiced quantity unit of measure code', description: 'Einheit der Position', xrechnungPath: '.../cbc:InvoicedQuantity/@unitCode', zugferdPath: '.../ram:BilledQuantity/@unitCode', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: 'XPP' },
-    { id: 27, btId: 'BT-152', en16931: 'Invoiced item VAT rate', description: 'Steuersatz der Position (%)', xrechnungPath: '.../cbc:Percent', zugferdPath: '.../ram:ApplicableTradeTax/ram:RateApplicablePercent', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: '19' },
+
+    // === FELDER DIE NACH OBEN VERSCHOBEN WURDEN (jetzt mandatory) ===
+    { id: 28, btId: 'BT-35', en16931: 'Seller address line 1', description: 'Straße des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 29, btId: 'BT-37', en16931: 'Seller city', description: 'Ort des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 30, btId: 'BT-38', en16931: 'Seller post code', description: 'PLZ des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 31, btId: 'BT-50', en16931: 'Buyer address line 1', description: 'Straße des Käufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 32, btId: 'BT-52', en16931: 'Buyer city', description: 'Ort des Käufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 33, btId: 'BT-53', en16931: 'Buyer post code', description: 'PLZ des Käufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 34, btId: 'BT-72', en16931: 'Actual delivery date', description: 'Liefer-/Leistungsdatum', xrechnungPath: 'cac:Delivery/cbc:ActualDeliveryDate', zugferdPath: '.../ram:ActualDeliverySupplyChainEvent/ram:OccurrenceDateTime', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 35, btId: 'BT-9', en16931: 'Payment due date', description: 'Fälligkeitsdatum', xrechnungPath: 'cbc:DueDate', zugferdPath: '.../ram:DueDateDateTime', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 36, btId: 'BT-12', en16931: 'Contract reference', description: 'Vertragsreferenz', xrechnungPath: 'cac:ContractDocumentReference/cbc:ID', zugferdPath: '.../ram:ContractReferencedDocument/ram:IssuerAssignedID', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 37, btId: 'BT-13', en16931: 'Purchase order reference', description: 'Bestellreferenz', xrechnungPath: 'cac:OrderReference/cbc:ID', zugferdPath: '.../ram:BuyerOrderReferencedDocument/ram:IssuerAssignedID', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+
+    // === WIRKLICH OPTIONALE FELDER ===
+    { id: 38, btId: 'BT-34', en16931: 'Seller electronic address', description: 'Elektronische Adresse (Verkäufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung'] },
+    { id: 39, btId: 'BT-41', en16931: 'Seller contact point', description: 'Kontaktpunkt des Verkäufers', xrechnungPath: '.../Contact/cbc:Name', zugferdPath: '.../ram:DefinedTradeContact/ram:PersonName', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
+    { id: 40, btId: 'BT-42', en16931: 'Seller contact telephone number', description: 'Telefon des Verkäufers', xrechnungPath: '.../Contact/cbc:Telephone', zugferdPath: '.../ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
+    { id: 41, btId: 'BT-43', en16931: 'Seller contact email address', description: 'E-Mail des Verkäufers', xrechnungPath: '.../Contact/cbc:ElectronicMail', zugferdPath: '.../ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
+    { id: 42, btId: 'BT-49', en16931: 'Buyer electronic address', description: 'Elektronische Adresse (Käufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung'] },
 
     // === ERWEITERTE OPTIONALE FELDER ===
-    { id: 28, btId: 'BT-34', en16931: 'Seller electronic address', description: 'Elektronische Adresse (Verkäufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung'] },
-    { id: 29, btId: 'BT-35', en16931: 'Seller address line 1', description: 'Straße des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 30, btId: 'BT-37', en16931: 'Seller city', description: 'Ort des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 31, btId: 'BT-38', en16931: 'Seller post code', description: 'PLZ des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 32, btId: 'BT-41', en16931: 'Seller contact point', description: 'Kontaktpunkt des Verkäufers', xrechnungPath: '.../Contact/cbc:Name', zugferdPath: '.../ram:DefinedTradeContact/ram:PersonName', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
-    { id: 33, btId: 'BT-42', en16931: 'Seller contact telephone number', description: 'Telefon des Verkäufers', xrechnungPath: '.../Contact/cbc:Telephone', zugferdPath: '.../ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
-    { id: 34, btId: 'BT-43', en16931: 'Seller contact email address', description: 'E-Mail des Verkäufers', xrechnungPath: '.../Contact/cbc:ElectronicMail', zugferdPath: '.../ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
-    { id: 35, btId: 'BT-49', en16931: 'Buyer electronic address', description: 'Elektronische Adresse (Käufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung'] },
-    { id: 36, btId: 'BT-50', en16931: 'Buyer address line 1', description: 'Straße des Käufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 37, btId: 'BT-52', en16931: 'Buyer city', description: 'Ort des Käufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 38, btId: 'BT-53', en16931: 'Buyer post code', description: 'PLZ des Käufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-
-    // === ERWEITERTE OPTIONALE FELDER ===
-    { id: 39, btId: 'BT-13', en16931: 'Purchase order reference', description: 'Bestellreferenz', xrechnungPath: 'cac:OrderReference/cbc:ID', zugferdPath: '.../ram:BuyerOrderReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 40, btId: 'BT-12', en16931: 'Contract reference', description: 'Vertragsreferenz', xrechnungPath: 'cac:ContractDocumentReference/cbc:ID', zugferdPath: '.../ram:ContractReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 41, btId: 'BT-25', en16931: 'Preceding Invoice reference', description: 'Vorherige Rechnungsreferenz', xrechnungPath: 'cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID', zugferdPath: '.../ram:InvoiceReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung'] },
-    { id: 42, btId: 'BT-9', en16931: 'Payment due date', description: 'Fälligkeitsdatum', xrechnungPath: 'cbc:DueDate', zugferdPath: '.../ram:DueDateDateTime', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 43, btId: 'BT-92', en16931: 'Document level allowance amount', description: 'Rabatt auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung'] },
-    { id: 44, btId: 'BT-99', en16931: 'Document level charge amount', description: 'Zuschlag auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung'] }
+    { id: 43, btId: 'BT-25', en16931: 'Preceding Invoice reference', description: 'Vorherige Rechnungsreferenz', xrechnungPath: 'cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID', zugferdPath: '.../ram:InvoiceReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung'] },
+    { id: 44, btId: 'BT-92', en16931: 'Document level allowance amount', description: 'Rabatt auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung'] },
+    { id: 45, btId: 'BT-99', en16931: 'Document level charge amount', description: 'Zuschlag auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung'] }
 ].sort((a, b) => parseInt(a.btId.substring(3)) - parseInt(b.btId.substring(3)));
 
 // Verfügbare Platzhalter mit Kategorien für intelligente Verwaltung
@@ -2372,11 +2376,10 @@ const App = () => {
     const data = { ...blankFormData };
     const unmapped = Object.keys(blankFormData).filter(k => k !== 'lineItems');
     const mapValue = (key, value) => {
-        if(value) {
-            data[key] = value;
-            const index = unmapped.indexOf(key);
-            if (index > -1) unmapped.splice(index, 1);
-        }
+        // Setze Wert (auch wenn leer) und entferne aus unmapped Liste
+        data[key] = value || '';
+        const index = unmapped.indexOf(key);
+        if (index > -1) unmapped.splice(index, 1);
     };
 
     mapValue('senderName', getValue('.//cac:PartyLegalEntity/cbc:RegistrationName', supplierParty) || getValue('.//cac:PartyName/cbc:Name', supplierParty));
@@ -2447,11 +2450,10 @@ const App = () => {
       const data = { ...blankFormData };
       const unmapped = Object.keys(blankFormData).filter(k => k !== 'lineItems');
       const mapValue = (key, value) => {
-        if(value) {
-            data[key] = value;
-            const index = unmapped.indexOf(key);
-            if (index > -1) unmapped.splice(index, 1);
-        }
+        // Setze Wert (auch wenn leer) und entferne aus unmapped Liste
+        data[key] = value || '';
+        const index = unmapped.indexOf(key);
+        if (index > -1) unmapped.splice(index, 1);
       };
       
       const issueDate = getValue('//rsm:ExchangedDocument/ram:IssueDateTime/udt:DateTimeString');
