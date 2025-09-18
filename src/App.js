@@ -1088,11 +1088,6 @@ const FormField = ({ name, label, value, onChange, placeholder, type = "text", b
                 <AlertCircle className="h-5 w-5 text-white bg-red-500 rounded-full p-0.5" />
             </div>
         )}
-        {!isMandatory && !isUnmapped && (
-            <div className="absolute top-0 right-0 -mt-1 -mr-1" title="Optionales Feld - wird automatisch befüllt falls leer">
-                <Info className="h-4 w-4 text-gray-400" />
-            </div>
-        )}
     </div>
 );
 };
