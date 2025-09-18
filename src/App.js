@@ -1081,11 +1081,19 @@ const FormField = ({ name, label, value, onChange, placeholder, type = "text", b
           )}
         </label>
         {children ? (
-            <select id={name} name={name} value={value || ''} onChange={onChange} className={`w-full p-3 rounded-xl bg-white/50 text-gray-800 border transition-all duration-200 placeholder:text-gray-600 ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : isMandatory ? 'border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500' : 'border-white/30 focus:outline-none focus:ring-2 focus:ring-gray-400'}`}>
+            <select id={name} name={name} value={value || ''} onChange={onChange} className={`w-full p-3 rounded-xl border transition-all duration-200 ${
+                value && value.trim() !== '' 
+                    ? 'bg-blue-50 text-blue-900 font-medium border-blue-200' 
+                    : 'bg-white/50 text-gray-800 border-white/30'
+            } ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : isMandatory ? 'focus:outline-none focus:ring-2 focus:ring-blue-500' : 'focus:outline-none focus:ring-2 focus:ring-gray-400'}`}>
                 {children}
             </select>
         ) : (
-            <input id={name} type={type} name={name} value={value || ''} onChange={onChange} placeholder={placeholder} disabled={disabled} className={`w-full p-3 rounded-xl bg-white/50 text-gray-800 border transition-all duration-200 disabled:bg-white/20 disabled:text-gray-500 placeholder:text-gray-600 ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : isMandatory ? 'border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500' : 'border-white/30 focus:outline-none focus:ring-2 focus:ring-gray-400'}`}/>
+            <input id={name} type={type} name={name} value={value || ''} onChange={onChange} placeholder={placeholder} disabled={disabled} className={`w-full p-3 rounded-xl border transition-all duration-200 placeholder:text-gray-400 ${
+                value && value.trim() !== '' 
+                    ? 'bg-blue-50 text-blue-900 font-medium border-blue-200' 
+                    : 'bg-white/50 text-gray-800 border-white/30'
+            } ${disabled ? 'bg-gray-100 text-gray-500' : ''} ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : isMandatory ? 'focus:outline-none focus:ring-2 focus:ring-blue-500' : 'focus:outline-none focus:ring-2 focus:ring-gray-400'}`}/>
         )}
         {isUnmapped && (
             <div className="absolute top-0 right-0 -mt-1 -mr-1" title={`Feld "${label}" konnte nicht aus der Datei gelesen werden.`}>
