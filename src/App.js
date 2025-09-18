@@ -2640,13 +2640,85 @@ const App = () => {
     ${enhancedFormData.paymentDueDate ? `<cbc:DueDate>${enhancedFormData.paymentDueDate}</cbc:DueDate>` : ''}
     <cbc:InvoiceTypeCode>${enhancedFormData.invoiceTypeCode}</cbc:InvoiceTypeCode>
     <cbc:DocumentCurrencyCode>${escapeXml(enhancedFormData.invoiceCurrencyCode)}</cbc:DocumentCurrencyCode>
-    <cbc:BuyerReference>${escapeXml(enhancedFormData.leitwegId)}</cbc:BuyerReference>${generateDocumentReferences()}${generateDeliveryInfo()}
-    <cac:PaymentTerms><cbc:Note>${escapeXml(enhancedFormData.paymentTerms || 'Zahlbar innerhalb von 30 Tagen')}</cbc:Note></cac:PaymentTerms>
-    <cac:AccountingSupplierParty><cac:Party><cbc:EndpointID schemeID="EM">${escapeXml(formData.senderElectronicAddress)}</cbc:EndpointID><cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(formData.senderName)}</cbc:RegistrationName></cac:PartyLegalEntity><cac:PostalAddress><cbc:StreetName>${escapeXml(formData.senderStreet)}</cbc:StreetName><cbc:CityName>${escapeXml(formData.senderCity)}</cbc:CityName><cbc:PostalZone>${escapeXml(formData.senderZip)}</cbc:PostalZone><cac:Country><cbc:IdentificationCode>${escapeXml(formData.senderCountry)}</cbc:IdentificationCode></cac:Country></cac:PostalAddress><cac:PartyTaxScheme><cbc:CompanyID>${escapeXml(formData.senderTaxId)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme><cac:Contact><cbc:Name>${escapeXml(formData.senderContactName)}</cbc:Name><cbc:Telephone>${escapeXml(formData.senderContactPhone)}</cbc:Telephone><cbc:ElectronicMail>${escapeXml(formData.senderContactEmail)}</cbc:ElectronicMail></cac:Contact></cac:Party></cac:AccountingSupplierParty>
-    <cac:AccountingCustomerParty><cac:Party><cbc:EndpointID schemeID="EM">${escapeXml(formData.recipientElectronicAddress)}</cbc:EndpointID><cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(formData.recipientName)}</cbc:RegistrationName></cac:PartyLegalEntity><cac:PostalAddress><cbc:StreetName>${escapeXml(formData.recipientStreet)}</cbc:StreetName><cbc:CityName>${escapeXml(formData.recipientCity)}</cbc:CityName><cbc:PostalZone>${escapeXml(formData.recipientZip)}</cbc:PostalZone><cac:Country><cbc:IdentificationCode>${escapeXml(formData.recipientCountry)}</cbc:IdentificationCode></cac:Country></cac:PostalAddress></cac:Party></cac:AccountingCustomerParty>
-    <cac:PaymentMeans><cbc:PaymentMeansCode>${formData.paymentMeansCode}</cbc:PaymentMeansCode><cac:PayeeFinancialAccount><cbc:ID>${escapeXml(formData.iban)}</cbc:ID><cac:FinancialInstitutionBranch><cbc:ID>${escapeXml(formData.bic)}</cbc:ID></cac:FinancialInstitutionBranch></cac:PayeeFinancialAccount></cac:PaymentMeans>
-    <cac:TaxTotal><cbc:TaxAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalTaxAmount}</cbc:TaxAmount><cac:TaxSubtotal><cbc:TaxableAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalNetAmount}</cbc:TaxableAmount><cbc:TaxAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalTaxAmount}</cbc:TaxAmount><cac:TaxCategory><cbc:ID>S</cbc:ID><cbc:Percent>${taxRate.toFixed(2)}</cbc:Percent><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:TaxCategory></cac:TaxSubtotal></cac:TaxTotal>
-    <cac:LegalMonetaryTotal><cbc:LineExtensionAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalNetAmount}</cbc:LineExtensionAmount><cbc:TaxExclusiveAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.totalNetAmount}</cbc:TaxExclusiveAmount><cbc:TaxInclusiveAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.grossAmount}</cbc:TaxInclusiveAmount><cbc:PayableAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${formData.grossAmount}</cbc:PayableAmount></cac:LegalMonetaryTotal>
+    <cbc:BuyerReference>${escapeXml(enhancedFormData.leitwegId)}</cbc:BuyerReference>${generateDocumentReferences()}
+    <cac:AccountingSupplierParty>
+        <cac:Party>
+            ${enhancedFormData.senderElectronicAddress ? `<cbc:EndpointID schemeID="EM">${escapeXml(enhancedFormData.senderElectronicAddress)}</cbc:EndpointID>` : ''}
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName>${escapeXml(enhancedFormData.senderName)}</cbc:RegistrationName>
+            </cac:PartyLegalEntity>
+            ${enhancedFormData.senderStreet || enhancedFormData.senderCity || enhancedFormData.senderZip ? `
+            <cac:PostalAddress>
+                ${enhancedFormData.senderStreet ? `<cbc:StreetName>${escapeXml(enhancedFormData.senderStreet)}</cbc:StreetName>` : ''}
+                ${enhancedFormData.senderCity ? `<cbc:CityName>${escapeXml(enhancedFormData.senderCity)}</cbc:CityName>` : ''}
+                ${enhancedFormData.senderZip ? `<cbc:PostalZone>${escapeXml(enhancedFormData.senderZip)}</cbc:PostalZone>` : ''}
+                <cac:Country>
+                    <cbc:IdentificationCode>${escapeXml(enhancedFormData.senderCountry)}</cbc:IdentificationCode>
+                </cac:Country>
+            </cac:PostalAddress>` : ''}
+            <cac:PartyTaxScheme>
+                <cbc:CompanyID>${escapeXml(enhancedFormData.senderTaxId)}</cbc:CompanyID>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:PartyTaxScheme>
+            ${enhancedFormData.senderContactName || enhancedFormData.senderContactPhone || enhancedFormData.senderContactEmail ? `
+            <cac:Contact>
+                ${enhancedFormData.senderContactName ? `<cbc:Name>${escapeXml(enhancedFormData.senderContactName)}</cbc:Name>` : ''}
+                ${enhancedFormData.senderContactPhone ? `<cbc:Telephone>${escapeXml(enhancedFormData.senderContactPhone)}</cbc:Telephone>` : ''}
+                ${enhancedFormData.senderContactEmail ? `<cbc:ElectronicMail>${escapeXml(enhancedFormData.senderContactEmail)}</cbc:ElectronicMail>` : ''}
+            </cac:Contact>` : ''}
+        </cac:Party>
+    </cac:AccountingSupplierParty>
+    <cac:AccountingCustomerParty>
+        <cac:Party>
+            ${enhancedFormData.recipientElectronicAddress ? `<cbc:EndpointID schemeID="EM">${escapeXml(enhancedFormData.recipientElectronicAddress)}</cbc:EndpointID>` : ''}
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName>${escapeXml(enhancedFormData.recipientName)}</cbc:RegistrationName>
+            </cac:PartyLegalEntity>
+            ${enhancedFormData.recipientStreet || enhancedFormData.recipientCity || enhancedFormData.recipientZip ? `
+            <cac:PostalAddress>
+                ${enhancedFormData.recipientStreet ? `<cbc:StreetName>${escapeXml(enhancedFormData.recipientStreet)}</cbc:StreetName>` : ''}
+                ${enhancedFormData.recipientCity ? `<cbc:CityName>${escapeXml(enhancedFormData.recipientCity)}</cbc:CityName>` : ''}
+                ${enhancedFormData.recipientZip ? `<cbc:PostalZone>${escapeXml(enhancedFormData.recipientZip)}</cbc:PostalZone>` : ''}
+                <cac:Country>
+                    <cbc:IdentificationCode>${escapeXml(enhancedFormData.recipientCountry)}</cbc:IdentificationCode>
+                </cac:Country>
+            </cac:PostalAddress>` : ''}
+        </cac:Party>
+    </cac:AccountingCustomerParty>${generateDeliveryInfo()}
+    ${enhancedFormData.iban || enhancedFormData.bic ? `<cac:PaymentMeans>
+        <cbc:PaymentMeansCode>${enhancedFormData.paymentMeansCode || '58'}</cbc:PaymentMeansCode>
+        ${enhancedFormData.iban ? `<cac:PayeeFinancialAccount>
+            <cbc:ID>${escapeXml(enhancedFormData.iban)}</cbc:ID>
+            ${enhancedFormData.bic ? `<cac:FinancialInstitutionBranch>
+                <cbc:ID>${escapeXml(enhancedFormData.bic)}</cbc:ID>
+            </cac:FinancialInstitutionBranch>` : ''}
+        </cac:PayeeFinancialAccount>` : ''}
+    </cac:PaymentMeans>` : ''}
+    <cac:PaymentTerms>
+        <cbc:Note>${escapeXml(enhancedFormData.paymentTerms || 'Zahlbar innerhalb von 30 Tagen')}</cbc:Note>
+    </cac:PaymentTerms>
+    <cac:TaxTotal>
+        <cbc:TaxAmount currencyID="${escapeXml(enhancedFormData.invoiceCurrencyCode)}">${enhancedFormData.totalTaxAmount}</cbc:TaxAmount>
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="${escapeXml(enhancedFormData.invoiceCurrencyCode)}">${enhancedFormData.totalNetAmount}</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="${escapeXml(enhancedFormData.invoiceCurrencyCode)}">${enhancedFormData.totalTaxAmount}</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cbc:Percent>${taxRate.toFixed(2)}</cbc:Percent>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:LegalMonetaryTotal>
+        <cbc:LineExtensionAmount currencyID="${escapeXml(enhancedFormData.invoiceCurrencyCode)}">${enhancedFormData.totalNetAmount}</cbc:LineExtensionAmount>
+        <cbc:TaxExclusiveAmount currencyID="${escapeXml(enhancedFormData.invoiceCurrencyCode)}">${enhancedFormData.totalNetAmount}</cbc:TaxExclusiveAmount>
+        <cbc:TaxInclusiveAmount currencyID="${escapeXml(enhancedFormData.invoiceCurrencyCode)}">${enhancedFormData.grossAmount}</cbc:TaxInclusiveAmount>
+        <cbc:PayableAmount currencyID="${escapeXml(enhancedFormData.invoiceCurrencyCode)}">${enhancedFormData.grossAmount}</cbc:PayableAmount>
+    </cac:LegalMonetaryTotal>
     ${lineItemsXML}
 </Invoice>`;
       
