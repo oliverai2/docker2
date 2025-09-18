@@ -2398,7 +2398,7 @@ const App = () => {
     mapValue('leitwegId', getValue('//cbc:BuyerReference'));
     mapValue('reference', getValue('//cbc:ID'));
     mapValue('invoiceDate', getValue('//cbc:IssueDate'));
-    mapValue('serviceDate', getValue('//cbc:DueDate'));
+    mapValue('serviceDate', getValue('//cac:Delivery/cbc:ActualDeliveryDate') || getValue('//cbc:DueDate'));
     mapValue('iban', getValue('.//cac:PayeeFinancialAccount/cbc:ID', paymentMeans));
     mapValue('bic', getValue('.//cac:PayeeFinancialAccount/cac:FinancialInstitutionBranch/cbc:ID', paymentMeans));
     mapValue('paymentMeansCode', getValue('.//cbc:PaymentMeansCode', paymentMeans));
@@ -2406,6 +2406,15 @@ const App = () => {
     mapValue('invoiceTypeCode', getValue('//cbc:InvoiceTypeCode'));
     mapValue('invoiceCurrencyCode', getValue('//cbc:DocumentCurrencyCode'));
     mapValue('taxRate', parseInt(getValue('.//cac:TaxSubtotal/cac:TaxCategory/cbc:Percent', taxTotal) || '0', 10).toString());
+    
+    // Neue optionale Felder parsen
+    mapValue('orderReference', getValue('//cac:OrderReference/cbc:ID'));
+    mapValue('contractReference', getValue('//cac:ContractDocumentReference/cbc:ID'));
+    mapValue('precedingInvoiceReference', getValue('//cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID'));
+    mapValue('paymentDueDate', getValue('//cbc:DueDate'));
+    mapValue('documentLevelAllowance', getValue('//cac:AllowanceCharge[cbc:ChargeIndicator="false"]/cbc:Amount'));
+    mapValue('documentLevelCharge', getValue('//cac:AllowanceCharge[cbc:ChargeIndicator="true"]/cbc:Amount'));
+    
     if (parsedLineItems.length > 0) data.lineItems = parsedLineItems;
     mapValue('totalNetAmount', getValue('.//cbc:TaxExclusiveAmount', legalMonetaryTotal));
     mapValue('totalTaxAmount', getValue('.//cbc:TaxAmount', taxTotal));
@@ -2509,6 +2518,15 @@ const App = () => {
       mapValue('invoiceTypeCode', getValue('//rsm:ExchangedDocument/ram:TypeCode'));
       mapValue('invoiceCurrencyCode', getValue('.//ram:InvoiceCurrencyCode', settlement));
       mapValue('taxRate', parseInt(getValue('.//ram:ApplicableTradeTax/ram:RateApplicablePercent', settlement) || '0', 10).toString());
+      
+      // Neue optionale Felder für ZUGFeRD parsen
+      mapValue('orderReference', getValue('.//ram:BuyerOrderReferencedDocument/ram:IssuerAssignedID', header));
+      mapValue('contractReference', getValue('.//ram:ContractReferencedDocument/ram:IssuerAssignedID', header));
+      mapValue('precedingInvoiceReference', getValue('.//ram:InvoiceReferencedDocument/ram:IssuerAssignedID', header));
+      mapValue('paymentDueDate', getValue('.//ram:DueDateDateTime', settlement));
+      mapValue('documentLevelAllowance', getValue('.//ram:SpecifiedTradeAllowanceCharge[ram:ChargeIndicator="false"]/ram:ActualAmount', settlement));
+      mapValue('documentLevelCharge', getValue('.//ram:SpecifiedTradeAllowanceCharge[ram:ChargeIndicator="true"]/ram:ActualAmount', settlement));
+      
       if (parsedLineItems.length > 0) data.lineItems = parsedLineItems;
       mapValue('totalNetAmount', getValue('.//ram:TaxBasisTotalAmount', monetarySummation));
       mapValue('totalTaxAmount', getValue('.//ram:TaxTotalAmount', monetarySummation));
