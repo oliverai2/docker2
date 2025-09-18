@@ -116,13 +116,13 @@ const eRechnungMappingData = [
     { id: 37, btId: 'BT-52', en16931: 'Buyer city', description: 'Ort des Käufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
     { id: 38, btId: 'BT-53', en16931: 'Buyer post code', description: 'PLZ des Käufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
 
-    // === NEUE OPTIONALE FELDER FÜR ERWEITERTE FUNKTIONALITÄT ===
-    { id: 39, btId: 'BT-13', en16931: 'Purchase order reference', description: 'Bestellreferenz', xrechnungPath: 'cac:OrderReference/cbc:ID', zugferdPath: '.../ram:BuyerOrderReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
-    { id: 40, btId: 'BT-12', en16931: 'Contract reference', description: 'Vertragsreferenz', xrechnungPath: 'cac:ContractDocumentReference/cbc:ID', zugferdPath: '.../ram:ContractReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
-    { id: 41, btId: 'BT-25', en16931: 'Preceding Invoice reference', description: 'Vorherige Rechnungsreferenz', xrechnungPath: 'cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID', zugferdPath: '.../ram:InvoiceReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung'], newField: true },
-    { id: 42, btId: 'BT-9', en16931: 'Payment due date', description: 'Fälligkeitsdatum', xrechnungPath: 'cbc:DueDate', zugferdPath: '.../ram:DueDateDateTime', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
-    { id: 43, btId: 'BT-92', en16931: 'Document level allowance amount', description: 'Rabatt auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung'], newField: true },
-    { id: 44, btId: 'BT-99', en16931: 'Document level charge amount', description: 'Zuschlag auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung'], newField: true }
+    // === ERWEITERTE OPTIONALE FELDER ===
+    { id: 39, btId: 'BT-13', en16931: 'Purchase order reference', description: 'Bestellreferenz', xrechnungPath: 'cac:OrderReference/cbc:ID', zugferdPath: '.../ram:BuyerOrderReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 40, btId: 'BT-12', en16931: 'Contract reference', description: 'Vertragsreferenz', xrechnungPath: 'cac:ContractDocumentReference/cbc:ID', zugferdPath: '.../ram:ContractReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 41, btId: 'BT-25', en16931: 'Preceding Invoice reference', description: 'Vorherige Rechnungsreferenz', xrechnungPath: 'cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID', zugferdPath: '.../ram:InvoiceReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung'] },
+    { id: 42, btId: 'BT-9', en16931: 'Payment due date', description: 'Fälligkeitsdatum', xrechnungPath: 'cbc:DueDate', zugferdPath: '.../ram:DueDateDateTime', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 43, btId: 'BT-92', en16931: 'Document level allowance amount', description: 'Rabatt auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung'] },
+    { id: 44, btId: 'BT-99', en16931: 'Document level charge amount', description: 'Zuschlag auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung'] }
 ].sort((a, b) => parseInt(a.btId.substring(3)) - parseInt(b.btId.substring(3)));
 
 // Verfügbare Platzhalter mit Kategorien für intelligente Verwaltung
@@ -168,13 +168,13 @@ const availablePlaceholders = {
     { key: 'kreditorId', label: 'Kreditorennummer', example: 'K12345' },
     { key: 'buchungskreisId', label: 'Buchungskreis', example: '1000' }
   ],
-  neue_optionale_felder: [
+  erweiterte_felder: [
     { key: 'orderReference', label: 'Bestellreferenz', example: 'PO-2025-001', btId: 'BT-13', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
     { key: 'contractReference', label: 'Vertragsreferenz', example: 'CONTRACT-2025-001', btId: 'BT-12', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { key: 'precedingInvoiceReference', label: 'Vorherige Rechnungsreferenz', example: 'RE-2024-999', btId: 'BT-25', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { key: 'precedingInvoiceReference', label: 'Vorherige Rechnungsreferenz', example: 'RE-2024-999', btId: 'BT-25', formats: ['EN16931', 'XRechnung'] },
     { key: 'paymentDueDate', label: 'Fälligkeitsdatum', example: '2025-02-15', btId: 'BT-9', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { key: 'documentLevelAllowance', label: 'Rabatt auf Dokumentenebene', example: '50.00', btId: 'BT-92', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { key: 'documentLevelCharge', label: 'Zuschlag auf Dokumentenebene', example: '25.00', btId: 'BT-99', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] }
+    { key: 'documentLevelAllowance', label: 'Rabatt auf Dokumentenebene', example: '50.00', btId: 'BT-92', formats: ['EN16931', 'XRechnung'] },
+    { key: 'documentLevelCharge', label: 'Zuschlag auf Dokumentenebene', example: '25.00', btId: 'BT-99', formats: ['EN16931', 'XRechnung'] }
   ]
 };
 
@@ -1040,22 +1040,27 @@ const FormField = ({ name, label, value, onChange, placeholder, type = "text", b
   const fieldMapping = eRechnungMappingData.find(field => field.btId === btId);
   const isMandatory = fieldMapping?.mandatory || mandatory;
   const fieldFormats = fieldMapping?.formats || formats;
-  const isNewField = fieldMapping?.newField || newField;
   const isXRechnungSpecific = fieldMapping?.xrechnungSpecific || xrechnungSpecific;
+  
+  // Zeige Format-Labels nur wenn NICHT alle drei Formate unterstützt werden
+  const shouldShowFormatLabels = fieldFormats.length > 0 && 
+    !(fieldFormats.length === 3 && 
+      fieldFormats.includes('EN16931') && 
+      fieldFormats.includes('XRechnung') && 
+      fieldFormats.includes('ZUGFeRD'));
   
   return (
     <div className="relative">
         <label htmlFor={name} className="flex items-center text-sm font-medium text-gray-600 mb-1">
           <span className="flex items-center">
-            {label}
+          {label}
             {isMandatory && <span className="ml-1 text-red-500 font-bold">*</span>}
             {isXRechnungSpecific && <span className="ml-1.5 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">XR</span>}
-            {isNewField && <span className="ml-1.5 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">NEU</span>}
           </span>
           {btId && (
             <div className="ml-auto flex items-center space-x-1">
               <span className="text-[10px] font-sans text-gray-500">({btId})</span>
-              {fieldFormats.length > 0 && (
+              {shouldShowFormatLabels && (
                 <div className="flex space-x-0.5">
                   {fieldFormats.map(format => (
                     <span key={format} className={`text-[8px] px-1 py-0.5 rounded-full font-medium ${
@@ -1089,7 +1094,7 @@ const FormField = ({ name, label, value, onChange, placeholder, type = "text", b
             </div>
         )}
     </div>
-  );
+);
 };
 
 // Formatierungsfunktionen
@@ -1524,7 +1529,7 @@ const HomePage = ({
           {/* Invoice Issuer - Erweiterte Pflichtfelder */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-lg text-gray-800">Rechnungssteller</h3>
+              <h3 className="font-semibold text-lg text-gray-800">Rechnungssteller</h3>
                 <span className="text-xs text-gray-500">Pflichtfelder für e-Rechnung</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1541,7 +1546,7 @@ const HomePage = ({
           {/* Invoice Recipient - Erweiterte Pflichtfelder */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-lg text-gray-800">Rechnungsempfänger</h3>
+              <h3 className="font-semibold text-lg text-gray-800">Rechnungsempfänger</h3>
                 <span className="text-xs text-gray-500">Pflichtfelder für e-Rechnung</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1557,7 +1562,7 @@ const HomePage = ({
           {/* Invoice Details - Erweiterte Pflichtfelder */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-lg text-gray-800">Rechnungsdetails</h3>
+              <h3 className="font-semibold text-lg text-gray-800">Rechnungsdetails</h3>
                 <span className="text-xs text-gray-500">Pflichtfelder für e-Rechnung</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1662,11 +1667,11 @@ const HomePage = ({
                   <FormField name="senderElectronicAddress" label="Elektronische Adresse" value={formData.senderElectronicAddress} onChange={handleInputChange} placeholder="rechnung@firma.de" btId="BT-34" isUnmapped={unmappedFields.includes('senderElectronicAddress')}/>
                   <FormField name="senderContactName" label="Ansprechpartner" value={formData.senderContactName} onChange={handleInputChange} placeholder="Max Mustermann" btId="BT-41" isUnmapped={unmappedFields.includes('senderContactName')}/>
                   <FormField name="senderContactPhone" label="Telefon" value={formData.senderContactPhone} onChange={handleInputChange} placeholder="+49 30 123456" btId="BT-42" isUnmapped={unmappedFields.includes('senderContactPhone')}/>
-                  <div className="md:col-span-2">
+                   <div className="md:col-span-2">
                     <FormField name="senderContactEmail" label="E-Mail" value={formData.senderContactEmail} onChange={handleInputChange} placeholder="max@firma.de" btId="BT-43" isUnmapped={unmappedFields.includes('senderContactEmail')}/>
                   </div>
-                </div>
               </div>
+          </div>
 
               {/* Empfänger - Optionale Felder */}
               <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
