@@ -59,48 +59,70 @@ const blankFormData = {
     totalNetAmount: '0.00',
     totalTaxAmount: '0.00',
     grossAmount: '0.00',
+    // Neue optionale Felder
+    orderReference: '',
+    contractReference: '',
+    precedingInvoiceReference: '',
+    paymentDueDate: '',
+    documentLevelAllowance: '',
+    documentLevelCharge: '',
 };
 
-// Mapping-Daten für E-Rechnungs-Standards (EN 16931)
+// Erweiterte Mapping-Daten für E-Rechnungs-Standards (EN 16931 + XRechnung + ZUGFeRD)
 const eRechnungMappingData = [
-    { id: 1, btId: 'BT-1', en16931: 'Invoice number', description: 'Rechnungsnummer', xrechnungPath: 'cbc:ID', zugferdPath: 'rsm:ExchangedDocument/ram:ID' },
-    { id: 2, btId: 'BT-2', en16931: 'Invoice issue date', description: 'Rechnungsdatum', xrechnungPath: 'cbc:IssueDate', zugferdPath: 'rsm:ExchangedDocument/ram:IssueDateTime' },
-    { id: 3, btId: 'BT-3', en16931: 'Invoice type code', description: 'Rechnungstyp', xrechnungPath: 'cbc:InvoiceTypeCode', zugferdPath: 'rsm:ExchangedDocument/ram:TypeCode' },
-    { id: 4, btId: 'BT-5', en16931: 'Invoice currency code', description: 'Währung', xrechnungPath: 'cbc:DocumentCurrencyCode', zugferdPath: '.../ram:InvoiceCurrencyCode' },
-    { id: 5, btId: 'BT-10', en16931: 'Buyer reference', description: 'Leitweg-ID', xrechnungPath: 'cbc:BuyerReference', zugferdPath: '.../ram:BuyerReference' },
-    { id: 6, btId: 'BT-20', en16931: 'Payment terms', description: 'Zahlungsbedingungen', xrechnungPath: 'cac:PaymentTerms/cbc:Note', zugferdPath: '.../ram:ApplicableTradePaymentTerms/ram:Description' },
-    { id: 7, btId: 'BT-27', en16931: 'Seller name', description: 'Name des Verkäufers', xrechnungPath: 'cac:AccountingSupplierParty/.../cbc:Name', zugferdPath: '.../ram:SellerTradeParty/ram:Name' },
-    { id: 8, btId: 'BT-31', en16931: 'Seller VAT identifier', description: 'USt-IdNr. des Verkäufers', xrechnungPath: '.../PartyTaxScheme/cbc:CompanyID', zugferdPath: '.../ram:SpecifiedTaxRegistration/ram:ID' },
-    { id: 9, btId: 'BT-34', en16931: 'Seller electronic address', description: 'Elektronische Adresse (Verkäufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID' },
-    { id: 10, btId: 'BT-35', en16931: 'Seller address line 1', description: 'Straße des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne' },
-    { id: 11, btId: 'BT-37', en16931: 'Seller city', description: 'Ort des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName' },
-    { id: 12, btId: 'BT-38', en16931: 'Seller post code', description: 'PLZ des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode' },
-    { id: 13, btId: 'BT-40', en16931: 'Seller country code', description: 'Land des Verkäufers', xrechnungPath: '.../Country/cbc:IdentificationCode', zugferdPath: '.../ram:PostalTradeAddress/ram:CountryID' },
-    { id: 14, btId: 'BT-41', en16931: 'Seller contact point', description: 'Kontaktpunkt des Verkäufers', xrechnungPath: '.../Contact/cbc:Name', zugferdPath: '.../ram:DefinedTradeContact/ram:PersonName' },
-    { id: 15, btId: 'BT-42', en16931: 'Seller contact telephone number', description: 'Telefon des Verkäufers', xrechnungPath: '.../Contact/cbc:Telephone', zugferdPath: '.../ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber' },
-    { id: 16, btId: 'BT-43', en16931: 'Seller contact email address', description: 'E-Mail des Verkäufers', xrechnungPath: '.../Contact/cbc:ElectronicMail', zugferdPath: '.../ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID' },
-    { id: 17, btId: 'BT-44', en16931: 'Buyer name', description: 'Name des Käufers', xrechnungPath: 'cac:AccountingCustomerParty/.../cbc:Name', zugferdPath: '.../ram:BuyerTradeParty/ram:Name' },
-    { id: 18, btId: 'BT-49', en16931: 'Buyer electronic address', description: 'Elektronische Adresse (Käufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID' },
-    { id: 19, btId: 'BT-50', en16931: 'Buyer address line 1', description: 'Straße des Käufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne' },
-    { id: 20, btId: 'BT-52', en16931: 'Buyer city', description: 'Ort des Käufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName' },
-    { id: 21, btId: 'BT-53', en16931: 'Buyer post code', description: 'PLZ des Käufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode' },
-    { id: 22, btId: 'BT-55', en16931: 'Buyer country code', description: 'Land des Käufers', xrechnungPath: '.../Country/cbc:IdentificationCode', zugferdPath: '.../ram:PostalTradeAddress/ram:CountryID' },
-    { id: 23, btId: 'BT-72', en16931: 'Actual delivery date', description: 'Liefer-/Leistungsdatum', xrechnungPath: 'cbc:DueDate', zugferdPath: '.../ram:ActualDeliverySupplyChainEvent/ram:OccurrenceDateTime' },
-    { id: 24, btId: 'BT-81', en16931: 'Payment means type code', description: 'Zahlungsart (Code)', xrechnungPath: '.../PaymentMeans/cbc:PaymentMeansCode', zugferdPath: '.../ram:PaymentMeansCode' },
-    { id: 25, btId: 'BT-84', en16931: 'Payment account identifier', description: 'IBAN', xrechnungPath: '.../PayeeFinancialAccount/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:IBANID' },
-    { id: 26, btId: 'BT-86', en16931: 'Payment service provider identifier', description: 'BIC / SWIFT-Code', xrechnungPath: '.../FinancialInstitutionBranch/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:ProprietaryID' },
-    { id: 27, btId: 'BT-106', en16931: 'Sum of Invoice line net amount', description: 'Summe Nettobeträge Positionen', xrechnungPath: '.../LegalMonetaryTotal/cbc:LineExtensionAmount', zugferdPath: '.../ram:GrandTotalAmount' },
-    { id: 28, btId: 'BT-109', en16931: 'Invoice total amount without VAT', description: 'Rechnungsnettobetrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:TaxExclusiveAmount', zugferdPath: '.../ram:TaxBasisTotalAmount' },
-    { id: 29, btId: 'BT-110', en16931: 'Invoice total VAT amount', description: 'Gesamtsteuerbetrag', xrechnungPath: '.../TaxTotal/cbc:TaxAmount', zugferdPath: '.../ram:TaxTotalAmount[@currencyID]' },
-    { id: 30, btId: 'BT-112', en16931: 'Invoice total amount with VAT', description: 'Rechnungsbruttobetrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:TaxInclusiveAmount', zugferdPath: '.../ram:GrandTotalAmount' },
-    { id: 31, btId: 'BT-115', en16931: 'Amount due for payment', description: 'Zu zahlender Betrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:PayableAmount', zugferdPath: '.../ram:DuePayableAmount' },
-    { id: 32, btId: 'BT-126', en16931: 'Invoice line identifier', description: 'Positionsnummer', xrechnungPath: '.../InvoiceLine/cbc:ID', zugferdPath: '.../ram:AssociatedDocumentLineDocument/ram:LineID' },
-    { id: 33, btId: 'BT-129', en16931: 'Invoiced quantity', description: 'Menge der Position', xrechnungPath: '.../cbc:InvoicedQuantity', zugferdPath: '.../ram:BilledQuantity' },
-    { id: 34, btId: 'BT-130', en16931: 'Invoiced quantity unit of measure code', description: 'Einheit der Position', xrechnungPath: '.../cbc:InvoicedQuantity/@unitCode', zugferdPath: '.../ram:BilledQuantity/@unitCode' },
-    { id: 35, btId: 'BT-131', en16931: 'Invoice line net amount', description: 'Nettobetrag der Position', xrechnungPath: '.../cbc:LineExtensionAmount', zugferdPath: '.../ram:SpecifiedTradeSettlementLineMonetarySummation/ram:LineTotalAmount' },
-    { id: 36, btId: 'BT-146', en16931: 'Item net price', description: 'Preis der Position', xrechnungPath: '.../Price/cbc:PriceAmount', zugferdPath: '.../ram:GrossPriceProductTradePrice/ram:ChargeAmount' },
-    { id: 37, btId: 'BT-152', en16931: 'Invoiced item VAT rate', description: 'Steuersatz der Position (%)', xrechnungPath: '.../cbc:Percent', zugferdPath: '.../ram:ApplicableTradeTax/ram:RateApplicablePercent' },
-    { id: 38, btId: 'BT-153', en16931: 'Item name', description: 'Artikelname der Position', xrechnungPath: '.../Item/cbc:Name', zugferdPath: '.../ram:SpecifiedTradeProduct/ram:Name' },
+    // === PFLICHTFELDER (Mandatory) ===
+    { id: 1, btId: 'BT-1', en16931: 'Invoice number', description: 'Rechnungsnummer', xrechnungPath: 'cbc:ID', zugferdPath: 'rsm:ExchangedDocument/ram:ID', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 2, btId: 'BT-2', en16931: 'Invoice issue date', description: 'Rechnungsdatum', xrechnungPath: 'cbc:IssueDate', zugferdPath: 'rsm:ExchangedDocument/ram:IssueDateTime', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 3, btId: 'BT-3', en16931: 'Invoice type code', description: 'Rechnungstyp', xrechnungPath: 'cbc:InvoiceTypeCode', zugferdPath: 'rsm:ExchangedDocument/ram:TypeCode', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 4, btId: 'BT-5', en16931: 'Invoice currency code', description: 'Währung', xrechnungPath: 'cbc:DocumentCurrencyCode', zugferdPath: '.../ram:InvoiceCurrencyCode', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 5, btId: 'BT-10', en16931: 'Buyer reference', description: 'Leitweg-ID', xrechnungPath: 'cbc:BuyerReference', zugferdPath: '.../ram:BuyerReference', mandatory: true, formats: ['XRechnung'], xrechnungSpecific: true },
+    { id: 6, btId: 'BT-27', en16931: 'Seller name', description: 'Name des Verkäufers', xrechnungPath: 'cac:AccountingSupplierParty/.../cbc:Name', zugferdPath: '.../ram:SellerTradeParty/ram:Name', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 7, btId: 'BT-31', en16931: 'Seller VAT identifier', description: 'USt-IdNr. des Verkäufers', xrechnungPath: '.../PartyTaxScheme/cbc:CompanyID', zugferdPath: '.../ram:SpecifiedTaxRegistration/ram:ID', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 8, btId: 'BT-40', en16931: 'Seller country code', description: 'Land des Verkäufers', xrechnungPath: '.../Country/cbc:IdentificationCode', zugferdPath: '.../ram:PostalTradeAddress/ram:CountryID', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 9, btId: 'BT-44', en16931: 'Buyer name', description: 'Name des Käufers', xrechnungPath: 'cac:AccountingCustomerParty/.../cbc:Name', zugferdPath: '.../ram:BuyerTradeParty/ram:Name', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 10, btId: 'BT-55', en16931: 'Buyer country code', description: 'Land des Käufers', xrechnungPath: '.../Country/cbc:IdentificationCode', zugferdPath: '.../ram:PostalTradeAddress/ram:CountryID', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 11, btId: 'BT-126', en16931: 'Invoice line identifier', description: 'Positionsnummer', xrechnungPath: '.../InvoiceLine/cbc:ID', zugferdPath: '.../ram:AssociatedDocumentLineDocument/ram:LineID', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], autoGenerated: true },
+    { id: 12, btId: 'BT-129', en16931: 'Invoiced quantity', description: 'Menge der Position', xrechnungPath: '.../cbc:InvoicedQuantity', zugferdPath: '.../ram:BilledQuantity', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 13, btId: 'BT-146', en16931: 'Item net price', description: 'Preis der Position', xrechnungPath: '.../Price/cbc:PriceAmount', zugferdPath: '.../ram:GrossPriceProductTradePrice/ram:ChargeAmount', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 14, btId: 'BT-153', en16931: 'Item name', description: 'Artikelname der Position', xrechnungPath: '.../Item/cbc:Name', zugferdPath: '.../ram:SpecifiedTradeProduct/ram:Name', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+
+    // === AUTOMATISCH BERECHNETE FELDER ===
+    { id: 15, btId: 'BT-106', en16931: 'Sum of Invoice line net amount', description: 'Summe Nettobeträge Positionen', xrechnungPath: '.../LegalMonetaryTotal/cbc:LineExtensionAmount', zugferdPath: '.../ram:GrandTotalAmount', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], autoCalculated: true },
+    { id: 16, btId: 'BT-109', en16931: 'Invoice total amount without VAT', description: 'Rechnungsnettobetrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:TaxExclusiveAmount', zugferdPath: '.../ram:TaxBasisTotalAmount', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], autoCalculated: true },
+    { id: 17, btId: 'BT-110', en16931: 'Invoice total VAT amount', description: 'Gesamtsteuerbetrag', xrechnungPath: '.../TaxTotal/cbc:TaxAmount', zugferdPath: '.../ram:TaxTotalAmount[@currencyID]', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], autoCalculated: true },
+    { id: 18, btId: 'BT-112', en16931: 'Invoice total amount with VAT', description: 'Rechnungsbruttobetrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:TaxInclusiveAmount', zugferdPath: '.../ram:GrandTotalAmount', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], autoCalculated: true },
+    { id: 19, btId: 'BT-115', en16931: 'Amount due for payment', description: 'Zu zahlender Betrag', xrechnungPath: '.../LegalMonetaryTotal/cbc:PayableAmount', zugferdPath: '.../ram:DuePayableAmount', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], autoCalculated: true },
+    { id: 20, btId: 'BT-131', en16931: 'Invoice line net amount', description: 'Nettobetrag der Position', xrechnungPath: '.../cbc:LineExtensionAmount', zugferdPath: '.../ram:SpecifiedTradeSettlementLineMonetarySummation/ram:LineTotalAmount', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], autoCalculated: true },
+
+    // === OPTIONALE FELDER MIT DEFAULTS ===
+    { id: 21, btId: 'BT-20', en16931: 'Payment terms', description: 'Zahlungsbedingungen', xrechnungPath: 'cac:PaymentTerms/cbc:Note', zugferdPath: '.../ram:ApplicableTradePaymentTerms/ram:Description', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: 'Zahlbar innerhalb von 30 Tagen' },
+    { id: 22, btId: 'BT-72', en16931: 'Actual delivery date', description: 'Liefer-/Leistungsdatum', xrechnungPath: 'cac:Delivery/cbc:ActualDeliveryDate', zugferdPath: '.../ram:ActualDeliverySupplyChainEvent/ram:OccurrenceDateTime', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: 'invoiceDate' },
+    { id: 23, btId: 'BT-81', en16931: 'Payment means type code', description: 'Zahlungsart (Code)', xrechnungPath: '.../PaymentMeans/cbc:PaymentMeansCode', zugferdPath: '.../ram:PaymentMeansCode', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: '58' },
+    { id: 24, btId: 'BT-84', en16931: 'Payment account identifier', description: 'IBAN', xrechnungPath: '.../PayeeFinancialAccount/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:IBANID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 25, btId: 'BT-86', en16931: 'Payment service provider identifier', description: 'BIC / SWIFT-Code', xrechnungPath: '.../FinancialInstitutionBranch/cbc:ID', zugferdPath: '.../ram:PayeePartyCreditorFinancialAccount/ram:ProprietaryID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 26, btId: 'BT-130', en16931: 'Invoiced quantity unit of measure code', description: 'Einheit der Position', xrechnungPath: '.../cbc:InvoicedQuantity/@unitCode', zugferdPath: '.../ram:BilledQuantity/@unitCode', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: 'XPP' },
+    { id: 27, btId: 'BT-152', en16931: 'Invoiced item VAT rate', description: 'Steuersatz der Position (%)', xrechnungPath: '.../cbc:Percent', zugferdPath: '.../ram:ApplicableTradeTax/ram:RateApplicablePercent', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: '19' },
+
+    // === ERWEITERTE OPTIONALE FELDER ===
+    { id: 28, btId: 'BT-34', en16931: 'Seller electronic address', description: 'Elektronische Adresse (Verkäufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 29, btId: 'BT-35', en16931: 'Seller address line 1', description: 'Straße des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 30, btId: 'BT-37', en16931: 'Seller city', description: 'Ort des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 31, btId: 'BT-38', en16931: 'Seller post code', description: 'PLZ des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 32, btId: 'BT-41', en16931: 'Seller contact point', description: 'Kontaktpunkt des Verkäufers', xrechnungPath: '.../Contact/cbc:Name', zugferdPath: '.../ram:DefinedTradeContact/ram:PersonName', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 33, btId: 'BT-42', en16931: 'Seller contact telephone number', description: 'Telefon des Verkäufers', xrechnungPath: '.../Contact/cbc:Telephone', zugferdPath: '.../ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 34, btId: 'BT-43', en16931: 'Seller contact email address', description: 'E-Mail des Verkäufers', xrechnungPath: '.../Contact/cbc:ElectronicMail', zugferdPath: '.../ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 35, btId: 'BT-49', en16931: 'Buyer electronic address', description: 'Elektronische Adresse (Käufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 36, btId: 'BT-50', en16931: 'Buyer address line 1', description: 'Straße des Käufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 37, btId: 'BT-52', en16931: 'Buyer city', description: 'Ort des Käufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 38, btId: 'BT-53', en16931: 'Buyer post code', description: 'PLZ des Käufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+
+    // === NEUE OPTIONALE FELDER FÜR ERWEITERTE FUNKTIONALITÄT ===
+    { id: 39, btId: 'BT-13', en16931: 'Purchase order reference', description: 'Bestellreferenz', xrechnungPath: 'cac:OrderReference/cbc:ID', zugferdPath: '.../ram:BuyerOrderReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
+    { id: 40, btId: 'BT-12', en16931: 'Contract reference', description: 'Vertragsreferenz', xrechnungPath: 'cac:ContractDocumentReference/cbc:ID', zugferdPath: '.../ram:ContractReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
+    { id: 41, btId: 'BT-25', en16931: 'Preceding Invoice reference', description: 'Vorherige Rechnungsreferenz', xrechnungPath: 'cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID', zugferdPath: '.../ram:InvoiceReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
+    { id: 42, btId: 'BT-9', en16931: 'Payment due date', description: 'Fälligkeitsdatum', xrechnungPath: 'cbc:DueDate', zugferdPath: '.../ram:DueDateDateTime', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
+    { id: 43, btId: 'BT-92', en16931: 'Document level allowance amount', description: 'Rabatt auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
+    { id: 44, btId: 'BT-99', en16931: 'Document level charge amount', description: 'Zuschlag auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true }
 ].sort((a, b) => parseInt(a.btId.substring(3)) - parseInt(b.btId.substring(3)));
 
 // Verfügbare Platzhalter mit Kategorien für intelligente Verwaltung
@@ -145,6 +167,14 @@ const availablePlaceholders = {
   sap_spezifisch: [
     { key: 'kreditorId', label: 'Kreditorennummer', example: 'K12345' },
     { key: 'buchungskreisId', label: 'Buchungskreis', example: '1000' }
+  ],
+  neue_optionale_felder: [
+    { key: 'orderReference', label: 'Bestellreferenz', example: 'PO-2025-001', btId: 'BT-13', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { key: 'contractReference', label: 'Vertragsreferenz', example: 'CONTRACT-2025-001', btId: 'BT-12', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { key: 'precedingInvoiceReference', label: 'Vorherige Rechnungsreferenz', example: 'RE-2024-999', btId: 'BT-25', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { key: 'paymentDueDate', label: 'Fälligkeitsdatum', example: '2025-02-15', btId: 'BT-9', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { key: 'documentLevelAllowance', label: 'Rabatt auf Dokumentenebene', example: '50.00', btId: 'BT-92', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { key: 'documentLevelCharge', label: 'Zuschlag auf Dokumentenebene', example: '25.00', btId: 'BT-99', formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] }
   ]
 };
 
@@ -735,6 +765,137 @@ const escapeXml = (unsafe) => {
   return unsafe.replace(/[<>&"']/g, (c) => ({'<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;'})[c] || c);
 };
 
+// Funktion zum automatischen Befüllen von Feldern mit Defaults
+const applyFieldDefaults = (formData) => {
+    const enhancedData = { ...formData };
+    
+    // Durchlaufe alle Mapping-Daten und setze Default-Werte
+    eRechnungMappingData.forEach(field => {
+        if (field.defaultValue && !enhancedData[getFieldNameFromBtId(field.btId)]) {
+            const fieldName = getFieldNameFromBtId(field.btId);
+            if (fieldName && field.defaultValue !== 'invoiceDate') {
+                enhancedData[fieldName] = field.defaultValue;
+            } else if (field.defaultValue === 'invoiceDate') {
+                // Spezialfall: serviceDate = invoiceDate wenn leer
+                if (field.btId === 'BT-72' && !enhancedData.serviceDate) {
+                    enhancedData.serviceDate = enhancedData.invoiceDate;
+                }
+            }
+        }
+    });
+    
+    // Berechne automatisch berechnete Felder
+    if (enhancedData.lineItems && enhancedData.lineItems.length > 0) {
+        const totalNet = enhancedData.lineItems.reduce((sum, item) => 
+            sum + parseFloat(item.netAmount || 0), 0);
+        const taxRate = parseFloat(enhancedData.taxRate || 19) / 100;
+        const totalTax = totalNet * taxRate;
+        const totalGross = totalNet + totalTax;
+        
+        enhancedData.totalNetAmount = totalNet.toFixed(2);
+        enhancedData.totalTaxAmount = totalTax.toFixed(2);
+        enhancedData.grossAmount = totalGross.toFixed(2);
+    }
+    
+    // Setze Fälligkeitsdatum basierend auf Rechnungsdatum + 30 Tage wenn leer
+    if (!enhancedData.paymentDueDate && enhancedData.invoiceDate) {
+        const dueDate = new Date(enhancedData.invoiceDate);
+        dueDate.setDate(dueDate.getDate() + 30);
+        enhancedData.paymentDueDate = dueDate.toISOString().slice(0, 10);
+    }
+    
+    return enhancedData;
+};
+
+// Hilfsfunktion um Feldnamen aus BT-ID zu ermitteln
+const getFieldNameFromBtId = (btId) => {
+    const fieldMapping = {
+        'BT-1': 'reference',
+        'BT-2': 'invoiceDate',
+        'BT-3': 'invoiceTypeCode',
+        'BT-5': 'invoiceCurrencyCode',
+        'BT-9': 'paymentDueDate',
+        'BT-10': 'leitwegId',
+        'BT-12': 'contractReference',
+        'BT-13': 'orderReference',
+        'BT-20': 'paymentTerms',
+        'BT-25': 'precedingInvoiceReference',
+        'BT-27': 'senderName',
+        'BT-31': 'senderTaxId',
+        'BT-34': 'senderElectronicAddress',
+        'BT-35': 'senderStreet',
+        'BT-37': 'senderCity',
+        'BT-38': 'senderZip',
+        'BT-40': 'senderCountry',
+        'BT-41': 'senderContactName',
+        'BT-42': 'senderContactPhone',
+        'BT-43': 'senderContactEmail',
+        'BT-44': 'recipientName',
+        'BT-49': 'recipientElectronicAddress',
+        'BT-50': 'recipientStreet',
+        'BT-52': 'recipientCity',
+        'BT-53': 'recipientZip',
+        'BT-55': 'recipientCountry',
+        'BT-72': 'serviceDate',
+        'BT-81': 'paymentMeansCode',
+        'BT-84': 'iban',
+        'BT-86': 'bic',
+        'BT-92': 'documentLevelAllowance',
+        'BT-99': 'documentLevelCharge',
+        'BT-129': 'billedQuantity',
+        'BT-130': 'unitCode',
+        'BT-146': 'price',
+        'BT-152': 'taxRate',
+        'BT-153': 'name'
+    };
+    return fieldMapping[btId];
+};
+
+// Validierungsfunktion für EN16931/XRechnung-spezifische Anforderungen
+const validateEN16931Fields = (formData) => {
+    const errors = [];
+    const warnings = [];
+    
+    // Prüfe Pflichtfelder
+    const mandatoryFields = eRechnungMappingData.filter(field => field.mandatory);
+    mandatoryFields.forEach(field => {
+        const fieldName = getFieldNameFromBtId(field.btId);
+        if (fieldName && !formData[fieldName]) {
+            if (field.btId === 'BT-10' && field.xrechnungSpecific) {
+                errors.push(`XRechnung-Pflichtfeld fehlt: ${field.description} (${field.btId})`);
+            } else {
+                errors.push(`Pflichtfeld fehlt: ${field.description} (${field.btId})`);
+            }
+        }
+    });
+    
+    // XRechnung-spezifische Validierungen
+    if (formData.leitwegId) {
+        const leitwegIdPattern = /^[0-9]{2,30}-[a-zA-Z0-9]{1,30}$/;
+        if (!leitwegIdPattern.test(formData.leitwegId)) {
+            errors.push('Leitweg-ID muss Format "99999999-ABCDEF" haben (XR-2)');
+        }
+    }
+    
+    // IBAN-Validierung für Deutschland
+    if (formData.iban && !formData.iban.startsWith('DE')) {
+        warnings.push('Für deutsche XRechnung wird deutsche IBAN empfohlen');
+    }
+    
+    // Geschäftsregeln-Validierung
+    if (formData.lineItems && formData.lineItems.length > 0) {
+        const calculatedTotal = formData.lineItems.reduce((sum, item) => 
+            sum + parseFloat(item.netAmount || 0), 0);
+        const formTotal = parseFloat(formData.totalNetAmount || 0);
+        
+        if (Math.abs(calculatedTotal - formTotal) > 0.01) {
+            errors.push('BR-1: Rechnungssumme stimmt nicht mit Positionssumme überein');
+        }
+    }
+    
+    return { errors, warnings };
+};
+
 
 
 // XML-Generierung mit hierarchischer Struktur (basierend auf Live-Vorschau)
@@ -855,26 +1016,61 @@ const updateElementInMapping = (mapping, id, field, value) => {
 };
 
 // Hilfskomponente für Formularfelder mit BT-ID
-const FormField = ({ name, label, value, onChange, placeholder, type = "text", btId, children, disabled = false, isUnmapped = false }) => (
+const FormField = ({ name, label, value, onChange, placeholder, type = "text", btId, children, disabled = false, isUnmapped = false, mandatory = false, formats = [], newField = false, xrechnungSpecific = false }) => {
+  const fieldMapping = eRechnungMappingData.find(field => field.btId === btId);
+  const isMandatory = fieldMapping?.mandatory || mandatory;
+  const fieldFormats = fieldMapping?.formats || formats;
+  const isNewField = fieldMapping?.newField || newField;
+  const isXRechnungSpecific = fieldMapping?.xrechnungSpecific || xrechnungSpecific;
+  
+  return (
     <div className="relative">
         <label htmlFor={name} className="flex items-center text-sm font-medium text-gray-600 mb-1">
-          {label}
-          {btId && <span className="ml-1.5 text-[10px] font-sans text-gray-500">({btId})</span>}
+          <span className="flex items-center">
+            {label}
+            {isMandatory && <span className="ml-1 text-red-500 font-bold">*</span>}
+            {isXRechnungSpecific && <span className="ml-1.5 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">XR</span>}
+            {isNewField && <span className="ml-1.5 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">NEU</span>}
+          </span>
+          {btId && (
+            <div className="ml-auto flex items-center space-x-1">
+              <span className="text-[10px] font-sans text-gray-500">({btId})</span>
+              {fieldFormats.length > 0 && (
+                <div className="flex space-x-0.5">
+                  {fieldFormats.map(format => (
+                    <span key={format} className={`text-[8px] px-1 py-0.5 rounded-full font-medium ${
+                      format === 'XRechnung' ? 'bg-blue-50 text-blue-600' :
+                      format === 'EN16931' ? 'bg-purple-50 text-purple-600' :
+                      format === 'ZUGFeRD' ? 'bg-orange-50 text-orange-600' : 'bg-gray-50 text-gray-600'
+                    }`}>
+                      {format}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </label>
         {children ? (
-            <select id={name} name={name} value={value || ''} onChange={onChange} className={`w-full p-3 rounded-xl bg-white/50 text-gray-800 border transition-all duration-200 placeholder:text-gray-600 ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : 'border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500'}`}>
+            <select id={name} name={name} value={value || ''} onChange={onChange} className={`w-full p-3 rounded-xl bg-white/50 text-gray-800 border transition-all duration-200 placeholder:text-gray-600 ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : isMandatory ? 'border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500' : 'border-white/30 focus:outline-none focus:ring-2 focus:ring-gray-400'}`}>
                 {children}
             </select>
         ) : (
-            <input id={name} type={type} name={name} value={value || ''} onChange={onChange} placeholder={placeholder} disabled={disabled} className={`w-full p-3 rounded-xl bg-white/50 text-gray-800 border transition-all duration-200 disabled:bg-white/20 disabled:text-gray-500 placeholder:text-gray-600 ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : 'border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500'}`}/>
+            <input id={name} type={type} name={name} value={value || ''} onChange={onChange} placeholder={placeholder} disabled={disabled} className={`w-full p-3 rounded-xl bg-white/50 text-gray-800 border transition-all duration-200 disabled:bg-white/20 disabled:text-gray-500 placeholder:text-gray-600 ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : isMandatory ? 'border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500' : 'border-white/30 focus:outline-none focus:ring-2 focus:ring-gray-400'}`}/>
         )}
         {isUnmapped && (
             <div className="absolute top-0 right-0 -mt-1 -mr-1" title={`Feld "${label}" konnte nicht aus der Datei gelesen werden.`}>
                 <AlertCircle className="h-5 w-5 text-white bg-red-500 rounded-full p-0.5" />
             </div>
         )}
+        {!isMandatory && !isUnmapped && (
+            <div className="absolute top-0 right-0 -mt-1 -mr-1" title="Optionales Feld - wird automatisch befüllt falls leer">
+                <Info className="h-4 w-4 text-gray-400" />
+            </div>
+        )}
     </div>
-);
+  );
+};
 
 // Formatierungsfunktionen
 const formatDate = (dateString) => {
@@ -1305,52 +1501,45 @@ const HomePage = ({
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xml,.pdf" className="hidden"/>
           </div>
           
-          {/* Invoice Issuer */}
+          {/* Invoice Issuer - Pflichtfelder */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
-              <h3 className="font-semibold text-lg text-gray-800">Rechnungssteller</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg text-gray-800">Rechnungssteller</h3>
+                <span className="text-xs text-gray-500">Pflichtfelder für e-Rechnung</span>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Pflichtfelder */}
                   <FormField name="senderName" label="Name" value={formData.senderName} onChange={handleInputChange} placeholder="Firma GmbH" btId="BT-27" isUnmapped={unmappedFields.includes('senderName')}/>
-                  <FormField name="senderStreet" label="Straße & Hausnummer" value={formData.senderStreet} onChange={handleInputChange} placeholder="Musterstraße 1" btId="BT-35" isUnmapped={unmappedFields.includes('senderStreet')}/>
-                  <FormField name="senderZip" label="PLZ" value={formData.senderZip} onChange={handleInputChange} placeholder="12345" btId="BT-38" isUnmapped={unmappedFields.includes('senderZip')}/>
-                  <FormField name="senderCity" label="Ort" value={formData.senderCity} onChange={handleInputChange} placeholder="Musterstadt" btId="BT-37" isUnmapped={unmappedFields.includes('senderCity')}/>
-                  <FormField name="senderCountry" label="Ländercode" value={formData.senderCountry} onChange={handleInputChange} placeholder="DE" btId="BT-40" isUnmapped={unmappedFields.includes('senderCountry')}/>
                   <FormField name="senderTaxId" label="Steuernummer / USt-IdNr." value={formData.senderTaxId} onChange={handleInputChange} placeholder="DE123456789" btId="BT-31" isUnmapped={unmappedFields.includes('senderTaxId')}/>
-                  <FormField name="senderContactName" label="Ansprechpartner" value={formData.senderContactName} onChange={handleInputChange} placeholder="Max Mustermann" btId="BT-41" isUnmapped={unmappedFields.includes('senderContactName')}/>
-                  <FormField name="senderContactPhone" label="Telefon" value={formData.senderContactPhone} onChange={handleInputChange} placeholder="+49 30 123456" btId="BT-42" isUnmapped={unmappedFields.includes('senderContactPhone')}/>
-                  <div className="md:col-span-2">
-                      <FormField name="senderContactEmail" label="E-Mail" value={formData.senderContactEmail} onChange={handleInputChange} placeholder="max@firma.de" btId="BT-43" isUnmapped={unmappedFields.includes('senderContactEmail')}/>
-                  </div>
-                  <div className="md:col-span-2">
-                      <FormField name="senderElectronicAddress" label="Elektronische Adresse" value={formData.senderElectronicAddress} onChange={handleInputChange} placeholder="rechnung@firma.de" btId="BT-34" isUnmapped={unmappedFields.includes('senderElectronicAddress')}/>
-                  </div>
+                  <FormField name="senderCountry" label="Ländercode" value={formData.senderCountry} onChange={handleInputChange} placeholder="DE" btId="BT-40" isUnmapped={unmappedFields.includes('senderCountry')}/>
               </div>
           </div>
 
-          {/* Invoice Recipient */}
+          {/* Invoice Recipient - Pflichtfelder */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
-              <h3 className="font-semibold text-lg text-gray-800">Rechnungsempfänger</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg text-gray-800">Rechnungsempfänger</h3>
+                <span className="text-xs text-gray-500">Pflichtfelder für e-Rechnung</span>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Pflichtfelder */}
                   <FormField name="recipientName" label="Name des Empfängers" value={formData.recipientName} onChange={handleInputChange} placeholder="Kunde AG" btId="BT-44" isUnmapped={unmappedFields.includes('recipientName')}/>
-                  <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')}/>
-                  <FormField name="recipientZip" label="PLZ" value={formData.recipientZip} onChange={handleInputChange} placeholder="54321" btId="BT-53" isUnmapped={unmappedFields.includes('recipientZip')}/>
-                  <FormField name="recipientCity" label="Ort" value={formData.recipientCity} onChange={handleInputChange} placeholder="Kundenstadt" btId="BT-52" isUnmapped={unmappedFields.includes('recipientCity')}/>
                   <FormField name="recipientCountry" label="Ländercode" value={formData.recipientCountry} onChange={handleInputChange} placeholder="DE" btId="BT-55" isUnmapped={unmappedFields.includes('recipientCountry')}/>
                   <div className="md:col-span-2">
                       <FormField name="leitwegId" label="Leitweg-ID" value={formData.leitwegId} onChange={handleInputChange} placeholder="04011000-12345-67" btId="BT-10" isUnmapped={unmappedFields.includes('leitwegId')}/>
                   </div>
-                   <div className="md:col-span-2">
-                      <FormField name="recipientElectronicAddress" label="Elektronische Adresse" value={formData.recipientElectronicAddress} onChange={handleInputChange} placeholder="rechnung@kunde.de" btId="BT-49" isUnmapped={unmappedFields.includes('recipientElectronicAddress')}/>
-                  </div>
               </div>
           </div>
 
-          {/* Invoice Details */}
+          {/* Invoice Details - Pflichtfelder */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
-              <h3 className="font-semibold text-lg text-gray-800">Rechnungsdetails</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg text-gray-800">Rechnungsdetails</h3>
+                <span className="text-xs text-gray-500">Pflichtfelder für e-Rechnung</span>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="reference" label="Rechnungsnummer" value={formData.reference} onChange={handleInputChange} placeholder="RE-2025-001" btId="BT-1" isUnmapped={unmappedFields.includes('reference')}/>
                   <FormField name="invoiceDate" label="Rechnungsdatum" value={formData.invoiceDate} onChange={handleInputChange} type="date" btId="BT-2" isUnmapped={unmappedFields.includes('invoiceDate')}/>
-                  <FormField name="serviceDate" label="Leistungs-/Lieferdatum" value={formData.serviceDate} onChange={handleInputChange} type="date" btId="BT-72" isUnmapped={unmappedFields.includes('serviceDate')}/>
                   <FormField name="invoiceTypeCode" label="Rechnungstyp" value={formData.invoiceTypeCode} onChange={handleInputChange} btId="BT-3" isUnmapped={unmappedFields.includes('invoiceTypeCode')}>
                       <option value="380">Rechnung (380)</option>
                       <option value="389">Selbst ausgestellte Rechnung (389)</option>
@@ -1409,19 +1598,80 @@ const HomePage = ({
             </div>
           </div>
 
-          {/* Payment Block */}
-          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
-              <h3 className="font-semibold text-lg text-gray-800">Zahlungsinformationen</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Optionale Felder - Ausklappbar */}
+          <details className="group">
+            <summary className="cursor-pointer list-none">
+              <div className="p-4 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm hover:bg-white/30 transition-all duration-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-800">Optionale Felder</h3>
+                    <p className="text-sm text-gray-600">Erweiterte Eingaben für vollständige e-Rechnung-Konformität</p>
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-gray-500 group-open:rotate-180 transition-transform duration-200" />
+                </div>
+              </div>
+            </summary>
+            
+            <div className="mt-4 space-y-4">
+              {/* Verkäufer - Optionale Felder */}
+              <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
+                <h4 className="font-medium text-gray-700">Rechnungssteller - Zusatzangaben</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField name="senderStreet" label="Straße & Hausnummer" value={formData.senderStreet} onChange={handleInputChange} placeholder="Musterstraße 1" btId="BT-35" isUnmapped={unmappedFields.includes('senderStreet')}/>
+                  <FormField name="senderZip" label="PLZ" value={formData.senderZip} onChange={handleInputChange} placeholder="12345" btId="BT-38" isUnmapped={unmappedFields.includes('senderZip')}/>
+                  <FormField name="senderCity" label="Ort" value={formData.senderCity} onChange={handleInputChange} placeholder="Musterstadt" btId="BT-37" isUnmapped={unmappedFields.includes('senderCity')}/>
+                  <FormField name="senderElectronicAddress" label="Elektronische Adresse" value={formData.senderElectronicAddress} onChange={handleInputChange} placeholder="rechnung@firma.de" btId="BT-34" isUnmapped={unmappedFields.includes('senderElectronicAddress')}/>
+                  <FormField name="senderContactName" label="Ansprechpartner" value={formData.senderContactName} onChange={handleInputChange} placeholder="Max Mustermann" btId="BT-41" isUnmapped={unmappedFields.includes('senderContactName')}/>
+                  <FormField name="senderContactPhone" label="Telefon" value={formData.senderContactPhone} onChange={handleInputChange} placeholder="+49 30 123456" btId="BT-42" isUnmapped={unmappedFields.includes('senderContactPhone')}/>
+                  <div className="md:col-span-2">
+                    <FormField name="senderContactEmail" label="E-Mail" value={formData.senderContactEmail} onChange={handleInputChange} placeholder="max@firma.de" btId="BT-43" isUnmapped={unmappedFields.includes('senderContactEmail')}/>
+                  </div>
+                </div>
+              </div>
+
+              {/* Empfänger - Optionale Felder */}
+              <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
+                <h4 className="font-medium text-gray-700">Rechnungsempfänger - Zusatzangaben</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')}/>
+                  <FormField name="recipientZip" label="PLZ" value={formData.recipientZip} onChange={handleInputChange} placeholder="54321" btId="BT-53" isUnmapped={unmappedFields.includes('recipientZip')}/>
+                  <FormField name="recipientCity" label="Ort" value={formData.recipientCity} onChange={handleInputChange} placeholder="Kundenstadt" btId="BT-52" isUnmapped={unmappedFields.includes('recipientCity')}/>
+                  <FormField name="recipientElectronicAddress" label="Elektronische Adresse" value={formData.recipientElectronicAddress} onChange={handleInputChange} placeholder="rechnung@kunde.de" btId="BT-49" isUnmapped={unmappedFields.includes('recipientElectronicAddress')}/>
+                </div>
+              </div>
+
+              {/* Zusätzliche Rechnungsdetails */}
+              <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
+                <h4 className="font-medium text-gray-700">Zusätzliche Rechnungsdetails</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField name="serviceDate" label="Leistungs-/Lieferdatum" value={formData.serviceDate} onChange={handleInputChange} type="date" btId="BT-72" isUnmapped={unmappedFields.includes('serviceDate')}/>
+                  <FormField name="paymentDueDate" label="Fälligkeitsdatum" value={formData.paymentDueDate} onChange={handleInputChange} type="date" btId="BT-9" isUnmapped={unmappedFields.includes('paymentDueDate')}/>
+                  <FormField name="orderReference" label="Bestellreferenz" value={formData.orderReference} onChange={handleInputChange} placeholder="PO-2025-001" btId="BT-13" isUnmapped={unmappedFields.includes('orderReference')}/>
+                  <FormField name="contractReference" label="Vertragsreferenz" value={formData.contractReference} onChange={handleInputChange} placeholder="CONTRACT-2025-001" btId="BT-12" isUnmapped={unmappedFields.includes('contractReference')}/>
+                  <div className="md:col-span-2">
+                    <FormField name="precedingInvoiceReference" label="Vorherige Rechnungsreferenz" value={formData.precedingInvoiceReference} onChange={handleInputChange} placeholder="RE-2024-999" btId="BT-25" isUnmapped={unmappedFields.includes('precedingInvoiceReference')}/>
+                  </div>
+                </div>
+              </div>
+
+              {/* Zahlungs- und Steuerdetails */}
+              <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
+                <h4 className="font-medium text-gray-700">Zahlungs- und Steuerdetails</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="iban" label="IBAN" value={formData.iban} onChange={handleInputChange} placeholder="DE..." btId="BT-84" isUnmapped={unmappedFields.includes('iban')}/>
                   <FormField name="bic" label="BIC" value={formData.bic} onChange={handleInputChange} placeholder="DEUTDEFFXXX" btId="BT-86" isUnmapped={unmappedFields.includes('bic')}/>
-                  <FormField name="paymentMeansCode" label="Zahlungsmittel-Code" value={formData.paymentMeansCode} onChange={handleInputChange} placeholder="30" btId="BT-81" isUnmapped={unmappedFields.includes('paymentMeansCode')}/>
-                  <FormField name="taxRate" label="MwSt.-Satz (%)" value={formData.taxRate} onChange={handleInputChange} type="number" placeholder="19" btId="BT-119" isUnmapped={unmappedFields.includes('taxRate')}/>
-                   <div className="md:col-span-2">
-                      <FormField name="paymentTerms" label="Zahlungsbedingungen" value={formData.paymentTerms} onChange={handleInputChange} placeholder="Zahlbar innerhalb von 30 Tagen" btId="BT-20" isUnmapped={unmappedFields.includes('paymentTerms')}/>
+                  <FormField name="paymentMeansCode" label="Zahlungsmittel-Code" value={formData.paymentMeansCode} onChange={handleInputChange} placeholder="58" btId="BT-81" isUnmapped={unmappedFields.includes('paymentMeansCode')}/>
+                  <FormField name="taxRate" label="MwSt.-Satz (%)" value={formData.taxRate} onChange={handleInputChange} type="number" placeholder="19" btId="BT-152" isUnmapped={unmappedFields.includes('taxRate')}/>
+                  <FormField name="documentLevelAllowance" label="Rabatt auf Dokumentenebene" value={formData.documentLevelAllowance} onChange={handleInputChange} type="number" placeholder="50.00" btId="BT-92" isUnmapped={unmappedFields.includes('documentLevelAllowance')}/>
+                  <FormField name="documentLevelCharge" label="Zuschlag auf Dokumentenebene" value={formData.documentLevelCharge} onChange={handleInputChange} type="number" placeholder="25.00" btId="BT-99" isUnmapped={unmappedFields.includes('documentLevelCharge')}/>
+                  <div className="md:col-span-2">
+                    <FormField name="paymentTerms" label="Zahlungsbedingungen" value={formData.paymentTerms} onChange={handleInputChange} placeholder="Zahlbar innerhalb von 30 Tagen" btId="BT-20" isUnmapped={unmappedFields.includes('paymentTerms')}/>
                   </div>
+                </div>
               </div>
-          </div>
+            </div>
+          </details>
 
           {/* Action buttons */}
           <div className="flex flex-col gap-4 mt-6">
@@ -2300,6 +2550,19 @@ const App = () => {
 
 
   const generateXRechnungUBL = async () => {
+    // Erweiterte Validierung mit EN16931/XRechnung-spezifischen Regeln
+    const validation = validateEN16931Fields(formData);
+    if (validation.errors.length > 0) {
+      showMessage(`Validierungsfehler:\n${validation.errors.join('\n')}`, 'error');
+      return;
+    }
+    
+    // Zeige Warnungen an, aber blockiere nicht
+    if (validation.warnings.length > 0) {
+      showMessage(`Warnungen:\n${validation.warnings.join('\n')}`, 'warning');
+    }
+
+    // Alte Validierung als Fallback
     if (!validateFormData()) return;
 
     setLoading(true);
@@ -2308,32 +2571,57 @@ const App = () => {
     setSapXml('');
 
     try {
-      const taxRate = parseFloat(formData.taxRate);
+      // Wende Defaults auf Formulardaten an
+      const enhancedFormData = applyFieldDefaults(formData);
+      
+      const taxRate = parseFloat(enhancedFormData.taxRate);
       if (isNaN(taxRate)) throw new Error('Steuersatz muss eine gültige Zahl sein.');
 
-      const lineItemsXML = formData.lineItems.map((item, index) => `
+      const lineItemsXML = enhancedFormData.lineItems.map((item, index) => `
     <cac:InvoiceLine>
         <cbc:ID>${index + 1}</cbc:ID>
-        <cbc:InvoicedQuantity unitCode="${escapeXml(item.unitCode)}">${parseFloat(item.billedQuantity).toFixed(2)}</cbc:InvoicedQuantity>
-        <cbc:LineExtensionAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${parseFloat(item.netAmount).toFixed(2)}</cbc:LineExtensionAmount>
+        <cbc:InvoicedQuantity unitCode="${escapeXml(item.unitCode || 'XPP')}">${parseFloat(item.billedQuantity).toFixed(2)}</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="${escapeXml(enhancedFormData.invoiceCurrencyCode)}">${parseFloat(item.netAmount).toFixed(2)}</cbc:LineExtensionAmount>
         <cac:Item>
             <cbc:Name>${escapeXml(item.name)}</cbc:Name>
             <cac:ClassifiedTaxCategory><cbc:ID>S</cbc:ID><cbc:Percent>${taxRate.toFixed(2)}</cbc:Percent><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:ClassifiedTaxCategory>
         </cac:Item>
-        <cac:Price><cbc:PriceAmount currencyID="${escapeXml(formData.invoiceCurrencyCode)}">${parseFloat(item.price).toFixed(2)}</cbc:PriceAmount></cac:Price>
+        <cac:Price><cbc:PriceAmount currencyID="${escapeXml(enhancedFormData.invoiceCurrencyCode)}">${parseFloat(item.price).toFixed(2)}</cbc:PriceAmount></cac:Price>
     </cac:InvoiceLine>`).join('');
+
+      // Generiere erweiterte XML mit optionalen Feldern
+      const generateDocumentReferences = () => {
+        let refs = '';
+        if (enhancedFormData.orderReference) {
+          refs += `\n    <cac:OrderReference><cbc:ID>${escapeXml(enhancedFormData.orderReference)}</cbc:ID></cac:OrderReference>`;
+        }
+        if (enhancedFormData.contractReference) {
+          refs += `\n    <cac:ContractDocumentReference><cbc:ID>${escapeXml(enhancedFormData.contractReference)}</cbc:ID></cac:ContractDocumentReference>`;
+        }
+        if (enhancedFormData.precedingInvoiceReference && enhancedFormData.invoiceTypeCode === '384') {
+          refs += `\n    <cac:BillingReference><cac:InvoiceDocumentReference><cbc:ID>${escapeXml(enhancedFormData.precedingInvoiceReference)}</cbc:ID></cac:InvoiceDocumentReference></cac:BillingReference>`;
+        }
+        return refs;
+      };
+
+      const generateDeliveryInfo = () => {
+        if (enhancedFormData.serviceDate) {
+          return `\n    <cac:Delivery><cbc:ActualDeliveryDate>${enhancedFormData.serviceDate}</cbc:ActualDeliveryDate></cac:Delivery>`;
+        }
+        return '';
+      };
 
       const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
     <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0</cbc:CustomizationID>
     <cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:3.0</cbc:ProfileID>
-    <cbc:ID>${escapeXml(formData.reference)}</cbc:ID>
-    <cbc:IssueDate>${formData.invoiceDate}</cbc:IssueDate>
-    <cbc:DueDate>${formData.serviceDate}</cbc:DueDate>
-    <cbc:InvoiceTypeCode>${formData.invoiceTypeCode}</cbc:InvoiceTypeCode>
-    <cbc:DocumentCurrencyCode>${escapeXml(formData.invoiceCurrencyCode)}</cbc:DocumentCurrencyCode>
-    <cbc:BuyerReference>${escapeXml(formData.leitwegId)}</cbc:BuyerReference>
-    <cac:PaymentTerms><cbc:Note>${escapeXml(formData.paymentTerms)}</cbc:Note></cac:PaymentTerms>
+    <cbc:ID>${escapeXml(enhancedFormData.reference)}</cbc:ID>
+    <cbc:IssueDate>${enhancedFormData.invoiceDate}</cbc:IssueDate>
+    ${enhancedFormData.paymentDueDate ? `<cbc:DueDate>${enhancedFormData.paymentDueDate}</cbc:DueDate>` : ''}
+    <cbc:InvoiceTypeCode>${enhancedFormData.invoiceTypeCode}</cbc:InvoiceTypeCode>
+    <cbc:DocumentCurrencyCode>${escapeXml(enhancedFormData.invoiceCurrencyCode)}</cbc:DocumentCurrencyCode>
+    <cbc:BuyerReference>${escapeXml(enhancedFormData.leitwegId)}</cbc:BuyerReference>${generateDocumentReferences()}
+    <cac:PaymentTerms><cbc:Note>${escapeXml(enhancedFormData.paymentTerms || 'Zahlbar innerhalb von 30 Tagen')}</cbc:Note></cac:PaymentTerms>
     <cac:AccountingSupplierParty><cac:Party><cbc:EndpointID schemeID="EM">${escapeXml(formData.senderElectronicAddress)}</cbc:EndpointID><cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(formData.senderName)}</cbc:RegistrationName></cac:PartyLegalEntity><cac:PostalAddress><cbc:StreetName>${escapeXml(formData.senderStreet)}</cbc:StreetName><cbc:CityName>${escapeXml(formData.senderCity)}</cbc:CityName><cbc:PostalZone>${escapeXml(formData.senderZip)}</cbc:PostalZone><cac:Country><cbc:IdentificationCode>${escapeXml(formData.senderCountry)}</cbc:IdentificationCode></cac:Country></cac:PostalAddress><cac:PartyTaxScheme><cbc:CompanyID>${escapeXml(formData.senderTaxId)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme><cac:Contact><cbc:Name>${escapeXml(formData.senderContactName)}</cbc:Name><cbc:Telephone>${escapeXml(formData.senderContactPhone)}</cbc:Telephone><cbc:ElectronicMail>${escapeXml(formData.senderContactEmail)}</cbc:ElectronicMail></cac:Contact></cac:Party></cac:AccountingSupplierParty>
     <cac:AccountingCustomerParty><cac:Party><cbc:EndpointID schemeID="EM">${escapeXml(formData.recipientElectronicAddress)}</cbc:EndpointID><cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(formData.recipientName)}</cbc:RegistrationName></cac:PartyLegalEntity><cac:PostalAddress><cbc:StreetName>${escapeXml(formData.recipientStreet)}</cbc:StreetName><cbc:CityName>${escapeXml(formData.recipientCity)}</cbc:CityName><cbc:PostalZone>${escapeXml(formData.recipientZip)}</cbc:PostalZone><cac:Country><cbc:IdentificationCode>${escapeXml(formData.recipientCountry)}</cbc:IdentificationCode></cac:Country></cac:PostalAddress></cac:Party></cac:AccountingCustomerParty>
     <cac:PaymentMeans><cbc:PaymentMeansCode>${formData.paymentMeansCode}</cbc:PaymentMeansCode><cac:PayeeFinancialAccount><cbc:ID>${escapeXml(formData.iban)}</cbc:ID><cac:FinancialInstitutionBranch><cbc:ID>${escapeXml(formData.bic)}</cbc:ID></cac:FinancialInstitutionBranch></cac:PayeeFinancialAccount></cac:PaymentMeans>
