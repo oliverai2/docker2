@@ -3085,6 +3085,13 @@ const App = () => {
             invoiceCurrencyCode: 'EUR',
             paymentTerms: `Zahlbar innerhalb von ${getRandomNumber(14, 30)} Tagen ohne Abzug.`,
             paymentMeansCode: '58',
+            // Neue optionale Felder (BT-9, BT-12, BT-13)
+            paymentDueDate: new Date(Date.now() + getRandomNumber(14, 30) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+            contractReference: `CONTRACT-${new Date().getFullYear()}-${String(getRandomNumber(100, 999))}`,
+            orderReference: `PO-${new Date().getFullYear()}-${String(getRandomNumber(1000, 9999))}`,
+            precedingInvoiceReference: '',
+            documentLevelAllowance: '',
+            documentLevelCharge: '',
             lineItems: (() => {
               const items = [];
               const services = [
