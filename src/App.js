@@ -1307,7 +1307,7 @@ const HomePage = ({
           
           {/* Invoice Issuer */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="rechnungssteller">
-              <h3 className={getStickyHeaderClass('rechnungssteller')}>Rechnungssteller</h3>
+              <h3 className={activeSection === 'rechnungssteller' ? "font-semibold text-lg text-gray-800 transition-all duration-200 sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm" : "font-semibold text-lg text-gray-800 transition-all duration-200"}>Rechnungssteller</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="senderName" label="Name" value={formData.senderName} onChange={handleInputChange} placeholder="Firma GmbH" btId="BT-27" isUnmapped={unmappedFields.includes('senderName')}/>
                   <FormField name="senderStreet" label="Straße & Hausnummer" value={formData.senderStreet} onChange={handleInputChange} placeholder="Musterstraße 1" btId="BT-35" isUnmapped={unmappedFields.includes('senderStreet')}/>
@@ -1328,7 +1328,7 @@ const HomePage = ({
 
           {/* Invoice Recipient */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="rechnungsempfaenger">
-              <h3 className={getStickyHeaderClass('rechnungsempfaenger')}>Rechnungsempfänger</h3>
+              <h3 className={activeSection === 'rechnungsempfaenger' ? "font-semibold text-lg text-gray-800 transition-all duration-200 sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm" : "font-semibold text-lg text-gray-800 transition-all duration-200"}>Rechnungsempfänger</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="recipientName" label="Name des Empfängers" value={formData.recipientName} onChange={handleInputChange} placeholder="Kunde AG" btId="BT-44" isUnmapped={unmappedFields.includes('recipientName')}/>
                   <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')}/>
@@ -1346,7 +1346,7 @@ const HomePage = ({
 
           {/* Invoice Details */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="rechnungsdetails">
-              <h3 className={getStickyHeaderClass('rechnungsdetails')}>Rechnungsdetails</h3>
+              <h3 className={activeSection === 'rechnungsdetails' ? "font-semibold text-lg text-gray-800 transition-all duration-200 sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm" : "font-semibold text-lg text-gray-800 transition-all duration-200"}>Rechnungsdetails</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="reference" label="Rechnungsnummer" value={formData.reference} onChange={handleInputChange} placeholder="RE-2025-001" btId="BT-1" isUnmapped={unmappedFields.includes('reference')}/>
                   <FormField name="invoiceDate" label="Rechnungsdatum" value={formData.invoiceDate} onChange={handleInputChange} type="date" btId="BT-2" isUnmapped={unmappedFields.includes('invoiceDate')}/>
@@ -1363,7 +1363,7 @@ const HomePage = ({
 
           {/* Line Items */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="rechnungspositionen">
-              <div className={getStickyContainerClass('rechnungspositionen')}>
+              <div className={activeSection === 'rechnungspositionen' ? "flex justify-between items-center transition-all duration-200 sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm" : "flex justify-between items-center transition-all duration-200"}>
                   <h3 className="font-semibold text-lg text-gray-800">Rechnungspositionen</h3>
                   <button onClick={addLineItem} className="p-2 rounded-full bg-white/50 text-gray-700 hover:bg-white/80 transition-colors" title="Position hinzufügen">
                       <PlusCircle size={20} />
@@ -1392,7 +1392,7 @@ const HomePage = ({
           
           {/* Totals Block */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="gesamtbetraege">
-            <h3 className={getStickyHeaderClass('gesamtbetraege')}>Gesamtbeträge</h3>
+            <h3 className={activeSection === 'gesamtbetraege' ? "font-semibold text-lg text-gray-800 transition-all duration-200 sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm" : "font-semibold text-lg text-gray-800 transition-all duration-200"}>Gesamtbeträge</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-600">Gesamt Netto <span className="ml-1.5 text-[10px] font-sans text-gray-500">(BT-109)</span></label>
@@ -1411,7 +1411,7 @@ const HomePage = ({
 
           {/* Payment Block */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="zahlungsinformationen">
-              <h3 className={getStickyHeaderClass('zahlungsinformationen')}>Zahlungsinformationen</h3>
+              <h3 className={activeSection === 'zahlungsinformationen' ? "font-semibold text-lg text-gray-800 transition-all duration-200 sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm" : "font-semibold text-lg text-gray-800 transition-all duration-200"}>Zahlungsinformationen</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="iban" label="IBAN" value={formData.iban} onChange={handleInputChange} placeholder="DE..." btId="BT-84" isUnmapped={unmappedFields.includes('iban')}/>
                   <FormField name="bic" label="BIC" value={formData.bic} onChange={handleInputChange} placeholder="DEUTDEFFXXX" btId="BT-86" isUnmapped={unmappedFields.includes('bic')}/>
@@ -1779,19 +1779,6 @@ const App = () => {
         resizeObserver.disconnect();
     };
   }, [currentPage]);
-
-  // Helper functions für Sticky Headers
-  const getStickyHeaderClass = (sectionId) => {
-    const baseClass = "font-semibold text-lg text-gray-800 transition-all duration-200";
-    const stickyClass = "sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm";
-    return activeSection === sectionId ? `${baseClass} ${stickyClass}` : baseClass;
-  };
-
-  const getStickyContainerClass = (sectionId) => {
-    const baseClass = "flex justify-between items-center transition-all duration-200";
-    const stickyClass = "sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm";
-    return activeSection === sectionId ? `${baseClass} ${stickyClass}` : baseClass;
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
