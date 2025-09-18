@@ -1452,15 +1452,15 @@ const PdfPreview = ({ pdfUrl }) => {
     );
 };
 
-const InvoicePreview = ({ formData, layout, showPdfPreview, pdfUrl, dataSource }) => {
+const InvoicePreview = ({ formData, layout, showPdfPreview, pdfUrl, showOptionalFields }) => {
     if (showPdfPreview && pdfUrl) {
         return <PdfPreview pdfUrl={pdfUrl} />;
     }
     
-    // Filtere Daten basierend auf Datenquelle
+    // Filtere Daten basierend auf Checkbox-Einstellung
     const getFilteredData = () => {
-        if (dataSource === 'ki') {
-            // Bei KI-Werten: Nur Pflichtfelder und befüllte Felder anzeigen
+        if (!showOptionalFields) {
+            // Checkbox nicht aktiviert: Nur Pflichtfelder anzeigen
             const mandatoryFieldNames = eRechnungMappingData
                 .filter(field => field.mandatory)
                 .map(field => getFieldNameFromBtId(field.btId))
@@ -1468,19 +1468,19 @@ const InvoicePreview = ({ formData, layout, showPdfPreview, pdfUrl, dataSource }
             
             const filteredData = { ...formData };
             
-            // Entferne optionale Felder, die leer sind
+            // Entferne alle optionalen Felder
             Object.keys(filteredData).forEach(key => {
-                if (!mandatoryFieldNames.includes(key) && 
-                    key !== 'lineItems' && 
-                    (!filteredData[key] || filteredData[key].trim() === '')) {
-                    delete filteredData[key];
+                if (!mandatoryFieldNames.includes(key) && key !== 'lineItems') {
+                    if (!filteredData[key] || filteredData[key].trim() === '') {
+                        delete filteredData[key];
+                    }
                 }
             });
             
             return filteredData;
         }
         
-        // Bei Upload: Alle verfügbaren Daten anzeigen
+        // Checkbox aktiviert: Alle verfügbaren Daten anzeigen
         return formData;
     };
     
@@ -1779,7 +1779,7 @@ const HomePage = ({
                             layout={selectedLayout} 
                             showPdfPreview={showPdfPreview}
                             pdfUrl={uploadedPdfData}
-                            dataSource={dataSource}
+                            showOptionalFields={showOptionalFields}
                         />
                     </div>
                     <div className="h-16 md:h-24" />
