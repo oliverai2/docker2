@@ -1653,19 +1653,6 @@ const App = () => {
   const [showPdfPreview, setShowPdfPreview] = useState(false); // PDF vs HTML Vorschau
   const [activeSection, setActiveSection] = useState(''); // Für Sticky Headers
 
-  // Helper function für Sticky Header className
-  const getStickyHeaderClass = (sectionId) => {
-    const baseClass = "font-semibold text-lg text-gray-800 transition-all duration-200";
-    const stickyClass = "sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm";
-    return activeSection === sectionId ? `${baseClass} ${stickyClass}` : baseClass;
-  };
-
-  const getStickyContainerClass = (sectionId) => {
-    const baseClass = "flex justify-between items-center transition-all duration-200";
-    const stickyClass = "sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm";
-    return activeSection === sectionId ? `${baseClass} ${stickyClass}` : baseClass;
-  };
-
   // Effect for auto-calculation of totals
   useEffect(() => {
     const totalNet = formData.lineItems.reduce((sum, item) => sum + (parseFloat(item.netAmount) || 0), 0);
@@ -1792,6 +1779,19 @@ const App = () => {
         resizeObserver.disconnect();
     };
   }, [currentPage]);
+
+  // Helper functions für Sticky Headers
+  const getStickyHeaderClass = (sectionId) => {
+    const baseClass = "font-semibold text-lg text-gray-800 transition-all duration-200";
+    const stickyClass = "sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm";
+    return activeSection === sectionId ? `${baseClass} ${stickyClass}` : baseClass;
+  };
+
+  const getStickyContainerClass = (sectionId) => {
+    const baseClass = "flex justify-between items-center transition-all duration-200";
+    const stickyClass = "sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm";
+    return activeSection === sectionId ? `${baseClass} ${stickyClass}` : baseClass;
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
