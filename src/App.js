@@ -1040,7 +1040,7 @@ const updateElementInMapping = (mapping, id, field, value) => {
 };
 
 // Hilfskomponente für Formularfelder mit BT-ID
-const FormField = ({ name, label, value, onChange, placeholder, type = "text", btId, children, disabled = false, isUnmapped = false, mandatory = false, formats = [], newField = false, xrechnungSpecific = false }) => {
+const FormField = ({ name, label, value, onChange, placeholder, type = "text", btId, children, disabled = false, isUnmapped = false, mandatory = false, formats = [], newField = false, xrechnungSpecific = false, onFocus, onBlur }) => {
   const fieldMapping = eRechnungMappingData.find(field => field.btId === btId);
   const isMandatory = fieldMapping?.mandatory || mandatory;
   const fieldFormats = fieldMapping?.formats || formats;
@@ -1081,19 +1081,36 @@ const FormField = ({ name, label, value, onChange, placeholder, type = "text", b
           )}
         </label>
         {children ? (
-            <select id={name} name={name} value={value || ''} onChange={onChange} className={`w-full p-3 rounded-xl border transition-all duration-200 ${
-                value && value.trim() !== '' 
-                    ? 'bg-blue-50 text-blue-900 font-medium border-blue-200' 
-                    : 'bg-white/50 text-gray-800 border-white/30'
-            } ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : isMandatory ? 'focus:outline-none focus:ring-2 focus:ring-blue-500' : 'focus:outline-none focus:ring-2 focus:ring-gray-400'}`}>
+            <select 
+                id={name} 
+                name={name} 
+                value={value || ''} 
+                onChange={onChange} 
+                onFocus={() => onFocus && onFocus(btId)}
+                onBlur={() => onBlur && onBlur()}
+                className={`w-full p-3 rounded-xl border transition-all duration-200 ${
+                    value && value.trim() !== '' 
+                        ? 'bg-blue-50 text-blue-900 font-medium border-blue-200' 
+                        : 'bg-white/50 text-gray-800 border-white/30'
+                } ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : isMandatory ? 'focus:outline-none focus:ring-2 focus:ring-blue-500' : 'focus:outline-none focus:ring-2 focus:ring-gray-400'}`}>
                 {children}
             </select>
         ) : (
-            <input id={name} type={type} name={name} value={value || ''} onChange={onChange} placeholder={placeholder} disabled={disabled} className={`w-full p-3 rounded-xl border transition-all duration-200 placeholder:text-gray-400 ${
-                value && value.trim() !== '' 
-                    ? 'bg-blue-50 text-blue-900 font-medium border-blue-200' 
-                    : 'bg-white/50 text-gray-800 border-white/30'
-            } ${disabled ? 'bg-gray-100 text-gray-500' : ''} ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : isMandatory ? 'focus:outline-none focus:ring-2 focus:ring-blue-500' : 'focus:outline-none focus:ring-2 focus:ring-gray-400'}`}/>
+            <input 
+                id={name} 
+                type={type} 
+                name={name} 
+                value={value || ''} 
+                onChange={onChange} 
+                onFocus={() => onFocus && onFocus(btId)}
+                onBlur={() => onBlur && onBlur()}
+                placeholder={placeholder} 
+                disabled={disabled} 
+                className={`w-full p-3 rounded-xl border transition-all duration-200 placeholder:text-gray-400 ${
+                    value && value.trim() !== '' 
+                        ? 'bg-blue-50 text-blue-900 font-medium border-blue-200' 
+                        : 'bg-white/50 text-gray-800 border-white/30'
+                } ${disabled ? 'bg-gray-100 text-gray-500' : ''} ${isUnmapped ? 'border-red-500 ring-2 ring-red-200' : isMandatory ? 'focus:outline-none focus:ring-2 focus:ring-blue-500' : 'focus:outline-none focus:ring-2 focus:ring-gray-400'}`}/>
         )}
         {isUnmapped && (
             <div className="absolute top-0 right-0 -mt-1 -mr-1" title={`Feld "${label}" konnte nicht aus der Datei gelesen werden.`}>
@@ -1109,6 +1126,14 @@ const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' });
+};
+
+// Hilfsfunktion für Highlighting-Klassen
+const getHighlightClass = (btId, activeField) => {
+    if (activeField === btId) {
+        return 'bg-yellow-100/70 border-2 border-yellow-300/60 shadow-md transform scale-102 transition-all duration-300 text-gray-800';
+    }
+    return '';
 };
 
 const formatCurrency = (amount) => {
@@ -1131,7 +1156,7 @@ const getDocumentTypeName = (code) => {
 // #region LAYOUT COMPONENTS
 // ============================================================================
 
-const LayoutClassic = ({ formData }) => (
+const LayoutClassic = ({ formData, activeField }) => (
     <div className="bg-white text-gray-800 p-10 font-sans shadow-2xl rounded-lg w-full">
       <header className="flex justify-between items-start pb-6 border-b-2 border-gray-100">
         <div>
@@ -1141,24 +1166,52 @@ const LayoutClassic = ({ formData }) => (
       <section className="grid grid-cols-2 gap-12 mt-8">
         <div>
           <p className="text-sm font-semibold text-gray-600 mb-2">RECHNUNGSSTELLER</p>
-          <p className="font-bold text-gray-800 break-words">{formData.senderName}</p>
-          <p className="text-gray-600 break-words">{formData.senderStreet}, {formData.senderZip} {formData.senderCity}</p>
-          <p className="text-gray-600 break-words">{formData.senderContactEmail}</p>
-          <p className="text-gray-600 break-words">Steuernummer: {formData.senderTaxId}</p>
+          <p className={`font-bold text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-27', activeField)}`}>{formData.senderName}</p>
+          <div className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-35', activeField) || getHighlightClass('BT-37', activeField) || getHighlightClass('BT-38', activeField)}`}>
+            <span className={`${getHighlightClass('BT-35', activeField)}`}>{formData.senderStreet}</span>, <span className={`${getHighlightClass('BT-38', activeField)}`}>{formData.senderZip}</span> <span className={`${getHighlightClass('BT-37', activeField)}`}>{formData.senderCity}</span>
+          </div>
+          {formData.senderContactEmail && (
+            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-43', activeField)}`}>{formData.senderContactEmail}</p>
+          )}
+          {formData.senderContactName && (
+            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-41', activeField)}`}>{formData.senderContactName}</p>
+          )}
+          {formData.senderContactPhone && (
+            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-42', activeField)}`}>{formData.senderContactPhone}</p>
+          )}
+          {formData.senderElectronicAddress && (
+            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-34', activeField)}`}>{formData.senderElectronicAddress}</p>
+          )}
+          <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-31', activeField)}`}>Steuernummer: {formData.senderTaxId}</p>
         </div>
         <div>
           <p className="text-sm font-semibold text-gray-600 mb-2">RECHNUNGSEMPFÄNGER</p>
-          <p className="font-bold text-gray-800 break-words">{formData.recipientName}</p>
-          <p className="text-gray-600 break-words">{formData.recipientStreet}, {formData.recipientZip} {formData.recipientCity}</p>
-          <p className="text-gray-600 break-words">{formData.recipientElectronicAddress}</p>
-          <p className="text-gray-600 break-words">Leitweg-ID: {formData.leitwegId}</p>
+          <p className={`font-bold text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-44', activeField)}`}>{formData.recipientName}</p>
+          <div className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-50', activeField) || getHighlightClass('BT-52', activeField) || getHighlightClass('BT-53', activeField)}`}>
+            <span className={`${getHighlightClass('BT-50', activeField)}`}>{formData.recipientStreet}</span>, <span className={`${getHighlightClass('BT-53', activeField)}`}>{formData.recipientZip}</span> <span className={`${getHighlightClass('BT-52', activeField)}`}>{formData.recipientCity}</span>
+          </div>
+          {formData.recipientElectronicAddress && (
+            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-49', activeField)}`}>{formData.recipientElectronicAddress}</p>
+          )}
         </div>
       </section>
       <section className="mt-8 pt-8 border-t border-gray-100 text-sm">
           <div className="grid grid-cols-3 gap-4">
-              <div><span className="font-semibold text-gray-600">Rechnungs-Nr.:</span> <span className="text-gray-800 break-all">{formData.reference}</span></div>
-              <div><span className="font-semibold text-gray-600">Rechnungsdatum:</span> <span className="text-gray-800">{formatDate(formData.invoiceDate)}</span></div>
-              <div><span className="font-semibold text-gray-600">Leistungsdatum:</span> <span className="text-gray-800">{formatDate(formData.serviceDate)}</span></div>
+              <div><span className="font-semibold text-gray-600">Rechnungs-Nr.:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-1', activeField)}`}>{formData.reference}</span></div>
+              <div><span className="font-semibold text-gray-600">Rechnungsdatum:</span> <span className={`text-gray-800 p-1 rounded ${getHighlightClass('BT-2', activeField)}`}>{formatDate(formData.invoiceDate)}</span></div>
+              <div><span className="font-semibold text-gray-600">Leistungsdatum:</span> <span className={`text-gray-800 p-1 rounded ${getHighlightClass('BT-72', activeField)}`}>{formatDate(formData.serviceDate)}</span></div>
+          </div>
+          {/* Optionale Referenzfelder */}
+          <div className="grid grid-cols-3 gap-4 mt-4">
+              {formData.orderReference && (
+                <div><span className="font-semibold text-gray-600">Bestellreferenz:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-13', activeField)}`}>{formData.orderReference}</span></div>
+              )}
+              {formData.contractReference && (
+                <div><span className="font-semibold text-gray-600">Vertragsreferenz:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-12', activeField)}`}>{formData.contractReference}</span></div>
+              )}
+              {formData.precedingInvoiceReference && (
+                <div><span className="font-semibold text-gray-600">Vorherige Rechnung:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-25', activeField)}`}>{formData.precedingInvoiceReference}</span></div>
+              )}
           </div>
       </section>
       <section className="mt-10">
@@ -1189,6 +1242,18 @@ const LayoutClassic = ({ formData }) => (
             <span className="font-semibold text-gray-600">Nettobetrag:</span>
             <span className="text-gray-800">{formatCurrency(formData.totalNetAmount)} {formData.invoiceCurrencyCode}</span>
           </div>
+          {formData.documentLevelAllowance && parseFloat(formData.documentLevelAllowance) > 0 && (
+            <div className="flex justify-between py-2 text-green-700">
+              <span className="font-semibold">Rabatt:</span>
+              <span>-{formatCurrency(formData.documentLevelAllowance)} {formData.invoiceCurrencyCode}</span>
+            </div>
+          )}
+          {formData.documentLevelCharge && parseFloat(formData.documentLevelCharge) > 0 && (
+            <div className="flex justify-between py-2 text-red-700">
+              <span className="font-semibold">Zuschlag:</span>
+              <span>+{formatCurrency(formData.documentLevelCharge)} {formData.invoiceCurrencyCode}</span>
+            </div>
+          )}
           <div className="flex justify-between py-2">
             <span className="font-semibold text-gray-600">MwSt. ({formData.taxRate}%):</span>
             <span className="text-gray-800">{formatCurrency(formData.totalTaxAmount)} {formData.invoiceCurrencyCode}</span>
@@ -1212,7 +1277,7 @@ const LayoutClassic = ({ formData }) => (
     </div>
 );
 
-const LayoutModern = ({ formData }) => (
+const LayoutModern = ({ formData, activeField }) => (
     <div className="bg-white text-gray-800 p-10 font-sans shadow-2xl rounded-lg w-full">
         <header className="flex justify-between items-center pb-6">
             <h1 className="text-5xl font-thin uppercase text-gray-800 tracking-[0.3em]">{getDocumentTypeName(formData.invoiceTypeCode)}</h1>
@@ -1220,41 +1285,68 @@ const LayoutModern = ({ formData }) => (
         <section className="grid grid-cols-2 gap-8 mt-10 pb-8 border-b border-gray-200">
             <div>
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">RECHNUNG AN</p>
-                <p className="font-medium text-gray-800 break-words">{formData.recipientName}</p>
-                <p className="text-gray-600 text-sm break-words">{formData.recipientStreet}, {formData.recipientZip} {formData.recipientCity}</p>
+                <p className={`font-medium text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-44', activeField)}`}>{formData.recipientName}</p>
+                <div className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-50', activeField) || getHighlightClass('BT-52', activeField) || getHighlightClass('BT-53', activeField)}`}>
+                  <span className={`${getHighlightClass('BT-50', activeField)}`}>{formData.recipientStreet}</span>, <span className={`${getHighlightClass('BT-53', activeField)}`}>{formData.recipientZip}</span> <span className={`${getHighlightClass('BT-52', activeField)}`}>{formData.recipientCity}</span>
+                </div>
                 {formData.recipientElectronicAddress && (
-                    <p className="text-gray-600 text-sm break-words">{formData.recipientElectronicAddress}</p>
-                )}
-                {formData.leitwegId && (
-                    <p className="text-gray-600 text-sm break-words">Leitweg-ID: {formData.leitwegId}</p>
+                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-49', activeField)}`}>{formData.recipientElectronicAddress}</p>
                 )}
             </div>
             <div className="text-right">
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">VON</p>
-                <p className="font-medium text-gray-800 break-words">{formData.senderName}</p>
-                <p className="text-gray-600 text-sm break-words">{formData.senderStreet}, {formData.senderZip} {formData.senderCity}</p>
+                <p className={`font-medium text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-27', activeField)}`}>{formData.senderName}</p>
+                <div className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-35', activeField) || getHighlightClass('BT-37', activeField) || getHighlightClass('BT-38', activeField)}`}>
+                  <span className={`${getHighlightClass('BT-35', activeField)}`}>{formData.senderStreet}</span>, <span className={`${getHighlightClass('BT-38', activeField)}`}>{formData.senderZip}</span> <span className={`${getHighlightClass('BT-37', activeField)}`}>{formData.senderCity}</span>
+                </div>
                 {formData.senderContactEmail && (
-                    <p className="text-gray-600 text-sm break-words">{formData.senderContactEmail}</p>
+                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-43', activeField)}`}>{formData.senderContactEmail}</p>
+                )}
+                {formData.senderElectronicAddress && (
+                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-34', activeField)}`}>{formData.senderElectronicAddress}</p>
                 )}
                 {formData.senderTaxId && (
-                    <p className="text-gray-600 text-sm break-words">Steuernummer: {formData.senderTaxId}</p>
+                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-31', activeField)}`}>Steuernummer: {formData.senderTaxId}</p>
                 )}
             </div>
         </section>
-         <section className="grid grid-cols-3 gap-8 mt-4 pb-8">
+         <section className="grid grid-cols-3 gap-8 mt-4 pb-4">
             <div>
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">RECHNUNGS-NR.</p>
-                <p className="font-mono text-gray-800 break-all">{formData.reference}</p>
+                <p className={`font-mono text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-1', activeField)}`}>{formData.reference}</p>
             </div>
             <div>
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">DATUM</p>
-                <p className="font-medium text-gray-800">{formatDate(formData.invoiceDate)}</p>
+                <p className={`font-medium text-gray-800 p-1 rounded ${getHighlightClass('BT-2', activeField)}`}>{formatDate(formData.invoiceDate)}</p>
             </div>
              <div>
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">LEISTUNGSDATUM</p>
-                <p className="font-medium text-gray-800">{formatDate(formData.serviceDate)}</p>
+                <p className={`font-medium text-gray-800 p-1 rounded ${getHighlightClass('BT-72', activeField)}`}>{formatDate(formData.serviceDate)}</p>
             </div>
         </section>
+        {/* Optionale Referenzfelder */}
+        {(formData.orderReference || formData.contractReference || formData.precedingInvoiceReference) && (
+          <section className="grid grid-cols-3 gap-8 pb-8 border-b border-gray-200">
+            {formData.orderReference && (
+              <div>
+                <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">BESTELLREFERENZ</p>
+                <p className={`font-mono text-gray-800 text-sm break-all p-1 rounded ${getHighlightClass('BT-13', activeField)}`}>{formData.orderReference}</p>
+              </div>
+            )}
+            {formData.contractReference && (
+              <div>
+                <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">VERTRAGSREFERENZ</p>
+                <p className={`font-mono text-gray-800 text-sm break-all p-1 rounded ${getHighlightClass('BT-12', activeField)}`}>{formData.contractReference}</p>
+              </div>
+            )}
+            {formData.precedingInvoiceReference && (
+              <div>
+                <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">VORHERIGE RECHNUNG</p>
+                <p className={`font-mono text-gray-800 text-sm break-all p-1 rounded ${getHighlightClass('BT-25', activeField)}`}>{formData.precedingInvoiceReference}</p>
+              </div>
+            )}
+          </section>
+        )}
         <section className="mt-8">
             <table className="w-full text-sm">
                 <thead>
@@ -1280,6 +1372,18 @@ const LayoutModern = ({ formData }) => (
         <section className="flex justify-end mt-8">
             <div className="w-full max-w-xs text-sm">
                 <div className="flex justify-between py-2 text-gray-600"><span>Zwischensumme</span><span>{formatCurrency(formData.totalNetAmount)} {formData.invoiceCurrencyCode}</span></div>
+                {formData.documentLevelAllowance && parseFloat(formData.documentLevelAllowance) > 0 && (
+                  <div className="flex justify-between py-2 text-green-700">
+                    <span>Rabatt</span>
+                    <span>-{formatCurrency(formData.documentLevelAllowance)} {formData.invoiceCurrencyCode}</span>
+                  </div>
+                )}
+                {formData.documentLevelCharge && parseFloat(formData.documentLevelCharge) > 0 && (
+                  <div className="flex justify-between py-2 text-red-700">
+                    <span>Zuschlag</span>
+                    <span>+{formatCurrency(formData.documentLevelCharge)} {formData.invoiceCurrencyCode}</span>
+                  </div>
+                )}
                 <div className="flex justify-between py-2 text-gray-600"><span>MwSt. ({formData.taxRate}%)</span><span>{formatCurrency(formData.totalTaxAmount)} {formData.invoiceCurrencyCode}</span></div>
                 <div className="flex justify-between py-3 mt-2 border-t-2 border-gray-800">
                     <span className="font-bold text-xl text-gray-900">Gesamt</span>
@@ -1322,7 +1426,7 @@ const LayoutModern = ({ formData }) => (
     </div>
 );
 
-const LayoutMinimalist = ({ formData }) => (
+const LayoutMinimalist = ({ formData, activeField }) => (
     <div className="bg-white text-black p-10 font-mono text-xs w-full shadow-2xl rounded-lg">
         <header className="grid grid-cols-2 gap-10">
             <div className="break-words">
@@ -1374,7 +1478,7 @@ const LayoutMinimalist = ({ formData }) => (
     </div>
 );
 
-const LayoutCreative = ({ formData }) => (
+const LayoutCreative = ({ formData, activeField }) => (
     <div className="bg-gray-900 text-white p-10 font-sans shadow-2xl rounded-lg w-full">
         <header className="flex justify-between items-start pb-6 border-b border-gray-700">
             <div>
@@ -1452,7 +1556,7 @@ const PdfPreview = ({ pdfUrl }) => {
     );
 };
 
-const InvoicePreview = ({ formData, layout, showPdfPreview, pdfUrl, showOptionalFields }) => {
+const InvoicePreview = ({ formData, layout, showPdfPreview, pdfUrl, showOptionalFields, activeField }) => {
     if (showPdfPreview && pdfUrl) {
         return <PdfPreview pdfUrl={pdfUrl} />;
     }
@@ -1487,11 +1591,11 @@ const InvoicePreview = ({ formData, layout, showPdfPreview, pdfUrl, showOptional
     const displayData = getFilteredData();
     
     switch(layout) {
-        case 'modern': return <LayoutModern formData={displayData} />;
-        case 'minimalist': return <LayoutMinimalist formData={displayData} />;
-        case 'creative': return <LayoutCreative formData={displayData} />;
+        case 'modern': return <LayoutModern formData={displayData} activeField={activeField} />;
+        case 'minimalist': return <LayoutMinimalist formData={displayData} activeField={activeField} />;
+        case 'creative': return <LayoutCreative formData={displayData} activeField={activeField} />;
         case 'classic':
-        default: return <LayoutClassic formData={displayData} />;
+        default: return <LayoutClassic formData={displayData} activeField={activeField} />;
     }
 };
 
@@ -1538,7 +1642,10 @@ const HomePage = ({
     showPdfPreview,
     uploadedPdfData,
     showOptionalFields,
-    setShowOptionalFields
+    setShowOptionalFields,
+    activeField,
+    handleFieldFocus,
+    handleFieldBlur
 }) => (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1585,21 +1692,21 @@ const HomePage = ({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Pflichtfelder */}
-                  <FormField name="senderName" label="Name" value={formData.senderName} onChange={handleInputChange} placeholder="Firma GmbH" btId="BT-27" isUnmapped={unmappedFields.includes('senderName')}/>
-                  <FormField name="senderTaxId" label="Steuernummer / USt-IdNr." value={formData.senderTaxId} onChange={handleInputChange} placeholder="DE123456789" btId="BT-31" isUnmapped={unmappedFields.includes('senderTaxId')}/>
-                  <FormField name="senderStreet" label="Straße & Hausnummer" value={formData.senderStreet} onChange={handleInputChange} placeholder="Musterstraße 1" btId="BT-35" isUnmapped={unmappedFields.includes('senderStreet')}/>
-                  <FormField name="senderZip" label="PLZ" value={formData.senderZip} onChange={handleInputChange} placeholder="12345" btId="BT-38" isUnmapped={unmappedFields.includes('senderZip')}/>
-                  <FormField name="senderCity" label="Ort" value={formData.senderCity} onChange={handleInputChange} placeholder="Musterstadt" btId="BT-37" isUnmapped={unmappedFields.includes('senderCity')}/>
-                  <FormField name="senderCountry" label="Ländercode" value={formData.senderCountry} onChange={handleInputChange} placeholder="DE" btId="BT-40" isUnmapped={unmappedFields.includes('senderCountry')}/>
+                  <FormField name="senderName" label="Name" value={formData.senderName} onChange={handleInputChange} placeholder="Firma GmbH" btId="BT-27" isUnmapped={unmappedFields.includes('senderName')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="senderTaxId" label="Steuernummer / USt-IdNr." value={formData.senderTaxId} onChange={handleInputChange} placeholder="DE123456789" btId="BT-31" isUnmapped={unmappedFields.includes('senderTaxId')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="senderStreet" label="Straße & Hausnummer" value={formData.senderStreet} onChange={handleInputChange} placeholder="Musterstraße 1" btId="BT-35" isUnmapped={unmappedFields.includes('senderStreet')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="senderZip" label="PLZ" value={formData.senderZip} onChange={handleInputChange} placeholder="12345" btId="BT-38" isUnmapped={unmappedFields.includes('senderZip')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="senderCity" label="Ort" value={formData.senderCity} onChange={handleInputChange} placeholder="Musterstadt" btId="BT-37" isUnmapped={unmappedFields.includes('senderCity')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="senderCountry" label="Ländercode" value={formData.senderCountry} onChange={handleInputChange} placeholder="DE" btId="BT-40" isUnmapped={unmappedFields.includes('senderCountry')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                   
                   {/* Optionale Felder - nur wenn Checkbox aktiviert */}
                   {showOptionalFields && (
                     <>
-                      <FormField name="senderElectronicAddress" label="Elektronische Adresse" value={formData.senderElectronicAddress} onChange={handleInputChange} placeholder="rechnung@firma.de" btId="BT-34" isUnmapped={unmappedFields.includes('senderElectronicAddress')}/>
-                      <FormField name="senderContactName" label="Ansprechpartner" value={formData.senderContactName} onChange={handleInputChange} placeholder="Max Mustermann" btId="BT-41" isUnmapped={unmappedFields.includes('senderContactName')}/>
-                      <FormField name="senderContactPhone" label="Telefon" value={formData.senderContactPhone} onChange={handleInputChange} placeholder="+49 30 123456" btId="BT-42" isUnmapped={unmappedFields.includes('senderContactPhone')}/>
+                      <FormField name="senderElectronicAddress" label="Elektronische Adresse" value={formData.senderElectronicAddress} onChange={handleInputChange} placeholder="rechnung@firma.de" btId="BT-34" isUnmapped={unmappedFields.includes('senderElectronicAddress')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                      <FormField name="senderContactName" label="Ansprechpartner" value={formData.senderContactName} onChange={handleInputChange} placeholder="Max Mustermann" btId="BT-41" isUnmapped={unmappedFields.includes('senderContactName')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                      <FormField name="senderContactPhone" label="Telefon" value={formData.senderContactPhone} onChange={handleInputChange} placeholder="+49 30 123456" btId="BT-42" isUnmapped={unmappedFields.includes('senderContactPhone')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                       <div className="md:col-span-2">
-                        <FormField name="senderContactEmail" label="E-Mail" value={formData.senderContactEmail} onChange={handleInputChange} placeholder="max@firma.de" btId="BT-43" isUnmapped={unmappedFields.includes('senderContactEmail')}/>
+                        <FormField name="senderContactEmail" label="E-Mail" value={formData.senderContactEmail} onChange={handleInputChange} placeholder="max@firma.de" btId="BT-43" isUnmapped={unmappedFields.includes('senderContactEmail')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                       </div>
                     </>
                   )}
@@ -1614,18 +1721,18 @@ const HomePage = ({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Pflichtfelder */}
-                  <FormField name="recipientName" label="Name des Empfängers" value={formData.recipientName} onChange={handleInputChange} placeholder="Kunde AG" btId="BT-44" isUnmapped={unmappedFields.includes('recipientName')}/>
-                  <FormField name="recipientCountry" label="Ländercode" value={formData.recipientCountry} onChange={handleInputChange} placeholder="DE" btId="BT-55" isUnmapped={unmappedFields.includes('recipientCountry')}/>
-                  <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')}/>
-                  <FormField name="recipientZip" label="PLZ" value={formData.recipientZip} onChange={handleInputChange} placeholder="54321" btId="BT-53" isUnmapped={unmappedFields.includes('recipientZip')}/>
-                  <FormField name="recipientCity" label="Ort" value={formData.recipientCity} onChange={handleInputChange} placeholder="Kundenstadt" btId="BT-52" isUnmapped={unmappedFields.includes('recipientCity')}/>
+                  <FormField name="recipientName" label="Name des Empfängers" value={formData.recipientName} onChange={handleInputChange} placeholder="Kunde AG" btId="BT-44" isUnmapped={unmappedFields.includes('recipientName')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="recipientCountry" label="Ländercode" value={formData.recipientCountry} onChange={handleInputChange} placeholder="DE" btId="BT-55" isUnmapped={unmappedFields.includes('recipientCountry')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="recipientZip" label="PLZ" value={formData.recipientZip} onChange={handleInputChange} placeholder="54321" btId="BT-53" isUnmapped={unmappedFields.includes('recipientZip')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="recipientCity" label="Ort" value={formData.recipientCity} onChange={handleInputChange} placeholder="Kundenstadt" btId="BT-52" isUnmapped={unmappedFields.includes('recipientCity')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                   
                   {/* Optionale Felder - nur wenn Checkbox aktiviert */}
                   {showOptionalFields && (
                     <>
-                      <FormField name="recipientElectronicAddress" label="Elektronische Adresse" value={formData.recipientElectronicAddress} onChange={handleInputChange} placeholder="rechnung@kunde.de" btId="BT-49" isUnmapped={unmappedFields.includes('recipientElectronicAddress')}/>
+                      <FormField name="recipientElectronicAddress" label="Elektronische Adresse" value={formData.recipientElectronicAddress} onChange={handleInputChange} placeholder="rechnung@kunde.de" btId="BT-49" isUnmapped={unmappedFields.includes('recipientElectronicAddress')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                       <div className="md:col-span-2">
-                          <FormField name="leitwegId" label="Leitweg-ID" value={formData.leitwegId} onChange={handleInputChange} placeholder="99999999-ABCDEF" btId="BT-10" isUnmapped={unmappedFields.includes('leitwegId')}/>
+                          <FormField name="leitwegId" label="Leitweg-ID" value={formData.leitwegId} onChange={handleInputChange} placeholder="99999999-ABCDEF" btId="BT-10" isUnmapped={unmappedFields.includes('leitwegId')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                       </div>
                     </>
                   )}
@@ -1639,25 +1746,25 @@ const HomePage = ({
                 <span className="text-xs text-gray-500">Pflichtfelder für e-Rechnung</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField name="reference" label="Rechnungsnummer" value={formData.reference} onChange={handleInputChange} placeholder="RE-2025-001" btId="BT-1" isUnmapped={unmappedFields.includes('reference')}/>
-                  <FormField name="invoiceDate" label="Rechnungsdatum" value={formData.invoiceDate} onChange={handleInputChange} type="date" btId="BT-2" isUnmapped={unmappedFields.includes('invoiceDate')}/>
-                  <FormField name="invoiceTypeCode" label="Rechnungstyp" value={formData.invoiceTypeCode} onChange={handleInputChange} btId="BT-3" isUnmapped={unmappedFields.includes('invoiceTypeCode')}>
+                  <FormField name="reference" label="Rechnungsnummer" value={formData.reference} onChange={handleInputChange} placeholder="RE-2025-001" btId="BT-1" isUnmapped={unmappedFields.includes('reference')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="invoiceDate" label="Rechnungsdatum" value={formData.invoiceDate} onChange={handleInputChange} type="date" btId="BT-2" isUnmapped={unmappedFields.includes('invoiceDate')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="invoiceTypeCode" label="Rechnungstyp" value={formData.invoiceTypeCode} onChange={handleInputChange} btId="BT-3" isUnmapped={unmappedFields.includes('invoiceTypeCode')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}>
                       <option value="380">Rechnung (380)</option>
                       <option value="389">Selbst ausgestellte Rechnung (389)</option>
                       <option value="384">Korrigierte Rechnung (384)</option>
                       <option value="261">Gutschrift (261)</option>
                   </FormField>
-                  <FormField name="invoiceCurrencyCode" label="Währung" value={formData.invoiceCurrencyCode} onChange={handleInputChange} placeholder="EUR" btId="BT-5" isUnmapped={unmappedFields.includes('invoiceCurrencyCode')}/>
-                  <FormField name="serviceDate" label="Leistungs-/Lieferdatum" value={formData.serviceDate} onChange={handleInputChange} type="date" btId="BT-72" isUnmapped={unmappedFields.includes('serviceDate')}/>
-                  <FormField name="paymentDueDate" label="Fälligkeitsdatum" value={formData.paymentDueDate} onChange={handleInputChange} type="date" btId="BT-9" isUnmapped={unmappedFields.includes('paymentDueDate')}/>
-                  <FormField name="orderReference" label="Bestellreferenz" value={formData.orderReference} onChange={handleInputChange} placeholder="PO-2025-001" btId="BT-13" isUnmapped={unmappedFields.includes('orderReference')}/>
-                  <FormField name="contractReference" label="Vertragsreferenz" value={formData.contractReference} onChange={handleInputChange} placeholder="CONTRACT-2025-001" btId="BT-12" isUnmapped={unmappedFields.includes('contractReference')}/>
+                  <FormField name="invoiceCurrencyCode" label="Währung" value={formData.invoiceCurrencyCode} onChange={handleInputChange} placeholder="EUR" btId="BT-5" isUnmapped={unmappedFields.includes('invoiceCurrencyCode')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="serviceDate" label="Leistungs-/Lieferdatum" value={formData.serviceDate} onChange={handleInputChange} type="date" btId="BT-72" isUnmapped={unmappedFields.includes('serviceDate')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="paymentDueDate" label="Fälligkeitsdatum" value={formData.paymentDueDate} onChange={handleInputChange} type="date" btId="BT-9" isUnmapped={unmappedFields.includes('paymentDueDate')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="orderReference" label="Bestellreferenz" value={formData.orderReference} onChange={handleInputChange} placeholder="PO-2025-001" btId="BT-13" isUnmapped={unmappedFields.includes('orderReference')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="contractReference" label="Vertragsreferenz" value={formData.contractReference} onChange={handleInputChange} placeholder="CONTRACT-2025-001" btId="BT-12" isUnmapped={unmappedFields.includes('contractReference')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                   
                   {/* Optionale Felder - nur wenn Checkbox aktiviert */}
                   {showOptionalFields && (
                     <>
                       <div className="md:col-span-2">
-                        <FormField name="precedingInvoiceReference" label="Vorherige Rechnungsreferenz" value={formData.precedingInvoiceReference} onChange={handleInputChange} placeholder="RE-2024-999" btId="BT-25" isUnmapped={unmappedFields.includes('precedingInvoiceReference')}/>
+                        <FormField name="precedingInvoiceReference" label="Vorherige Rechnungsreferenz" value={formData.precedingInvoiceReference} onChange={handleInputChange} placeholder="RE-2024-999" btId="BT-25" isUnmapped={unmappedFields.includes('precedingInvoiceReference')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                       </div>
                     </>
                   )}
@@ -1682,12 +1789,12 @@ const HomePage = ({
                               </button>
                           )}
                       </div>
-                      <FormField name="name" label="Beschreibung" value={item.name} onChange={(e) => handleLineItemChange(item.id, 'name', e.target.value)} placeholder="Leistungsbeschreibung" btId="BT-153"/>
+                      <FormField name="name" label="Beschreibung" value={item.name} onChange={(e) => handleLineItemChange(item.id, 'name', e.target.value)} placeholder="Leistungsbeschreibung" btId="BT-153" onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <FormField name="billedQuantity" label="Menge" value={item.billedQuantity} onChange={(e) => handleLineItemChange(item.id, 'billedQuantity', e.target.value)} type="number" btId="BT-129"/>
-                          <FormField name="unitCode" label="Einheit" value={item.unitCode} onChange={(e) => handleLineItemChange(item.id, 'unitCode', e.target.value)} placeholder="XPP" btId="BT-130"/>
-                          <FormField name="price" label="Einzelpreis (Netto)" value={item.price} onChange={(e) => handleLineItemChange(item.id, 'price', e.target.value)} type="number" btId="BT-146"/>
-                          <FormField name="netAmount" label="Gesamt (Netto)" value={item.netAmount} onChange={() => {}} type="number" btId="BT-131" disabled={true}/>
+                          <FormField name="billedQuantity" label="Menge" value={item.billedQuantity} onChange={(e) => handleLineItemChange(item.id, 'billedQuantity', e.target.value)} type="number" btId="BT-129" onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                          <FormField name="unitCode" label="Einheit" value={item.unitCode} onChange={(e) => handleLineItemChange(item.id, 'unitCode', e.target.value)} placeholder="XPP" btId="BT-130" onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                          <FormField name="price" label="Einzelpreis (Netto)" value={item.price} onChange={(e) => handleLineItemChange(item.id, 'price', e.target.value)} type="number" btId="BT-146" onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                          <FormField name="netAmount" label="Gesamt (Netto)" value={item.netAmount} onChange={() => {}} type="number" btId="BT-131" disabled={true} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                       </div>
                   </div>
               ))}
@@ -1719,17 +1826,17 @@ const HomePage = ({
                 <span className="text-xs text-gray-500">Wichtige Zahlungsinformationen</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField name="paymentTerms" label="Zahlungsbedingungen" value={formData.paymentTerms} onChange={handleInputChange} placeholder="Zahlbar innerhalb von 30 Tagen" btId="BT-20" isUnmapped={unmappedFields.includes('paymentTerms')}/>
-                  <FormField name="paymentMeansCode" label="Zahlungsmittel-Code" value={formData.paymentMeansCode} onChange={handleInputChange} placeholder="58" btId="BT-81" isUnmapped={unmappedFields.includes('paymentMeansCode')}/>
-                  <FormField name="iban" label="IBAN" value={formData.iban} onChange={handleInputChange} placeholder="DE..." btId="BT-84" isUnmapped={unmappedFields.includes('iban')}/>
-                  <FormField name="bic" label="BIC" value={formData.bic} onChange={handleInputChange} placeholder="DEUTDEFFXXX" btId="BT-86" isUnmapped={unmappedFields.includes('bic')}/>
-                  <FormField name="taxRate" label="MwSt.-Satz (%)" value={formData.taxRate} onChange={handleInputChange} type="number" placeholder="19" btId="BT-152" isUnmapped={unmappedFields.includes('taxRate')}/>
+                  <FormField name="paymentTerms" label="Zahlungsbedingungen" value={formData.paymentTerms} onChange={handleInputChange} placeholder="Zahlbar innerhalb von 30 Tagen" btId="BT-20" isUnmapped={unmappedFields.includes('paymentTerms')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="paymentMeansCode" label="Zahlungsmittel-Code" value={formData.paymentMeansCode} onChange={handleInputChange} placeholder="58" btId="BT-81" isUnmapped={unmappedFields.includes('paymentMeansCode')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="iban" label="IBAN" value={formData.iban} onChange={handleInputChange} placeholder="DE..." btId="BT-84" isUnmapped={unmappedFields.includes('iban')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="bic" label="BIC" value={formData.bic} onChange={handleInputChange} placeholder="DEUTDEFFXXX" btId="BT-86" isUnmapped={unmappedFields.includes('bic')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="taxRate" label="MwSt.-Satz (%)" value={formData.taxRate} onChange={handleInputChange} type="number" placeholder="19" btId="BT-152" isUnmapped={unmappedFields.includes('taxRate')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                   
                   {/* Optionale Felder - nur wenn Checkbox aktiviert */}
                   {showOptionalFields && (
                     <>
-                      <FormField name="documentLevelAllowance" label="Rabatt auf Dokumentenebene" value={formData.documentLevelAllowance} onChange={handleInputChange} type="number" placeholder="50.00" btId="BT-92" isUnmapped={unmappedFields.includes('documentLevelAllowance')}/>
-                      <FormField name="documentLevelCharge" label="Zuschlag auf Dokumentenebene" value={formData.documentLevelCharge} onChange={handleInputChange} type="number" placeholder="25.00" btId="BT-99" isUnmapped={unmappedFields.includes('documentLevelCharge')}/>
+                      <FormField name="documentLevelAllowance" label="Rabatt auf Dokumentenebene" value={formData.documentLevelAllowance} onChange={handleInputChange} type="number" placeholder="50.00" btId="BT-92" isUnmapped={unmappedFields.includes('documentLevelAllowance')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                      <FormField name="documentLevelCharge" label="Zuschlag auf Dokumentenebene" value={formData.documentLevelCharge} onChange={handleInputChange} type="number" placeholder="25.00" btId="BT-99" isUnmapped={unmappedFields.includes('documentLevelCharge')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                     </>
                   )}
               </div>
@@ -1780,6 +1887,7 @@ const HomePage = ({
                             showPdfPreview={showPdfPreview}
                             pdfUrl={uploadedPdfData}
                             showOptionalFields={showOptionalFields}
+                            activeField={activeField}
                         />
                     </div>
                     <div className="h-16 md:h-24" />
@@ -1954,6 +2062,8 @@ const App = () => {
   const [showXRechnungButton, setShowXRechnungButton] = useState(true);
   const [xrechnungTabEnabled, setXrechnungTabEnabled] = useState(true);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
+  const [activeField, setActiveField] = useState(null); // BT-ID des aktiven Feldes für Highlighting
+  const highlightTimeoutRef = useRef(null); // Ref für Highlight-Timer
   const [kreditorId, setKreditorId] = useState('');
   const [buchungskreisId, setBuchungskreisId] = useState('');
   const [invoiceSummary, setInvoiceSummary] = useState('');
@@ -1994,6 +2104,7 @@ const App = () => {
     }
     return () => {
       if (messageTimeoutRef.current) clearTimeout(messageTimeoutRef.current);
+      if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current);
     };
   }, [message]);
   
@@ -2060,6 +2171,28 @@ const App = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handler für Field-Highlighting mit 2-Sekunden-Timer
+  const handleFieldFocus = (btId) => {
+    // Lösche vorherigen Timer falls vorhanden
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+    }
+    
+    // Setze das Highlighting
+    setActiveField(btId);
+    
+    // Starte 2-Sekunden-Timer zum Entfernen des Highlights
+    highlightTimeoutRef.current = setTimeout(() => {
+      setActiveField(null);
+      highlightTimeoutRef.current = null;
+    }, 2000);
+  };
+
+  const handleFieldBlur = () => {
+    // Beim Blur machen wir nichts, da das Highlighting zeitgesteuert ist
+    // Das Highlighting bleibt für 2 Sekunden bestehen
   };
 
   const handleLineItemChange = (id, field, value) => {
@@ -3095,13 +3228,30 @@ const App = () => {
 
 
   const handlePrefill = async () => {
+    // Zuerst alles zurücksetzen (inklusive optionale Felder ausblenden)
+    handleReset();
+    
     setLoadingPrefill(true);
     setShowXRechnungButton(true); // XRechnung Button wieder einblenden bei KI-Werte
     setXrechnungTabEnabled(true); // XRechnung Tab wieder aktivieren
-    showMessage('Generiere Zufallswerte...', 'info');
+    showMessage('Setze zurück und generiere KI-Werte für Pflichtfelder...', 'info');
     try {
         // Simuliere kurze Ladezeit für bessere UX
         await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Ermittle alle Pflichtfelder aus dem Mapping
+        const mandatoryFields = eRechnungMappingData
+          .filter(field => field.mandatory && !field.autoCalculated && !field.autoGenerated)
+          .map(field => field.btId);
+        
+        // Erstelle Mapping von BT-ID zu Feldnamen
+        const btIdToFieldName = {};
+        mandatoryFields.forEach(btId => {
+          const fieldName = getFieldNameFromBtId(btId);
+          if (fieldName) {
+            btIdToFieldName[btId] = fieldName;
+          }
+        });
         
         const generatedData = (() => {
           const getRandomItem = (array) => array[Math.floor(Math.random() * array.length)];
@@ -3109,82 +3259,62 @@ const App = () => {
           const companies = ['TechSolutions GmbH', 'Digital Innovations AG', 'Moderne Systeme GmbH', 'Kreative Medien GmbH', 'Professionelle Dienste AG'];
           const cities = ['München', 'Hamburg', 'Berlin', 'Köln', 'Frankfurt', 'Stuttgart', 'Düsseldorf'];
           const streets = ['Hauptstraße', 'Bahnhofstraße', 'Kirchgasse', 'Schulstraße', 'Gartenweg'];
-          const firstNames = ['Michael', 'Thomas', 'Andreas', 'Wolfgang', 'Klaus', 'Sabine', 'Petra'];
-          const lastNames = ['Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner'];
           
           const senderCompany = getRandomItem(companies);
           const recipientCompany = getRandomItem(companies.filter(c => c !== senderCompany));
-          const contactFirstName = getRandomItem(firstNames);
-          const contactLastName = getRandomItem(lastNames);
           
-          return {
-            senderName: senderCompany,
-            senderStreet: `${getRandomItem(streets)} ${getRandomNumber(1, 150)}`,
-            senderZip: String(getRandomNumber(10000, 99999)),
-            senderCity: getRandomItem(cities),
-            senderCountry: 'DE', // BT-40
-            senderTaxId: `DE${getRandomNumber(100000000, 999999999)}`,
-            senderContactName: `${contactFirstName} ${contactLastName}`,
-            senderContactPhone: `+49 ${getRandomNumber(30, 89)} ${getRandomNumber(10000000, 99999999)}`,
-            senderContactEmail: `${contactFirstName.toLowerCase()}.${contactLastName.toLowerCase()}@example.de`,
-            senderElectronicAddress: 'sender@company.de',
-            recipientName: recipientCompany,
-            recipientStreet: `${getRandomItem(streets)} ${getRandomNumber(1, 200)}`,
-            recipientZip: String(getRandomNumber(10000, 99999)),
-            recipientCity: getRandomItem(cities),
-            recipientCountry: 'DE', // BT-55
-            recipientElectronicAddress: 'recipient@kunde.de',
-            leitwegId: '99999999-ABCDEF',
-            reference: `RE-${new Date().getFullYear()}-${String(getRandomNumber(1000, 9999))}`,
-            invoiceDate: new Date(Date.now() - getRandomNumber(1, 30) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-            iban: `DE${getRandomNumber(10, 99)}${String(getRandomNumber(10000000, 99999999))}${String(getRandomNumber(1000000000, 9999999999))}`,
-            bic: `${getRandomItem(['DEUTDEFF', 'COBADEFF', 'DRESDEFF'])}${getRandomNumber(100, 999)}`,
-            invoiceTypeCode: '380',
-            invoiceCurrencyCode: 'EUR', // BT-5
-            paymentTerms: `Zahlbar innerhalb von ${getRandomNumber(14, 30)} Tagen ohne Abzug.`,
-            paymentMeansCode: '58',
-            // Neue optionale Felder (BT-9, BT-12, BT-13)
-            paymentDueDate: new Date(Date.now() + getRandomNumber(14, 30) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-            contractReference: `CONTRACT-${new Date().getFullYear()}-${String(getRandomNumber(100, 999))}`,
-            orderReference: `PO-${new Date().getFullYear()}-${String(getRandomNumber(1000, 9999))}`,
-            precedingInvoiceReference: '',
-            documentLevelAllowance: '',
-            documentLevelCharge: '',
-            lineItems: (() => {
-              const items = [];
-              const services = [
-                { name: 'Beratungsleistung', price: 125.00 },
-                { name: 'Softwareentwicklung', price: 95.00 },
-                { name: 'IT-Support', price: 85.00 }
-              ];
-              
-              for (let i = 0; i < getRandomNumber(1, 3); i++) {
-                const service = getRandomItem(services);
-                const quantity = getRandomNumber(5, 40);
-                const price = service.price;
-                const netAmount = (quantity * price).toFixed(2);
-                
-                items.push({
-                  id: i + 1,
-                  name: service.name,
-                  unitCode: 'HUR',
-                  billedQuantity: String(quantity),
-                  price: price.toFixed(2),
-                  netAmount: netAmount
-                });
-              }
-              return items;
-            })()
-          };
+          // Nur Pflichtfelder + BT-10 befüllen
+          const data = {};
+          
+          // Pflichtfelder befüllen
+          if (btIdToFieldName['BT-1']) data[btIdToFieldName['BT-1']] = `RE-${new Date().getFullYear()}-${String(getRandomNumber(1000, 9999))}`;
+          if (btIdToFieldName['BT-2']) data[btIdToFieldName['BT-2']] = new Date(Date.now() - getRandomNumber(1, 30) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+          if (btIdToFieldName['BT-3']) data[btIdToFieldName['BT-3']] = '380';
+          if (btIdToFieldName['BT-5']) data[btIdToFieldName['BT-5']] = 'EUR';
+          if (btIdToFieldName['BT-27']) data[btIdToFieldName['BT-27']] = senderCompany;
+          if (btIdToFieldName['BT-31']) data[btIdToFieldName['BT-31']] = `DE${getRandomNumber(100000000, 999999999)}`;
+          if (btIdToFieldName['BT-35']) data[btIdToFieldName['BT-35']] = `${getRandomItem(streets)} ${getRandomNumber(1, 150)}`;
+          if (btIdToFieldName['BT-37']) data[btIdToFieldName['BT-37']] = getRandomItem(cities);
+          if (btIdToFieldName['BT-38']) data[btIdToFieldName['BT-38']] = String(getRandomNumber(10000, 99999));
+          if (btIdToFieldName['BT-40']) data[btIdToFieldName['BT-40']] = 'DE';
+          if (btIdToFieldName['BT-44']) data[btIdToFieldName['BT-44']] = recipientCompany;
+          if (btIdToFieldName['BT-50']) data[btIdToFieldName['BT-50']] = `${getRandomItem(streets)} ${getRandomNumber(1, 200)}`;
+          if (btIdToFieldName['BT-52']) data[btIdToFieldName['BT-52']] = getRandomItem(cities);
+          if (btIdToFieldName['BT-53']) data[btIdToFieldName['BT-53']] = String(getRandomNumber(10000, 99999));
+          if (btIdToFieldName['BT-55']) data[btIdToFieldName['BT-55']] = 'DE';
+          if (btIdToFieldName['BT-72']) data[btIdToFieldName['BT-72']] = new Date().toISOString().slice(0, 10);
+          if (btIdToFieldName['BT-9']) data[btIdToFieldName['BT-9']] = new Date(Date.now() + getRandomNumber(14, 30) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+          if (btIdToFieldName['BT-12']) data[btIdToFieldName['BT-12']] = `CONTRACT-${new Date().getFullYear()}-${String(getRandomNumber(100, 999))}`;
+          if (btIdToFieldName['BT-13']) data[btIdToFieldName['BT-13']] = `PO-${new Date().getFullYear()}-${String(getRandomNumber(1000, 9999))}`;
+          if (btIdToFieldName['BT-20']) data[btIdToFieldName['BT-20']] = `Zahlbar innerhalb von ${getRandomNumber(14, 30)} Tagen ohne Abzug.`;
+          if (btIdToFieldName['BT-81']) data[btIdToFieldName['BT-81']] = '58';
+          if (btIdToFieldName['BT-84']) data[btIdToFieldName['BT-84']] = `DE${getRandomNumber(10, 99)}${String(getRandomNumber(10000000, 99999999))}${String(getRandomNumber(1000000000, 9999999999))}`;
+          if (btIdToFieldName['BT-86']) data[btIdToFieldName['BT-86']] = `${getRandomItem(['DEUTDEFF', 'COBADEFF', 'DRESDEFF'])}${getRandomNumber(100, 999)}`;
+          if (btIdToFieldName['BT-152']) data[btIdToFieldName['BT-152']] = '19';
+          
+          // BT-10 (Leitweg-ID) separat befüllen - auch wenn es ein Pflichtfeld ist
+          data.leitwegId = '99999999-ABCDEF';
+          
+          // Pflichtfelder für Positionen
+          data.lineItems = [{
+            id: 1,
+            name: 'Beratungsleistung',
+            unitCode: 'HUR',
+            billedQuantity: '10',
+            price: '125.00',
+            netAmount: '1250.00'
+          }];
+          
+          return data;
         })();
-        const finalData = { ...generatedData, serviceDate: new Date().toISOString().slice(0, 10), taxRate: '19' };
         
-        setFormData(prev => ({...prev, ...finalData}));
+        // Nur die generierten Pflichtfelder + BT-10 setzen, andere Felder bleiben unverändert
+        setFormData(prev => ({...prev, ...generatedData}));
         setDataSource('ki'); // Markiere als KI-generierte Daten
-        showMessage('Werte erfolgreich vorbefüllt!', 'success');
+        showMessage('Pflichtfelder erfolgreich vorbefüllt!', 'success');
     } catch (error) {
         console.error("Fehler bei der Vorbefüllung:", error);
-        showMessage('Fehler bei der Vorbefüllung mit Zufallswerten.', 'error');
+        showMessage('Fehler bei der Vorbefüllung mit KI-Werten.', 'error');
     } finally {
         setLoadingPrefill(false);
     }
@@ -3480,6 +3610,7 @@ const App = () => {
                 en16931XML={en16931XML} selectedLayout={selectedLayout} unmappedFields={unmappedFields} activeXmlTab={activeXmlTab} setActiveXmlTab={setActiveXmlTab} setSapXml={setSapXml}
                 setXrechnungXML={setXrechnungXML} setEn16931XML={setEn16931XML} dataSource={dataSource} showXRechnungButton={showXRechnungButton} xrechnungTabEnabled={xrechnungTabEnabled}
                 showPdfPreview={showPdfPreview} uploadedPdfData={uploadedPdfData} showOptionalFields={showOptionalFields} setShowOptionalFields={setShowOptionalFields}
+                activeField={activeField} handleFieldFocus={handleFieldFocus} handleFieldBlur={handleFieldBlur}
             />;
         case 'layoutSelection': return renderLayoutSelectionPage();
         case 'eRechnungMapping': return renderERechnungMappingPage();
