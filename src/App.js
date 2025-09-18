@@ -3189,8 +3189,51 @@ const App = () => {
   };
 
   const handleReset = () => {
-    // Vollständiges Zurücksetzen aller States
-    setFormData({ ...blankFormData });
+    // Erstelle komplett leere Formulardaten (ohne Defaults)
+    const completelyBlankData = {
+      senderName: '',
+      senderStreet: '',
+      senderZip: '',
+      senderCity: '',
+      senderCountry: '',
+      senderTaxId: '',
+      senderContactName: '',
+      senderContactPhone: '',
+      senderContactEmail: '',
+      senderElectronicAddress: '',
+      recipientName: '',
+      recipientStreet: '',
+      recipientZip: '',
+      recipientCity: '',
+      recipientCountry: '',
+      recipientElectronicAddress: '',
+      leitwegId: '',
+      reference: '',
+      invoiceDate: '',
+      serviceDate: '',
+      iban: '',
+      bic: '',
+      invoiceTypeCode: '',
+      invoiceCurrencyCode: '',
+      paymentTerms: '',
+      paymentMeansCode: '',
+      taxRate: '',
+      lineItems: [
+        { id: 1, name: '', unitCode: '', billedQuantity: '', netAmount: '', price: '' }
+      ],
+      totalNetAmount: '0.00',
+      totalTaxAmount: '0.00',
+      grossAmount: '0.00',
+      orderReference: '',
+      contractReference: '',
+      precedingInvoiceReference: '',
+      paymentDueDate: '',
+      documentLevelAllowance: '',
+      documentLevelCharge: '',
+    };
+    
+    // Vollständiges Zurücksetzen aller States - Force Update
+    setFormData(() => ({ ...completelyBlankData }));
     setXrechnungXML('');
     setEn16931XML('');
     setSapXml('');
@@ -3221,7 +3264,17 @@ const App = () => {
     setInvoiceSummary('');
     setDataSource(null); // Datenquelle zurücksetzen
     
-    showMessage('Komplette Anwendung zurückgesetzt - bereit für neue Eingaben.', 'success');
+    // Force Update für alle berechneten Felder
+    setTimeout(() => {
+      setFormData(prev => ({
+        ...prev,
+        totalNetAmount: '0.00',
+        totalTaxAmount: '0.00',
+        grossAmount: '0.00'
+      }));
+    }, 100);
+    
+    showMessage('Komplette Anwendung zurückgesetzt - alle Felder geleert.', 'success');
   };
   
   const renderLayoutSelectionPage = () => {
