@@ -994,11 +994,23 @@ const LayoutModern = ({ formData }) => (
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">RECHNUNG AN</p>
                 <p className="font-medium text-gray-800 break-words">{formData.recipientName}</p>
                 <p className="text-gray-600 text-sm break-words">{formData.recipientStreet}, {formData.recipientZip} {formData.recipientCity}</p>
+                {formData.recipientElectronicAddress && (
+                    <p className="text-gray-600 text-sm break-words">{formData.recipientElectronicAddress}</p>
+                )}
+                {formData.leitwegId && (
+                    <p className="text-gray-600 text-sm break-words">Leitweg-ID: {formData.leitwegId}</p>
+                )}
             </div>
             <div className="text-right">
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">VON</p>
                 <p className="font-medium text-gray-800 break-words">{formData.senderName}</p>
                 <p className="text-gray-600 text-sm break-words">{formData.senderStreet}, {formData.senderZip} {formData.senderCity}</p>
+                {formData.senderContactEmail && (
+                    <p className="text-gray-600 text-sm break-words">{formData.senderContactEmail}</p>
+                )}
+                {formData.senderTaxId && (
+                    <p className="text-gray-600 text-sm break-words">Steuernummer: {formData.senderTaxId}</p>
+                )}
             </div>
         </section>
          <section className="grid grid-cols-3 gap-8 mt-4 pb-8">
@@ -1030,8 +1042,8 @@ const LayoutModern = ({ formData }) => (
                         <tr key={item.id}>
                             <td className="p-3 border-b border-gray-100 font-medium text-gray-800 break-words">{item.name}</td>
                             <td className="text-right p-3 border-b border-gray-100 text-gray-600">{item.billedQuantity}</td>
-                            <td className="text-right p-3 border-b border-gray-100 text-gray-600">{formatCurrency(item.price)} €</td>
-                            <td className="text-right p-3 border-b border-gray-100 font-medium text-gray-800">{formatCurrency(item.netAmount)} €</td>
+                            <td className="text-right p-3 border-b border-gray-100 text-gray-600">{formatCurrency(item.price)} {formData.invoiceCurrencyCode}</td>
+                            <td className="text-right p-3 border-b border-gray-100 font-medium text-gray-800">{formatCurrency(item.netAmount)} {formData.invoiceCurrencyCode}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -1039,17 +1051,45 @@ const LayoutModern = ({ formData }) => (
         </section>
         <section className="flex justify-end mt-8">
             <div className="w-full max-w-xs text-sm">
-                <div className="flex justify-between py-2 text-gray-600"><span>Zwischensumme</span><span>{formatCurrency(formData.totalNetAmount)} €</span></div>
-                <div className="flex justify-between py-2 text-gray-600"><span>MwSt. ({formData.taxRate}%)</span><span>{formatCurrency(formData.totalTaxAmount)} €</span></div>
+                <div className="flex justify-between py-2 text-gray-600"><span>Zwischensumme</span><span>{formatCurrency(formData.totalNetAmount)} {formData.invoiceCurrencyCode}</span></div>
+                <div className="flex justify-between py-2 text-gray-600"><span>MwSt. ({formData.taxRate}%)</span><span>{formatCurrency(formData.totalTaxAmount)} {formData.invoiceCurrencyCode}</span></div>
                 <div className="flex justify-between py-3 mt-2 border-t-2 border-gray-800">
                     <span className="font-bold text-xl text-gray-900">Gesamt</span>
-                    <span className="font-bold text-xl text-gray-900">{formatCurrency(formData.grossAmount)} €</span>
+                    <span className="font-bold text-xl text-gray-900">{formatCurrency(formData.grossAmount)} {formData.invoiceCurrencyCode}</span>
                 </div>
             </div>
         </section>
-        <footer className="mt-12 pt-6 border-t border-gray-200 text-xs text-gray-500">
-            <p className="font-semibold mb-2">Zahlungsbedingungen: {formData.paymentTerms}</p>
-            <p>IBAN: {formData.iban} • BIC: {formData.bic}</p>
+        <footer className="mt-12 pt-6 border-t border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">ZAHLUNGSINFORMATIONEN</p>
+                    {formData.paymentTerms && (
+                        <p className="text-xs text-gray-600 mb-2 break-words">{formData.paymentTerms}</p>
+                    )}
+                    <div className="text-xs text-gray-600 space-y-1">
+                        {formData.iban && (
+                            <p><span className="font-medium text-gray-700">IBAN:</span> {formData.iban}</p>
+                        )}
+                        {formData.bic && (
+                            <p><span className="font-medium text-gray-700">BIC:</span> {formData.bic}</p>
+                        )}
+                    </div>
+                </div>
+                <div className="text-right">
+                    <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">KONTAKT</p>
+                    <div className="text-xs text-gray-600 space-y-1">
+                        {formData.senderContactName && (
+                            <p>{formData.senderContactName}</p>
+                        )}
+                        {formData.senderContactPhone && (
+                            <p>{formData.senderContactPhone}</p>
+                        )}
+                        {formData.senderElectronicAddress && (
+                            <p>{formData.senderElectronicAddress}</p>
+                        )}
+                    </div>
+                </div>
+            </div>
         </footer>
     </div>
 );
@@ -1163,7 +1203,32 @@ const LayoutCreative = ({ formData }) => (
     </div>
 );
 
-const InvoicePreview = ({ formData, layout }) => {
+const PdfPreview = ({ pdfUrl }) => {
+    return (
+        <div className="w-full h-full bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-gray-100 px-4 py-2 border-b">
+                <p className="text-sm text-gray-600 font-medium">Original ZUGFeRD-PDF</p>
+            </div>
+            <iframe 
+                src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                className="w-full h-full min-h-[600px]" 
+                title="PDF Vorschau"
+                style={{ 
+                    border: 'none',
+                    pointerEvents: 'none', // Verhindert Interaktion mit dem PDF
+                    overflow: 'hidden'
+                }}
+                scrolling="no"
+            />
+        </div>
+    );
+};
+
+const InvoicePreview = ({ formData, layout, showPdfPreview, pdfUrl }) => {
+    if (showPdfPreview && pdfUrl) {
+        return <PdfPreview pdfUrl={pdfUrl} />;
+    }
+    
     switch(layout) {
         case 'modern': return <LayoutModern formData={formData} />;
         case 'minimalist': return <LayoutMinimalist formData={formData} />;
@@ -1212,7 +1277,9 @@ const HomePage = ({
     setEn16931XML,
     dataSource,
     showXRechnungButton,
-    xrechnungTabEnabled
+    xrechnungTabEnabled,
+    showPdfPreview,
+    uploadedPdfData
 }) => (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1384,10 +1451,22 @@ const HomePage = ({
                   }}
                 >
                     <div className="flex justify-between items-center border-b border-white/30 pb-2 mb-4 px-1">
-                        <h2 className="text-2xl font-semibold text-gray-800">Rechnungsvorschau</h2>
+                        <h2 className="text-2xl font-semibold text-gray-800">
+                            {showPdfPreview ? 'PDF-Vorschau' : 'Rechnungsvorschau'}
+                        </h2>
+                        {showPdfPreview && (
+                            <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
+                                ZUGFeRD-PDF
+                            </span>
+                        )}
                     </div>
                     <div className="px-1">
-                        <InvoicePreview formData={formData} layout={selectedLayout} />
+                        <InvoicePreview 
+                            formData={formData} 
+                            layout={selectedLayout} 
+                            showPdfPreview={showPdfPreview}
+                            pdfUrl={uploadedPdfData}
+                        />
                     </div>
                     <div className="h-16 md:h-24" />
                 </div>
@@ -1570,6 +1649,8 @@ const App = () => {
   const [previewTransform, setPreviewTransform] = useState(0);
   const [unmappedFields, setUnmappedFields] = useState([]);
   const [uploadStatus, setUploadStatus] = useState(null); // 'success', 'incomplete', null
+  const [uploadedPdfData, setUploadedPdfData] = useState(null); // PDF-Daten für Anzeige
+  const [showPdfPreview, setShowPdfPreview] = useState(false); // PDF vs HTML Vorschau
 
 
   // Effect for auto-calculation of totals
@@ -1800,7 +1881,14 @@ const App = () => {
             
             if (xmlContent) {
                 console.log('XML erfolgreich extrahiert, Größe:', xmlContent.length, 'Zeichen');
-                showMessage('XML-Anhang erfolgreich extrahiert', 'success');
+                
+                // Speichere PDF-Daten für Anzeige
+                const pdfBlob = new Blob([pdfData], { type: 'application/pdf' });
+                const pdfUrl = URL.createObjectURL(pdfBlob);
+                setUploadedPdfData(pdfUrl);
+                setShowPdfPreview(true);
+                
+                showMessage('ZUGFeRD-PDF erkannt - PDF-Vorschau wird angezeigt', 'success');
                 parseXmlContent(xmlContent);
             } else {
                 console.log('Kein XML-Inhalt gefunden');
@@ -2635,7 +2723,15 @@ const App = () => {
     setShowXRechnungButton(true); // XRechnung Button wieder einblenden bei Zurücksetzen
     setXrechnungTabEnabled(true); // XRechnung Tab wieder aktivieren
     setUnmappedFields([]);
-    showMessage('Alle Felder und Ergebnisse zurückgesetzt.', 'info');
+    
+    // PDF-Vorschau zurücksetzen
+    if (uploadedPdfData) {
+      URL.revokeObjectURL(uploadedPdfData); // Speicher freigeben
+    }
+    setUploadedPdfData(null);
+    setShowPdfPreview(false);
+    
+    showMessage('Alle Felder und Ergebnisse zurückgesetzt - HTML-Vorschau wird angezeigt.', 'info');
   };
   
   const renderLayoutSelectionPage = () => {
@@ -2838,6 +2934,7 @@ const App = () => {
                 handleOpenSapModal={handleOpenSapModal} sapXml={sapXml} handleCopy={handleCopy} handleDownload={handleDownload} xrechnungXML={xrechnungXML}
                 en16931XML={en16931XML} selectedLayout={selectedLayout} unmappedFields={unmappedFields} activeXmlTab={activeXmlTab} setActiveXmlTab={setActiveXmlTab} setSapXml={setSapXml}
                 setXrechnungXML={setXrechnungXML} setEn16931XML={setEn16931XML} dataSource={dataSource} showXRechnungButton={showXRechnungButton} xrechnungTabEnabled={xrechnungTabEnabled}
+                showPdfPreview={showPdfPreview} uploadedPdfData={uploadedPdfData}
             />;
         case 'layoutSelection': return renderLayoutSelectionPage();
         case 'eRechnungMapping': return renderERechnungMappingPage();
