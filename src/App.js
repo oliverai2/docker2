@@ -887,13 +887,14 @@ const validateEN16931Fields = (formData) => {
     }
     
     // XRechnung-spezifische Validierungen
-    if (formData.leitwegId) {
+    // Leitweg-ID ist für XRechnung erforderlich
+    if (!formData.leitwegId || formData.leitwegId.trim() === '') {
+        errors.push('XRechnung-Pflichtfeld fehlt: Leitweg-ID (BT-10) - bitte in den optionalen Feldern ausfüllen');
+    } else {
         const leitwegIdPattern = /^[0-9]{2,30}-[a-zA-Z0-9]{1,30}$/;
         if (!leitwegIdPattern.test(formData.leitwegId)) {
             errors.push('Leitweg-ID muss Format "99999999-ABCDEF" haben (XR-2)');
         }
-    } else {
-        errors.push('XRechnung-Pflichtfeld fehlt: Leitweg-ID (BT-10)');
     }
     
     // IBAN-Validierung für Deutschland
@@ -1550,9 +1551,6 @@ const HomePage = ({
                   <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')}/>
                   <FormField name="recipientZip" label="PLZ" value={formData.recipientZip} onChange={handleInputChange} placeholder="54321" btId="BT-53" isUnmapped={unmappedFields.includes('recipientZip')}/>
                   <FormField name="recipientCity" label="Ort" value={formData.recipientCity} onChange={handleInputChange} placeholder="Kundenstadt" btId="BT-52" isUnmapped={unmappedFields.includes('recipientCity')}/>
-                  <div className="md:col-span-2">
-                      <FormField name="leitwegId" label="Leitweg-ID" value={formData.leitwegId} onChange={handleInputChange} placeholder="04011000-12345-67" btId="BT-10" isUnmapped={unmappedFields.includes('leitwegId')}/>
-                  </div>
               </div>
           </div>
 
@@ -1675,6 +1673,9 @@ const HomePage = ({
                 <h4 className="font-medium text-gray-700">Rechnungsempfänger - Zusatzangaben</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="recipientElectronicAddress" label="Elektronische Adresse" value={formData.recipientElectronicAddress} onChange={handleInputChange} placeholder="rechnung@kunde.de" btId="BT-49" isUnmapped={unmappedFields.includes('recipientElectronicAddress')}/>
+                  <div className="md:col-span-2">
+                      <FormField name="leitwegId" label="Leitweg-ID" value={formData.leitwegId} onChange={handleInputChange} placeholder="99999999-ABCDEF" btId="BT-10" isUnmapped={unmappedFields.includes('leitwegId')}/>
+                  </div>
                 </div>
               </div>
 
@@ -2975,7 +2976,7 @@ const App = () => {
             recipientZip: String(getRandomNumber(10000, 99999)),
             recipientCity: getRandomItem(cities),
             recipientElectronicAddress: 'recipient@kunde.de',
-            leitwegId: `${getRandomNumber(100000, 999999)}-${getRandomNumber(100000, 999999)}-${getRandomNumber(10, 99)}`,
+            leitwegId: '99999999-ABCDEF',
             reference: `RE-${new Date().getFullYear()}-${String(getRandomNumber(1000, 9999))}`,
             invoiceDate: new Date(Date.now() - getRandomNumber(1, 30) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
             iban: `DE${getRandomNumber(10, 99)}${String(getRandomNumber(10000000, 99999999))}${String(getRandomNumber(1000000000, 9999999999))}`,
