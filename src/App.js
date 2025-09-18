@@ -2550,8 +2550,20 @@ const App = () => {
   
   const handleUploadClick = () => {
     console.log('Upload-Button geklickt');
-    setShowXRechnungButton(false); // XRechnung Button ausblenden wenn XML/PDF geladen wird
-    fileInputRef.current.click();
+    
+    // Zurücksetzen vor neuem Upload
+    setXrechnungXML('');
+    setEn16931XML('');
+    setSapXml('');
+    setUnmappedFields([]);
+    setShowXRechnungButton(false);
+    setShowPdfPreview(false);
+    
+    // File Input zurücksetzen und klicken
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
   };
 
   // Test-Funktion für Debugging (kann in der Browser-Konsole aufgerufen werden)
@@ -3145,21 +3157,38 @@ const App = () => {
   };
 
   const handleReset = () => {
-    setFormData(blankFormData);
+    // Vollständiges Zurücksetzen aller States
+    setFormData({ ...blankFormData });
     setXrechnungXML('');
+    setEn16931XML('');
     setSapXml('');
-    setShowXRechnungButton(true); // XRechnung Button wieder einblenden bei Zurücksetzen
-    setXrechnungTabEnabled(true); // XRechnung Tab wieder aktivieren
+    setShowXRechnungButton(true);
+    setXrechnungTabEnabled(true);
     setUnmappedFields([]);
+    setActiveXmlTab('xrechnung');
+    setShowOptionalFields(false);
+    setLoading(false);
+    setLoadingPrefill(false);
+    setLoadingSummary(false);
     
-    // PDF-Vorschau zurücksetzen
+    // PDF-Vorschau vollständig zurücksetzen
     if (uploadedPdfData) {
-      URL.revokeObjectURL(uploadedPdfData); // Speicher freigeben
+      URL.revokeObjectURL(uploadedPdfData);
     }
     setUploadedPdfData(null);
     setShowPdfPreview(false);
     
-    showMessage('Alle Felder und Ergebnisse zurückgesetzt - HTML-Vorschau wird angezeigt.', 'info');
+    // File Input zurücksetzen
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
+    // SAP-Daten zurücksetzen
+    setKreditorId('');
+    setBuchungskreisId('');
+    setInvoiceSummary('');
+    
+    showMessage('Komplette Anwendung zurückgesetzt - bereit für neue Eingaben.', 'success');
   };
   
   const renderLayoutSelectionPage = () => {
