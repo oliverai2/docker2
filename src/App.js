@@ -1499,7 +1499,9 @@ const HomePage = ({
     showXRechnungButton,
     xrechnungTabEnabled,
     showPdfPreview,
-    uploadedPdfData
+    uploadedPdfData,
+    showOptionalFields,
+    setShowOptionalFields
 }) => (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1525,6 +1527,19 @@ const HomePage = ({
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xml,.pdf" className="hidden"/>
           </div>
           
+          {/* Checkbox für optionale Felder */}
+          <div className="mb-6">
+              <label className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer">
+                  <input 
+                      type="checkbox" 
+                      checked={showOptionalFields} 
+                      onChange={(e) => setShowOptionalFields(e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>Optionale Felder einblenden</span>
+              </label>
+          </div>
+          
           {/* Invoice Issuer - Erweiterte Pflichtfelder */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
               <div className="flex items-center justify-between">
@@ -1539,6 +1554,18 @@ const HomePage = ({
                   <FormField name="senderZip" label="PLZ" value={formData.senderZip} onChange={handleInputChange} placeholder="12345" btId="BT-38" isUnmapped={unmappedFields.includes('senderZip')}/>
                   <FormField name="senderCity" label="Ort" value={formData.senderCity} onChange={handleInputChange} placeholder="Musterstadt" btId="BT-37" isUnmapped={unmappedFields.includes('senderCity')}/>
                   <FormField name="senderCountry" label="Ländercode" value={formData.senderCountry} onChange={handleInputChange} placeholder="DE" btId="BT-40" isUnmapped={unmappedFields.includes('senderCountry')}/>
+                  
+                  {/* Optionale Felder - nur wenn Checkbox aktiviert */}
+                  {showOptionalFields && (
+                    <>
+                      <FormField name="senderElectronicAddress" label="Elektronische Adresse" value={formData.senderElectronicAddress} onChange={handleInputChange} placeholder="rechnung@firma.de" btId="BT-34" isUnmapped={unmappedFields.includes('senderElectronicAddress')}/>
+                      <FormField name="senderContactName" label="Ansprechpartner" value={formData.senderContactName} onChange={handleInputChange} placeholder="Max Mustermann" btId="BT-41" isUnmapped={unmappedFields.includes('senderContactName')}/>
+                      <FormField name="senderContactPhone" label="Telefon" value={formData.senderContactPhone} onChange={handleInputChange} placeholder="+49 30 123456" btId="BT-42" isUnmapped={unmappedFields.includes('senderContactPhone')}/>
+                      <div className="md:col-span-2">
+                        <FormField name="senderContactEmail" label="E-Mail" value={formData.senderContactEmail} onChange={handleInputChange} placeholder="max@firma.de" btId="BT-43" isUnmapped={unmappedFields.includes('senderContactEmail')}/>
+                      </div>
+                    </>
+                  )}
               </div>
           </div>
 
@@ -1555,6 +1582,16 @@ const HomePage = ({
                   <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')}/>
                   <FormField name="recipientZip" label="PLZ" value={formData.recipientZip} onChange={handleInputChange} placeholder="54321" btId="BT-53" isUnmapped={unmappedFields.includes('recipientZip')}/>
                   <FormField name="recipientCity" label="Ort" value={formData.recipientCity} onChange={handleInputChange} placeholder="Kundenstadt" btId="BT-52" isUnmapped={unmappedFields.includes('recipientCity')}/>
+                  
+                  {/* Optionale Felder - nur wenn Checkbox aktiviert */}
+                  {showOptionalFields && (
+                    <>
+                      <FormField name="recipientElectronicAddress" label="Elektronische Adresse" value={formData.recipientElectronicAddress} onChange={handleInputChange} placeholder="rechnung@kunde.de" btId="BT-49" isUnmapped={unmappedFields.includes('recipientElectronicAddress')}/>
+                      <div className="md:col-span-2">
+                          <FormField name="leitwegId" label="Leitweg-ID" value={formData.leitwegId} onChange={handleInputChange} placeholder="99999999-ABCDEF" btId="BT-10" isUnmapped={unmappedFields.includes('leitwegId')}/>
+                      </div>
+                    </>
+                  )}
               </div>
           </div>
 
@@ -1578,6 +1615,15 @@ const HomePage = ({
                   <FormField name="paymentDueDate" label="Fälligkeitsdatum" value={formData.paymentDueDate} onChange={handleInputChange} type="date" btId="BT-9" isUnmapped={unmappedFields.includes('paymentDueDate')}/>
                   <FormField name="orderReference" label="Bestellreferenz" value={formData.orderReference} onChange={handleInputChange} placeholder="PO-2025-001" btId="BT-13" isUnmapped={unmappedFields.includes('orderReference')}/>
                   <FormField name="contractReference" label="Vertragsreferenz" value={formData.contractReference} onChange={handleInputChange} placeholder="CONTRACT-2025-001" btId="BT-12" isUnmapped={unmappedFields.includes('contractReference')}/>
+                  
+                  {/* Optionale Felder - nur wenn Checkbox aktiviert */}
+                  {showOptionalFields && (
+                    <>
+                      <div className="md:col-span-2">
+                        <FormField name="precedingInvoiceReference" label="Vorherige Rechnungsreferenz" value={formData.precedingInvoiceReference} onChange={handleInputChange} placeholder="RE-2024-999" btId="BT-25" isUnmapped={unmappedFields.includes('precedingInvoiceReference')}/>
+                      </div>
+                    </>
+                  )}
               </div>
           </div>
 
@@ -1641,61 +1687,17 @@ const HomePage = ({
                   <FormField name="iban" label="IBAN" value={formData.iban} onChange={handleInputChange} placeholder="DE..." btId="BT-84" isUnmapped={unmappedFields.includes('iban')}/>
                   <FormField name="bic" label="BIC" value={formData.bic} onChange={handleInputChange} placeholder="DEUTDEFFXXX" btId="BT-86" isUnmapped={unmappedFields.includes('bic')}/>
                   <FormField name="taxRate" label="MwSt.-Satz (%)" value={formData.taxRate} onChange={handleInputChange} type="number" placeholder="19" btId="BT-152" isUnmapped={unmappedFields.includes('taxRate')}/>
+                  
+                  {/* Optionale Felder - nur wenn Checkbox aktiviert */}
+                  {showOptionalFields && (
+                    <>
+                      <FormField name="documentLevelAllowance" label="Rabatt auf Dokumentenebene" value={formData.documentLevelAllowance} onChange={handleInputChange} type="number" placeholder="50.00" btId="BT-92" isUnmapped={unmappedFields.includes('documentLevelAllowance')}/>
+                      <FormField name="documentLevelCharge" label="Zuschlag auf Dokumentenebene" value={formData.documentLevelCharge} onChange={handleInputChange} type="number" placeholder="25.00" btId="BT-99" isUnmapped={unmappedFields.includes('documentLevelCharge')}/>
+                    </>
+                  )}
               </div>
           </div>
 
-          {/* Optionale Felder - Ausklappbar */}
-          <details className="group">
-            <summary className="cursor-pointer list-none">
-              <div className="p-4 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm hover:bg-white/30 transition-all duration-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-800">Optionale Felder</h3>
-                    <p className="text-sm text-gray-600">Erweiterte Eingaben für vollständige e-Rechnung-Konformität</p>
-                  </div>
-                  <ChevronDown className="h-5 w-5 text-gray-500 group-open:rotate-180 transition-transform duration-200" />
-                </div>
-              </div>
-            </summary>
-            
-            <div className="mt-4 space-y-4">
-              {/* Verkäufer - Optionale Felder */}
-              <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
-                <h4 className="font-medium text-gray-700">Rechnungssteller - Zusatzangaben</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField name="senderElectronicAddress" label="Elektronische Adresse" value={formData.senderElectronicAddress} onChange={handleInputChange} placeholder="rechnung@firma.de" btId="BT-34" isUnmapped={unmappedFields.includes('senderElectronicAddress')}/>
-                  <FormField name="senderContactName" label="Ansprechpartner" value={formData.senderContactName} onChange={handleInputChange} placeholder="Max Mustermann" btId="BT-41" isUnmapped={unmappedFields.includes('senderContactName')}/>
-                  <FormField name="senderContactPhone" label="Telefon" value={formData.senderContactPhone} onChange={handleInputChange} placeholder="+49 30 123456" btId="BT-42" isUnmapped={unmappedFields.includes('senderContactPhone')}/>
-                   <div className="md:col-span-2">
-                    <FormField name="senderContactEmail" label="E-Mail" value={formData.senderContactEmail} onChange={handleInputChange} placeholder="max@firma.de" btId="BT-43" isUnmapped={unmappedFields.includes('senderContactEmail')}/>
-                  </div>
-              </div>
-          </div>
-
-              {/* Empfänger - Optionale Felder */}
-              <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
-                <h4 className="font-medium text-gray-700">Rechnungsempfänger - Zusatzangaben</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField name="recipientElectronicAddress" label="Elektronische Adresse" value={formData.recipientElectronicAddress} onChange={handleInputChange} placeholder="rechnung@kunde.de" btId="BT-49" isUnmapped={unmappedFields.includes('recipientElectronicAddress')}/>
-                  <div className="md:col-span-2">
-                      <FormField name="leitwegId" label="Leitweg-ID" value={formData.leitwegId} onChange={handleInputChange} placeholder="99999999-ABCDEF" btId="BT-10" isUnmapped={unmappedFields.includes('leitwegId')}/>
-                  </div>
-                </div>
-              </div>
-
-              {/* Erweiterte Rechnungsdetails */}
-              <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
-                <h4 className="font-medium text-gray-700">Erweiterte Rechnungsdetails</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField name="documentLevelAllowance" label="Rabatt auf Dokumentenebene" value={formData.documentLevelAllowance} onChange={handleInputChange} type="number" placeholder="50.00" btId="BT-92" isUnmapped={unmappedFields.includes('documentLevelAllowance')}/>
-                  <FormField name="documentLevelCharge" label="Zuschlag auf Dokumentenebene" value={formData.documentLevelCharge} onChange={handleInputChange} type="number" placeholder="25.00" btId="BT-99" isUnmapped={unmappedFields.includes('documentLevelCharge')}/>
-                  <div className="md:col-span-2">
-                    <FormField name="precedingInvoiceReference" label="Vorherige Rechnungsreferenz" value={formData.precedingInvoiceReference} onChange={handleInputChange} placeholder="RE-2024-999" btId="BT-25" isUnmapped={unmappedFields.includes('precedingInvoiceReference')}/>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </details>
 
           {/* Action buttons */}
           <div className="flex flex-col gap-4 mt-6">
@@ -1913,6 +1915,7 @@ const App = () => {
   const [showAdminMenu, setShowAdminMenu] = useState(false);
   const [showXRechnungButton, setShowXRechnungButton] = useState(true);
   const [xrechnungTabEnabled, setXrechnungTabEnabled] = useState(true);
+  const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [kreditorId, setKreditorId] = useState('');
   const [buchungskreisId, setBuchungskreisId] = useState('');
   const [invoiceSummary, setInvoiceSummary] = useState('');
@@ -3351,7 +3354,7 @@ const App = () => {
                 handleOpenSapModal={handleOpenSapModal} sapXml={sapXml} handleCopy={handleCopy} handleDownload={handleDownload} xrechnungXML={xrechnungXML}
                 en16931XML={en16931XML} selectedLayout={selectedLayout} unmappedFields={unmappedFields} activeXmlTab={activeXmlTab} setActiveXmlTab={setActiveXmlTab} setSapXml={setSapXml}
                 setXrechnungXML={setXrechnungXML} setEn16931XML={setEn16931XML} dataSource={dataSource} showXRechnungButton={showXRechnungButton} xrechnungTabEnabled={xrechnungTabEnabled}
-                showPdfPreview={showPdfPreview} uploadedPdfData={uploadedPdfData}
+                showPdfPreview={showPdfPreview} uploadedPdfData={uploadedPdfData} showOptionalFields={showOptionalFields} setShowOptionalFields={setShowOptionalFields}
             />;
         case 'layoutSelection': return renderLayoutSelectionPage();
         case 'eRechnungMapping': return renderERechnungMappingPage();
