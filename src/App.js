@@ -1306,8 +1306,8 @@ const HomePage = ({
           </div>
           
           {/* Invoice Issuer */}
-          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
-              <h3 className="font-semibold text-lg text-gray-800">Rechnungssteller</h3>
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="rechnungssteller">
+              <h3 className={`font-semibold text-lg text-gray-800 ${activeSection === 'rechnungssteller' ? 'sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm transition-all duration-200' : 'transition-all duration-200'}`}>Rechnungssteller</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="senderName" label="Name" value={formData.senderName} onChange={handleInputChange} placeholder="Firma GmbH" btId="BT-27" isUnmapped={unmappedFields.includes('senderName')}/>
                   <FormField name="senderStreet" label="Straße & Hausnummer" value={formData.senderStreet} onChange={handleInputChange} placeholder="Musterstraße 1" btId="BT-35" isUnmapped={unmappedFields.includes('senderStreet')}/>
@@ -1327,8 +1327,8 @@ const HomePage = ({
           </div>
 
           {/* Invoice Recipient */}
-          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
-              <h3 className="font-semibold text-lg text-gray-800">Rechnungsempfänger</h3>
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="rechnungsempfaenger">
+              <h3 className={`font-semibold text-lg text-gray-800 ${activeSection === 'rechnungsempfaenger' ? 'sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm transition-all duration-200' : 'transition-all duration-200'}`}>Rechnungsempfänger</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="recipientName" label="Name des Empfängers" value={formData.recipientName} onChange={handleInputChange} placeholder="Kunde AG" btId="BT-44" isUnmapped={unmappedFields.includes('recipientName')}/>
                   <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')}/>
@@ -1345,8 +1345,8 @@ const HomePage = ({
           </div>
 
           {/* Invoice Details */}
-          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
-              <h3 className="font-semibold text-lg text-gray-800">Rechnungsdetails</h3>
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="rechnungsdetails">
+              <h3 className={`font-semibold text-lg text-gray-800 ${activeSection === 'rechnungsdetails' ? 'sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm transition-all duration-200' : 'transition-all duration-200'}`}>Rechnungsdetails</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="reference" label="Rechnungsnummer" value={formData.reference} onChange={handleInputChange} placeholder="RE-2025-001" btId="BT-1" isUnmapped={unmappedFields.includes('reference')}/>
                   <FormField name="invoiceDate" label="Rechnungsdatum" value={formData.invoiceDate} onChange={handleInputChange} type="date" btId="BT-2" isUnmapped={unmappedFields.includes('invoiceDate')}/>
@@ -1362,8 +1362,8 @@ const HomePage = ({
           </div>
 
           {/* Line Items */}
-          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
-              <div className="flex justify-between items-center">
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="rechnungspositionen">
+              <div className={`flex justify-between items-center ${activeSection === 'rechnungspositionen' ? 'sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm transition-all duration-200' : 'transition-all duration-200'}`}>
                   <h3 className="font-semibold text-lg text-gray-800">Rechnungspositionen</h3>
                   <button onClick={addLineItem} className="p-2 rounded-full bg-white/50 text-gray-700 hover:bg-white/80 transition-colors" title="Position hinzufügen">
                       <PlusCircle size={20} />
@@ -1391,8 +1391,8 @@ const HomePage = ({
           </div>
           
           {/* Totals Block */}
-          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
-            <h3 className="font-semibold text-lg text-gray-800">Gesamtbeträge</h3>
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="gesamtbetraege">
+            <h3 className={`font-semibold text-lg text-gray-800 ${activeSection === 'gesamtbetraege' ? 'sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm transition-all duration-200' : 'transition-all duration-200'}`}>Gesamtbeträge</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-600">Gesamt Netto <span className="ml-1.5 text-[10px] font-sans text-gray-500">(BT-109)</span></label>
@@ -1410,8 +1410,8 @@ const HomePage = ({
           </div>
 
           {/* Payment Block */}
-          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
-              <h3 className="font-semibold text-lg text-gray-800">Zahlungsinformationen</h3>
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg" data-section="zahlungsinformationen">
+              <h3 className={`font-semibold text-lg text-gray-800 ${activeSection === 'zahlungsinformationen' ? 'sticky top-20 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-5 px-5 shadow-sm transition-all duration-200' : 'transition-all duration-200'}`}>Zahlungsinformationen</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="iban" label="IBAN" value={formData.iban} onChange={handleInputChange} placeholder="DE..." btId="BT-84" isUnmapped={unmappedFields.includes('iban')}/>
                   <FormField name="bic" label="BIC" value={formData.bic} onChange={handleInputChange} placeholder="DEUTDEFFXXX" btId="BT-86" isUnmapped={unmappedFields.includes('bic')}/>
@@ -1651,6 +1651,7 @@ const App = () => {
   const [uploadStatus, setUploadStatus] = useState(null); // 'success', 'incomplete', null
   const [uploadedPdfData, setUploadedPdfData] = useState(null); // PDF-Daten für Anzeige
   const [showPdfPreview, setShowPdfPreview] = useState(false); // PDF vs HTML Vorschau
+  const [activeSection, setActiveSection] = useState(''); // Für Sticky Headers
 
 
   // Effect for auto-calculation of totals
@@ -1667,6 +1668,44 @@ const App = () => {
         grossAmount: totalGross.toFixed(2)
     }));
   }, [formData.lineItems, formData.taxRate]);
+
+  // Intersection Observer für Sticky Headers
+  useEffect(() => {
+    const observers = [];
+    
+    const sectionConfig = [
+      { id: 'rechnungssteller' },
+      { id: 'rechnungsempfaenger' },
+      { id: 'rechnungsdetails' },
+      { id: 'rechnungspositionen' },
+      { id: 'gesamtbetraege' },
+      { id: 'zahlungsinformationen' }
+    ];
+
+    sectionConfig.forEach(section => {
+      const sectionElement = document.querySelector(`[data-section="${section.id}"]`);
+      if (sectionElement) {
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
+              setActiveSection(section.id);
+            } else if (!entry.isIntersecting && activeSection === section.id) {
+              setActiveSection('');
+            }
+          },
+          { 
+            threshold: [0, 0.3, 0.7],
+            rootMargin: '-80px 0px -50% 0px'
+          }
+        );
+        
+        observer.observe(sectionElement);
+        observers.push(observer);
+      }
+    });
+
+    return () => observers.forEach(observer => observer.disconnect());
+  }, [activeSection]);
 
   // Handle message timeouts
   useEffect(() => {
