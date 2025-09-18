@@ -3122,6 +3122,7 @@ const App = () => {
             senderStreet: `${getRandomItem(streets)} ${getRandomNumber(1, 150)}`,
             senderZip: String(getRandomNumber(10000, 99999)),
             senderCity: getRandomItem(cities),
+            senderCountry: 'DE', // BT-40
             senderTaxId: `DE${getRandomNumber(100000000, 999999999)}`,
             senderContactName: `${contactFirstName} ${contactLastName}`,
             senderContactPhone: `+49 ${getRandomNumber(30, 89)} ${getRandomNumber(10000000, 99999999)}`,
@@ -3131,6 +3132,7 @@ const App = () => {
             recipientStreet: `${getRandomItem(streets)} ${getRandomNumber(1, 200)}`,
             recipientZip: String(getRandomNumber(10000, 99999)),
             recipientCity: getRandomItem(cities),
+            recipientCountry: 'DE', // BT-55
             recipientElectronicAddress: 'recipient@kunde.de',
             leitwegId: '99999999-ABCDEF',
             reference: `RE-${new Date().getFullYear()}-${String(getRandomNumber(1000, 9999))}`,
@@ -3138,7 +3140,7 @@ const App = () => {
             iban: `DE${getRandomNumber(10, 99)}${String(getRandomNumber(10000000, 99999999))}${String(getRandomNumber(1000000000, 9999999999))}`,
             bic: `${getRandomItem(['DEUTDEFF', 'COBADEFF', 'DRESDEFF'])}${getRandomNumber(100, 999)}`,
             invoiceTypeCode: '380',
-            invoiceCurrencyCode: 'EUR',
+            invoiceCurrencyCode: 'EUR', // BT-5
             paymentTerms: `Zahlbar innerhalb von ${getRandomNumber(14, 30)} Tagen ohne Abzug.`,
             paymentMeansCode: '58',
             // Neue optionale Felder (BT-9, BT-12, BT-13)
