@@ -104,14 +104,14 @@ const eRechnungMappingData = [
     { id: 27, btId: 'BT-152', en16931: 'Invoiced item VAT rate', description: 'Steuersatz der Position (%)', xrechnungPath: '.../cbc:Percent', zugferdPath: '.../ram:ApplicableTradeTax/ram:RateApplicablePercent', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], defaultValue: '19' },
 
     // === ERWEITERTE OPTIONALE FELDER ===
-    { id: 28, btId: 'BT-34', en16931: 'Seller electronic address', description: 'Elektronische Adresse (Verkäufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 28, btId: 'BT-34', en16931: 'Seller electronic address', description: 'Elektronische Adresse (Verkäufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung'] },
     { id: 29, btId: 'BT-35', en16931: 'Seller address line 1', description: 'Straße des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
     { id: 30, btId: 'BT-37', en16931: 'Seller city', description: 'Ort des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
     { id: 31, btId: 'BT-38', en16931: 'Seller post code', description: 'PLZ des Verkäufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 32, btId: 'BT-41', en16931: 'Seller contact point', description: 'Kontaktpunkt des Verkäufers', xrechnungPath: '.../Contact/cbc:Name', zugferdPath: '.../ram:DefinedTradeContact/ram:PersonName', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 33, btId: 'BT-42', en16931: 'Seller contact telephone number', description: 'Telefon des Verkäufers', xrechnungPath: '.../Contact/cbc:Telephone', zugferdPath: '.../ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 34, btId: 'BT-43', en16931: 'Seller contact email address', description: 'E-Mail des Verkäufers', xrechnungPath: '.../Contact/cbc:ElectronicMail', zugferdPath: '.../ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
-    { id: 35, btId: 'BT-49', en16931: 'Buyer electronic address', description: 'Elektronische Adresse (Käufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 32, btId: 'BT-41', en16931: 'Seller contact point', description: 'Kontaktpunkt des Verkäufers', xrechnungPath: '.../Contact/cbc:Name', zugferdPath: '.../ram:DefinedTradeContact/ram:PersonName', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
+    { id: 33, btId: 'BT-42', en16931: 'Seller contact telephone number', description: 'Telefon des Verkäufers', xrechnungPath: '.../Contact/cbc:Telephone', zugferdPath: '.../ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
+    { id: 34, btId: 'BT-43', en16931: 'Seller contact email address', description: 'E-Mail des Verkäufers', xrechnungPath: '.../Contact/cbc:ElectronicMail', zugferdPath: '.../ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
+    { id: 35, btId: 'BT-49', en16931: 'Buyer electronic address', description: 'Elektronische Adresse (Käufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung'] },
     { id: 36, btId: 'BT-50', en16931: 'Buyer address line 1', description: 'Straße des Käufers', xrechnungPath: '.../PostalAddress/cbc:StreetName', zugferdPath: '.../ram:PostalTradeAddress/ram:LineOne', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
     { id: 37, btId: 'BT-52', en16931: 'Buyer city', description: 'Ort des Käufers', xrechnungPath: '.../PostalAddress/cbc:CityName', zugferdPath: '.../ram:PostalTradeAddress/ram:CityName', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
     { id: 38, btId: 'BT-53', en16931: 'Buyer post code', description: 'PLZ des Käufers', xrechnungPath: '.../PostalAddress/cbc:PostalZone', zugferdPath: '.../ram:PostalTradeAddress/ram:PostcodeCode', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
@@ -119,10 +119,10 @@ const eRechnungMappingData = [
     // === NEUE OPTIONALE FELDER FÜR ERWEITERTE FUNKTIONALITÄT ===
     { id: 39, btId: 'BT-13', en16931: 'Purchase order reference', description: 'Bestellreferenz', xrechnungPath: 'cac:OrderReference/cbc:ID', zugferdPath: '.../ram:BuyerOrderReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
     { id: 40, btId: 'BT-12', en16931: 'Contract reference', description: 'Vertragsreferenz', xrechnungPath: 'cac:ContractDocumentReference/cbc:ID', zugferdPath: '.../ram:ContractReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
-    { id: 41, btId: 'BT-25', en16931: 'Preceding Invoice reference', description: 'Vorherige Rechnungsreferenz', xrechnungPath: 'cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID', zugferdPath: '.../ram:InvoiceReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
+    { id: 41, btId: 'BT-25', en16931: 'Preceding Invoice reference', description: 'Vorherige Rechnungsreferenz', xrechnungPath: 'cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID', zugferdPath: '.../ram:InvoiceReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung'], newField: true },
     { id: 42, btId: 'BT-9', en16931: 'Payment due date', description: 'Fälligkeitsdatum', xrechnungPath: 'cbc:DueDate', zugferdPath: '.../ram:DueDateDateTime', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
-    { id: 43, btId: 'BT-92', en16931: 'Document level allowance amount', description: 'Rabatt auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true },
-    { id: 44, btId: 'BT-99', en16931: 'Document level charge amount', description: 'Zuschlag auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'], newField: true }
+    { id: 43, btId: 'BT-92', en16931: 'Document level allowance amount', description: 'Rabatt auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung'], newField: true },
+    { id: 44, btId: 'BT-99', en16931: 'Document level charge amount', description: 'Zuschlag auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung'], newField: true }
 ].sort((a, b) => parseInt(a.btId.substring(3)) - parseInt(b.btId.substring(3)));
 
 // Verfügbare Platzhalter mit Kategorien für intelligente Verwaltung
@@ -1501,7 +1501,7 @@ const HomePage = ({
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xml,.pdf" className="hidden"/>
           </div>
           
-          {/* Invoice Issuer - Pflichtfelder */}
+          {/* Invoice Issuer - Erweiterte Pflichtfelder */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-lg text-gray-800">Rechnungssteller</h3>
@@ -1511,11 +1511,14 @@ const HomePage = ({
                   {/* Pflichtfelder */}
                   <FormField name="senderName" label="Name" value={formData.senderName} onChange={handleInputChange} placeholder="Firma GmbH" btId="BT-27" isUnmapped={unmappedFields.includes('senderName')}/>
                   <FormField name="senderTaxId" label="Steuernummer / USt-IdNr." value={formData.senderTaxId} onChange={handleInputChange} placeholder="DE123456789" btId="BT-31" isUnmapped={unmappedFields.includes('senderTaxId')}/>
+                  <FormField name="senderStreet" label="Straße & Hausnummer" value={formData.senderStreet} onChange={handleInputChange} placeholder="Musterstraße 1" btId="BT-35" isUnmapped={unmappedFields.includes('senderStreet')}/>
+                  <FormField name="senderZip" label="PLZ" value={formData.senderZip} onChange={handleInputChange} placeholder="12345" btId="BT-38" isUnmapped={unmappedFields.includes('senderZip')}/>
+                  <FormField name="senderCity" label="Ort" value={formData.senderCity} onChange={handleInputChange} placeholder="Musterstadt" btId="BT-37" isUnmapped={unmappedFields.includes('senderCity')}/>
                   <FormField name="senderCountry" label="Ländercode" value={formData.senderCountry} onChange={handleInputChange} placeholder="DE" btId="BT-40" isUnmapped={unmappedFields.includes('senderCountry')}/>
               </div>
           </div>
 
-          {/* Invoice Recipient - Pflichtfelder */}
+          {/* Invoice Recipient - Erweiterte Pflichtfelder */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-lg text-gray-800">Rechnungsempfänger</h3>
@@ -1525,13 +1528,16 @@ const HomePage = ({
                   {/* Pflichtfelder */}
                   <FormField name="recipientName" label="Name des Empfängers" value={formData.recipientName} onChange={handleInputChange} placeholder="Kunde AG" btId="BT-44" isUnmapped={unmappedFields.includes('recipientName')}/>
                   <FormField name="recipientCountry" label="Ländercode" value={formData.recipientCountry} onChange={handleInputChange} placeholder="DE" btId="BT-55" isUnmapped={unmappedFields.includes('recipientCountry')}/>
+                  <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')}/>
+                  <FormField name="recipientZip" label="PLZ" value={formData.recipientZip} onChange={handleInputChange} placeholder="54321" btId="BT-53" isUnmapped={unmappedFields.includes('recipientZip')}/>
+                  <FormField name="recipientCity" label="Ort" value={formData.recipientCity} onChange={handleInputChange} placeholder="Kundenstadt" btId="BT-52" isUnmapped={unmappedFields.includes('recipientCity')}/>
                   <div className="md:col-span-2">
                       <FormField name="leitwegId" label="Leitweg-ID" value={formData.leitwegId} onChange={handleInputChange} placeholder="04011000-12345-67" btId="BT-10" isUnmapped={unmappedFields.includes('leitwegId')}/>
                   </div>
               </div>
           </div>
 
-          {/* Invoice Details - Pflichtfelder */}
+          {/* Invoice Details - Erweiterte Pflichtfelder */}
           <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-lg text-gray-800">Rechnungsdetails</h3>
@@ -1547,6 +1553,10 @@ const HomePage = ({
                       <option value="261">Gutschrift (261)</option>
                   </FormField>
                   <FormField name="invoiceCurrencyCode" label="Währung" value={formData.invoiceCurrencyCode} onChange={handleInputChange} placeholder="EUR" btId="BT-5" isUnmapped={unmappedFields.includes('invoiceCurrencyCode')}/>
+                  <FormField name="serviceDate" label="Leistungs-/Lieferdatum" value={formData.serviceDate} onChange={handleInputChange} type="date" btId="BT-72" isUnmapped={unmappedFields.includes('serviceDate')}/>
+                  <FormField name="paymentDueDate" label="Fälligkeitsdatum" value={formData.paymentDueDate} onChange={handleInputChange} type="date" btId="BT-9" isUnmapped={unmappedFields.includes('paymentDueDate')}/>
+                  <FormField name="orderReference" label="Bestellreferenz" value={formData.orderReference} onChange={handleInputChange} placeholder="PO-2025-001" btId="BT-13" isUnmapped={unmappedFields.includes('orderReference')}/>
+                  <FormField name="contractReference" label="Vertragsreferenz" value={formData.contractReference} onChange={handleInputChange} placeholder="CONTRACT-2025-001" btId="BT-12" isUnmapped={unmappedFields.includes('contractReference')}/>
               </div>
           </div>
 
@@ -1598,6 +1608,20 @@ const HomePage = ({
             </div>
           </div>
 
+          {/* Zahlungs- und Steuerdetails */}
+          <div className="space-y-4 p-5 bg-white/30 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg text-gray-800">Zahlungs- und Steuerdetails</h3>
+                <span className="text-xs text-gray-500">Wichtige Zahlungsinformationen</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField name="paymentTerms" label="Zahlungsbedingungen" value={formData.paymentTerms} onChange={handleInputChange} placeholder="Zahlbar innerhalb von 30 Tagen" btId="BT-20" isUnmapped={unmappedFields.includes('paymentTerms')}/>
+                  <FormField name="paymentMeansCode" label="Zahlungsmittel-Code" value={formData.paymentMeansCode} onChange={handleInputChange} placeholder="58" btId="BT-81" isUnmapped={unmappedFields.includes('paymentMeansCode')}/>
+                  <FormField name="iban" label="IBAN" value={formData.iban} onChange={handleInputChange} placeholder="DE..." btId="BT-84" isUnmapped={unmappedFields.includes('iban')}/>
+                  <FormField name="bic" label="BIC" value={formData.bic} onChange={handleInputChange} placeholder="DEUTDEFFXXX" btId="BT-86" isUnmapped={unmappedFields.includes('bic')}/>
+                  <FormField name="taxRate" label="MwSt.-Satz (%)" value={formData.taxRate} onChange={handleInputChange} type="number" placeholder="19" btId="BT-152" isUnmapped={unmappedFields.includes('taxRate')}/>
+              </div>
+          </div>
 
           {/* Optionale Felder - Ausklappbar */}
           <details className="group">
@@ -1618,9 +1642,6 @@ const HomePage = ({
               <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
                 <h4 className="font-medium text-gray-700">Rechnungssteller - Zusatzangaben</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField name="senderStreet" label="Straße & Hausnummer" value={formData.senderStreet} onChange={handleInputChange} placeholder="Musterstraße 1" btId="BT-35" isUnmapped={unmappedFields.includes('senderStreet')}/>
-                  <FormField name="senderZip" label="PLZ" value={formData.senderZip} onChange={handleInputChange} placeholder="12345" btId="BT-38" isUnmapped={unmappedFields.includes('senderZip')}/>
-                  <FormField name="senderCity" label="Ort" value={formData.senderCity} onChange={handleInputChange} placeholder="Musterstadt" btId="BT-37" isUnmapped={unmappedFields.includes('senderCity')}/>
                   <FormField name="senderElectronicAddress" label="Elektronische Adresse" value={formData.senderElectronicAddress} onChange={handleInputChange} placeholder="rechnung@firma.de" btId="BT-34" isUnmapped={unmappedFields.includes('senderElectronicAddress')}/>
                   <FormField name="senderContactName" label="Ansprechpartner" value={formData.senderContactName} onChange={handleInputChange} placeholder="Max Mustermann" btId="BT-41" isUnmapped={unmappedFields.includes('senderContactName')}/>
                   <FormField name="senderContactPhone" label="Telefon" value={formData.senderContactPhone} onChange={handleInputChange} placeholder="+49 30 123456" btId="BT-42" isUnmapped={unmappedFields.includes('senderContactPhone')}/>
@@ -1634,39 +1655,18 @@ const HomePage = ({
               <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
                 <h4 className="font-medium text-gray-700">Rechnungsempfänger - Zusatzangaben</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')}/>
-                  <FormField name="recipientZip" label="PLZ" value={formData.recipientZip} onChange={handleInputChange} placeholder="54321" btId="BT-53" isUnmapped={unmappedFields.includes('recipientZip')}/>
-                  <FormField name="recipientCity" label="Ort" value={formData.recipientCity} onChange={handleInputChange} placeholder="Kundenstadt" btId="BT-52" isUnmapped={unmappedFields.includes('recipientCity')}/>
                   <FormField name="recipientElectronicAddress" label="Elektronische Adresse" value={formData.recipientElectronicAddress} onChange={handleInputChange} placeholder="rechnung@kunde.de" btId="BT-49" isUnmapped={unmappedFields.includes('recipientElectronicAddress')}/>
                 </div>
               </div>
 
-              {/* Zusätzliche Rechnungsdetails */}
+              {/* Erweiterte Rechnungsdetails */}
               <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
-                <h4 className="font-medium text-gray-700">Zusätzliche Rechnungsdetails</h4>
+                <h4 className="font-medium text-gray-700">Erweiterte Rechnungsdetails</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField name="serviceDate" label="Leistungs-/Lieferdatum" value={formData.serviceDate} onChange={handleInputChange} type="date" btId="BT-72" isUnmapped={unmappedFields.includes('serviceDate')}/>
-                  <FormField name="paymentDueDate" label="Fälligkeitsdatum" value={formData.paymentDueDate} onChange={handleInputChange} type="date" btId="BT-9" isUnmapped={unmappedFields.includes('paymentDueDate')}/>
-                  <FormField name="orderReference" label="Bestellreferenz" value={formData.orderReference} onChange={handleInputChange} placeholder="PO-2025-001" btId="BT-13" isUnmapped={unmappedFields.includes('orderReference')}/>
-                  <FormField name="contractReference" label="Vertragsreferenz" value={formData.contractReference} onChange={handleInputChange} placeholder="CONTRACT-2025-001" btId="BT-12" isUnmapped={unmappedFields.includes('contractReference')}/>
-                  <div className="md:col-span-2">
-                    <FormField name="precedingInvoiceReference" label="Vorherige Rechnungsreferenz" value={formData.precedingInvoiceReference} onChange={handleInputChange} placeholder="RE-2024-999" btId="BT-25" isUnmapped={unmappedFields.includes('precedingInvoiceReference')}/>
-                  </div>
-                </div>
-              </div>
-
-              {/* Zahlungs- und Steuerdetails */}
-              <div className="space-y-4 p-5 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl shadow-sm">
-                <h4 className="font-medium text-gray-700">Zahlungs- und Steuerdetails</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField name="iban" label="IBAN" value={formData.iban} onChange={handleInputChange} placeholder="DE..." btId="BT-84" isUnmapped={unmappedFields.includes('iban')}/>
-                  <FormField name="bic" label="BIC" value={formData.bic} onChange={handleInputChange} placeholder="DEUTDEFFXXX" btId="BT-86" isUnmapped={unmappedFields.includes('bic')}/>
-                  <FormField name="paymentMeansCode" label="Zahlungsmittel-Code" value={formData.paymentMeansCode} onChange={handleInputChange} placeholder="58" btId="BT-81" isUnmapped={unmappedFields.includes('paymentMeansCode')}/>
-                  <FormField name="taxRate" label="MwSt.-Satz (%)" value={formData.taxRate} onChange={handleInputChange} type="number" placeholder="19" btId="BT-152" isUnmapped={unmappedFields.includes('taxRate')}/>
                   <FormField name="documentLevelAllowance" label="Rabatt auf Dokumentenebene" value={formData.documentLevelAllowance} onChange={handleInputChange} type="number" placeholder="50.00" btId="BT-92" isUnmapped={unmappedFields.includes('documentLevelAllowance')}/>
                   <FormField name="documentLevelCharge" label="Zuschlag auf Dokumentenebene" value={formData.documentLevelCharge} onChange={handleInputChange} type="number" placeholder="25.00" btId="BT-99" isUnmapped={unmappedFields.includes('documentLevelCharge')}/>
                   <div className="md:col-span-2">
-                    <FormField name="paymentTerms" label="Zahlungsbedingungen" value={formData.paymentTerms} onChange={handleInputChange} placeholder="Zahlbar innerhalb von 30 Tagen" btId="BT-20" isUnmapped={unmappedFields.includes('paymentTerms')}/>
+                    <FormField name="precedingInvoiceReference" label="Vorherige Rechnungsreferenz" value={formData.precedingInvoiceReference} onChange={handleInputChange} placeholder="RE-2024-999" btId="BT-25" isUnmapped={unmappedFields.includes('precedingInvoiceReference')}/>
                   </div>
                 </div>
               </div>
@@ -2620,7 +2620,7 @@ const App = () => {
     ${enhancedFormData.paymentDueDate ? `<cbc:DueDate>${enhancedFormData.paymentDueDate}</cbc:DueDate>` : ''}
     <cbc:InvoiceTypeCode>${enhancedFormData.invoiceTypeCode}</cbc:InvoiceTypeCode>
     <cbc:DocumentCurrencyCode>${escapeXml(enhancedFormData.invoiceCurrencyCode)}</cbc:DocumentCurrencyCode>
-    <cbc:BuyerReference>${escapeXml(enhancedFormData.leitwegId)}</cbc:BuyerReference>${generateDocumentReferences()}
+    <cbc:BuyerReference>${escapeXml(enhancedFormData.leitwegId)}</cbc:BuyerReference>${generateDocumentReferences()}${generateDeliveryInfo()}
     <cac:PaymentTerms><cbc:Note>${escapeXml(enhancedFormData.paymentTerms || 'Zahlbar innerhalb von 30 Tagen')}</cbc:Note></cac:PaymentTerms>
     <cac:AccountingSupplierParty><cac:Party><cbc:EndpointID schemeID="EM">${escapeXml(formData.senderElectronicAddress)}</cbc:EndpointID><cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(formData.senderName)}</cbc:RegistrationName></cac:PartyLegalEntity><cac:PostalAddress><cbc:StreetName>${escapeXml(formData.senderStreet)}</cbc:StreetName><cbc:CityName>${escapeXml(formData.senderCity)}</cbc:CityName><cbc:PostalZone>${escapeXml(formData.senderZip)}</cbc:PostalZone><cac:Country><cbc:IdentificationCode>${escapeXml(formData.senderCountry)}</cbc:IdentificationCode></cac:Country></cac:PostalAddress><cac:PartyTaxScheme><cbc:CompanyID>${escapeXml(formData.senderTaxId)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme><cac:Contact><cbc:Name>${escapeXml(formData.senderContactName)}</cbc:Name><cbc:Telephone>${escapeXml(formData.senderContactPhone)}</cbc:Telephone><cbc:ElectronicMail>${escapeXml(formData.senderContactEmail)}</cbc:ElectronicMail></cac:Contact></cac:Party></cac:AccountingSupplierParty>
     <cac:AccountingCustomerParty><cac:Party><cbc:EndpointID schemeID="EM">${escapeXml(formData.recipientElectronicAddress)}</cbc:EndpointID><cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(formData.recipientName)}</cbc:RegistrationName></cac:PartyLegalEntity><cac:PostalAddress><cbc:StreetName>${escapeXml(formData.recipientStreet)}</cbc:StreetName><cbc:CityName>${escapeXml(formData.recipientCity)}</cbc:CityName><cbc:PostalZone>${escapeXml(formData.recipientZip)}</cbc:PostalZone><cac:Country><cbc:IdentificationCode>${escapeXml(formData.recipientCountry)}</cbc:IdentificationCode></cac:Country></cac:PostalAddress></cac:Party></cac:AccountingCustomerParty>
