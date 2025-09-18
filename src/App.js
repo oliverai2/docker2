@@ -856,8 +856,8 @@ const validateEN16931Fields = (formData) => {
     const errors = [];
     const warnings = [];
     
-    // Prüfe Pflichtfelder
-    const mandatoryFields = eRechnungMappingData.filter(field => field.mandatory);
+    // Prüfe Pflichtfelder (außer Positionsfelder)
+    const mandatoryFields = eRechnungMappingData.filter(field => field.mandatory && !['BT-126', 'BT-129', 'BT-146', 'BT-153', 'BT-131'].includes(field.btId));
     mandatoryFields.forEach(field => {
         const fieldName = getFieldNameFromBtId(field.btId);
         if (fieldName && !formData[fieldName]) {
@@ -869,12 +869,31 @@ const validateEN16931Fields = (formData) => {
         }
     });
     
+    // Validiere Rechnungspositionen
+    if (!formData.lineItems || formData.lineItems.length === 0) {
+        errors.push('Mindestens eine Rechnungsposition ist erforderlich');
+    } else {
+        formData.lineItems.forEach((item, index) => {
+            if (!item.name || item.name.trim() === '') {
+                errors.push(`Position ${index + 1}: Artikelname ist erforderlich (BT-153)`);
+            }
+            if (!item.billedQuantity || parseFloat(item.billedQuantity) <= 0) {
+                errors.push(`Position ${index + 1}: Menge muss größer als 0 sein (BT-129)`);
+            }
+            if (!item.price || parseFloat(item.price) < 0) {
+                errors.push(`Position ${index + 1}: Preis muss angegeben werden (BT-146)`);
+            }
+        });
+    }
+    
     // XRechnung-spezifische Validierungen
     if (formData.leitwegId) {
         const leitwegIdPattern = /^[0-9]{2,30}-[a-zA-Z0-9]{1,30}$/;
         if (!leitwegIdPattern.test(formData.leitwegId)) {
             errors.push('Leitweg-ID muss Format "99999999-ABCDEF" haben (XR-2)');
         }
+    } else {
+        errors.push('XRechnung-Pflichtfeld fehlt: Leitweg-ID (BT-10)');
     }
     
     // IBAN-Validierung für Deutschland
