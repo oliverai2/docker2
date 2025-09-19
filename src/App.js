@@ -2851,9 +2851,9 @@ const App = () => {
     <cac:AccountingSupplierParty>
         <cac:Party>
             ${enhancedFormData.senderElectronicAddress ? `<cbc:EndpointID schemeID="EM">${escapeXml(enhancedFormData.senderElectronicAddress)}</cbc:EndpointID>` : ''}
-            <cac:PartyLegalEntity>
-                <cbc:RegistrationName>${escapeXml(enhancedFormData.senderName)}</cbc:RegistrationName>
-            </cac:PartyLegalEntity>
+            <cac:PartyName>
+                <cbc:Name>${escapeXml(enhancedFormData.senderName)}</cbc:Name>
+            </cac:PartyName>
             ${enhancedFormData.senderStreet || enhancedFormData.senderCity || enhancedFormData.senderZip ? `
             <cac:PostalAddress>
                 ${enhancedFormData.senderStreet ? `<cbc:StreetName>${escapeXml(enhancedFormData.senderStreet)}</cbc:StreetName>` : ''}
@@ -2874,6 +2874,9 @@ const App = () => {
                     <cbc:ID>VAT</cbc:ID>
                 </cac:TaxScheme>
             </cac:PartyTaxScheme>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName>${escapeXml(enhancedFormData.senderName)}</cbc:RegistrationName>
+            </cac:PartyLegalEntity>
             ${enhancedFormData.senderContactName || enhancedFormData.senderContactPhone || enhancedFormData.senderContactEmail ? `
             <cac:Contact>
                 ${enhancedFormData.senderContactName ? `<cbc:Name>${escapeXml(enhancedFormData.senderContactName)}</cbc:Name>` : ''}
@@ -2885,9 +2888,9 @@ const App = () => {
     <cac:AccountingCustomerParty>
         <cac:Party>
             ${enhancedFormData.recipientElectronicAddress ? `<cbc:EndpointID schemeID="EM">${escapeXml(enhancedFormData.recipientElectronicAddress)}</cbc:EndpointID>` : ''}
-            <cac:PartyLegalEntity>
-                <cbc:RegistrationName>${escapeXml(enhancedFormData.recipientName)}</cbc:RegistrationName>
-            </cac:PartyLegalEntity>
+            <cac:PartyName>
+                <cbc:Name>${escapeXml(enhancedFormData.recipientName)}</cbc:Name>
+            </cac:PartyName>
             ${enhancedFormData.recipientStreet || enhancedFormData.recipientCity || enhancedFormData.recipientZip ? `
             <cac:PostalAddress>
                 ${enhancedFormData.recipientStreet ? `<cbc:StreetName>${escapeXml(enhancedFormData.recipientStreet)}</cbc:StreetName>` : ''}
@@ -2902,6 +2905,9 @@ const App = () => {
                     <cbc:IdentificationCode>${escapeXml(enhancedFormData.recipientCountry)}</cbc:IdentificationCode>
                 </cac:Country>
             </cac:PostalAddress>`}
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName>${escapeXml(enhancedFormData.recipientName)}</cbc:RegistrationName>
+            </cac:PartyLegalEntity>
         </cac:Party>
     </cac:AccountingCustomerParty>${generateDeliveryInfo()}
     ${enhancedFormData.iban || enhancedFormData.bic ? `<cac:PaymentMeans>
@@ -2978,9 +2984,9 @@ const App = () => {
     <AccountingSupplierParty>
         <Party>
             <EndpointID schemeID="EM">${escapeXml(formData.senderElectronicAddress)}</EndpointID>
-            <PartyLegalEntity>
-                <RegistrationName>${escapeXml(formData.senderName)}</RegistrationName>
-            </PartyLegalEntity>
+            <PartyName>
+                <Name>${escapeXml(formData.senderName)}</Name>
+            </PartyName>
             <PostalAddress>
                 <StreetName>${escapeXml(formData.senderStreet)}</StreetName>
                 <CityName>${escapeXml(formData.senderCity)}</CityName>
@@ -2995,6 +3001,9 @@ const App = () => {
                     <ID>VAT</ID>
                 </TaxScheme>
             </PartyTaxScheme>
+            <PartyLegalEntity>
+                <RegistrationName>${escapeXml(formData.senderName)}</RegistrationName>
+            </PartyLegalEntity>
             <Contact>
                 <Name>${escapeXml(formData.senderContactName)}</Name>
                 <Telephone>${escapeXml(formData.senderContactPhone)}</Telephone>
@@ -3005,9 +3014,9 @@ const App = () => {
     <AccountingCustomerParty>
         <Party>
             <EndpointID schemeID="EM">${escapeXml(formData.recipientElectronicAddress)}</EndpointID>
-            <PartyLegalEntity>
-                <RegistrationName>${escapeXml(formData.recipientName)}</RegistrationName>
-            </PartyLegalEntity>
+            <PartyName>
+                <Name>${escapeXml(formData.recipientName)}</Name>
+            </PartyName>
             <PostalAddress>
                 <StreetName>${escapeXml(formData.recipientStreet)}</StreetName>
                 <CityName>${escapeXml(formData.recipientCity)}</CityName>
@@ -3016,6 +3025,9 @@ const App = () => {
                     <IdentificationCode>${escapeXml(formData.recipientCountry)}</IdentificationCode>
                 </Country>
             </PostalAddress>
+            <PartyLegalEntity>
+                <RegistrationName>${escapeXml(formData.recipientName)}</RegistrationName>
+            </PartyLegalEntity>
         </Party>
     </AccountingCustomerParty>
     <PaymentMeans>
