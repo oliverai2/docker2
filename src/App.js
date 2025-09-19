@@ -1342,50 +1342,50 @@ const LayoutClassic = ({ formData, activeField, generatedFields = new Set() }) =
         <div>
           <p className="text-sm font-semibold text-gray-600 mb-2">RECHNUNGSSTELLER</p>
           <p className={`font-bold text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-27', activeField, generatedFields)}`}>{formData.senderName}</p>
-          <div className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-35', activeField) || getHighlightClass('BT-37', activeField) || getHighlightClass('BT-38', activeField)}`}>
-            <span className={`${getHighlightClass('BT-35', activeField)}`}>{formData.senderStreet}</span>, <span className={`${getHighlightClass('BT-38', activeField)}`}>{formData.senderZip}</span> <span className={`${getHighlightClass('BT-37', activeField)}`}>{formData.senderCity}</span>
+          <div className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-35', activeField, generatedFields) || getHighlightClass('BT-37', activeField, generatedFields) || getHighlightClass('BT-38', activeField, generatedFields)}`}>
+            <span className={`${getHighlightClass('BT-35', activeField, generatedFields)}`}>{formData.senderStreet}</span>, <span className={`${getHighlightClass('BT-38', activeField, generatedFields)}`}>{formData.senderZip}</span> <span className={`${getHighlightClass('BT-37', activeField, generatedFields)}`}>{formData.senderCity}</span>
           </div>
           {formData.senderContactEmail && (
-            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-43', activeField)}`}>{formData.senderContactEmail}</p>
+            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-43', activeField, generatedFields)}`}>{formData.senderContactEmail}</p>
           )}
           {formData.senderContactName && (
-            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-41', activeField)}`}>{formData.senderContactName}</p>
+            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-41', activeField, generatedFields)}`}>{formData.senderContactName}</p>
           )}
           {formData.senderContactPhone && (
-            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-42', activeField)}`}>{formData.senderContactPhone}</p>
+            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-42', activeField, generatedFields)}`}>{formData.senderContactPhone}</p>
           )}
           {formData.senderElectronicAddress && (
-            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-34', activeField)}`}>{formData.senderElectronicAddress}</p>
+            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-34', activeField, generatedFields)}`}>{formData.senderElectronicAddress}</p>
           )}
-          <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-31', activeField)}`}>Steuernummer: {formData.senderTaxId}</p>
+          <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-31', activeField, generatedFields)}`}>Steuernummer: {formData.senderTaxId}</p>
         </div>
         <div>
           <p className="text-sm font-semibold text-gray-600 mb-2">RECHNUNGSEMPFÄNGER</p>
-          <p className={`font-bold text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-44', activeField)}`}>{formData.recipientName}</p>
-          <div className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-50', activeField) || getHighlightClass('BT-52', activeField) || getHighlightClass('BT-53', activeField)}`}>
-            <span className={`${getHighlightClass('BT-50', activeField)}`}>{formData.recipientStreet}</span>, <span className={`${getHighlightClass('BT-53', activeField)}`}>{formData.recipientZip}</span> <span className={`${getHighlightClass('BT-52', activeField)}`}>{formData.recipientCity}</span>
+          <p className={`font-bold text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-44', activeField, generatedFields)}`}>{formData.recipientName}</p>
+          <div className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-50', activeField, generatedFields) || getHighlightClass('BT-52', activeField, generatedFields) || getHighlightClass('BT-53', activeField, generatedFields)}`}>
+            <span className={`${getHighlightClass('BT-50', activeField, generatedFields)}`}>{formData.recipientStreet}</span>, <span className={`${getHighlightClass('BT-53', activeField, generatedFields)}`}>{formData.recipientZip}</span> <span className={`${getHighlightClass('BT-52', activeField, generatedFields)}`}>{formData.recipientCity}</span>
           </div>
           {formData.recipientElectronicAddress && (
-            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-49', activeField)}`}>{formData.recipientElectronicAddress}</p>
+            <p className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-49', activeField, generatedFields)}`}>{formData.recipientElectronicAddress}</p>
           )}
         </div>
       </section>
       <section className="mt-8 pt-8 border-t border-gray-100 text-sm">
           <div className="grid grid-cols-3 gap-4">
-              <div><span className="font-semibold text-gray-600">Rechnungs-Nr.:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-1', activeField)}`}>{formData.reference}</span></div>
-              <div><span className="font-semibold text-gray-600">Rechnungsdatum:</span> <span className={`text-gray-800 p-1 rounded ${getHighlightClass('BT-2', activeField)}`}>{formatDate(formData.invoiceDate)}</span></div>
-              <div><span className="font-semibold text-gray-600">Leistungsdatum:</span> <span className={`text-gray-800 p-1 rounded ${getHighlightClass('BT-72', activeField)}`}>{formatDate(formData.serviceDate)}</span></div>
+              <div><span className="font-semibold text-gray-600">Rechnungs-Nr.:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-1', activeField, generatedFields)}`}>{formData.reference}</span></div>
+              <div><span className="font-semibold text-gray-600">Rechnungsdatum:</span> <span className={`text-gray-800 p-1 rounded ${getHighlightClass('BT-2', activeField, generatedFields)}`}>{formatDate(formData.invoiceDate)}</span></div>
+              <div><span className="font-semibold text-gray-600">Leistungsdatum:</span> <span className={`text-gray-800 p-1 rounded ${getHighlightClass('BT-72', activeField, generatedFields)}`}>{formatDate(formData.serviceDate)}</span></div>
           </div>
           {/* Optionale Referenzfelder */}
           <div className="grid grid-cols-3 gap-4 mt-4">
               {formData.orderReference && (
-                <div><span className="font-semibold text-gray-600">Bestellreferenz:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-13', activeField)}`}>{formData.orderReference}</span></div>
+                <div><span className="font-semibold text-gray-600">Bestellreferenz:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-13', activeField, generatedFields)}`}>{formData.orderReference}</span></div>
               )}
               {formData.contractReference && (
-                <div><span className="font-semibold text-gray-600">Vertragsreferenz:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-12', activeField)}`}>{formData.contractReference}</span></div>
+                <div><span className="font-semibold text-gray-600">Vertragsreferenz:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-12', activeField, generatedFields)}`}>{formData.contractReference}</span></div>
               )}
               {formData.precedingInvoiceReference && (
-                <div><span className="font-semibold text-gray-600">Vorherige Rechnung:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-25', activeField)}`}>{formData.precedingInvoiceReference}</span></div>
+                <div><span className="font-semibold text-gray-600">Vorherige Rechnung:</span> <span className={`text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-25', activeField, generatedFields)}`}>{formData.precedingInvoiceReference}</span></div>
               )}
           </div>
       </section>
@@ -1460,43 +1460,43 @@ const LayoutModern = ({ formData, activeField, generatedFields = new Set() }) =>
         <section className="grid grid-cols-2 gap-8 mt-10 pb-8 border-b border-gray-200">
             <div>
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">RECHNUNG AN</p>
-                <p className={`font-medium text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-44', activeField)}`}>{formData.recipientName}</p>
-                <div className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-50', activeField) || getHighlightClass('BT-52', activeField) || getHighlightClass('BT-53', activeField)}`}>
-                  <span className={`${getHighlightClass('BT-50', activeField)}`}>{formData.recipientStreet}</span>, <span className={`${getHighlightClass('BT-53', activeField)}`}>{formData.recipientZip}</span> <span className={`${getHighlightClass('BT-52', activeField)}`}>{formData.recipientCity}</span>
+                <p className={`font-medium text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-44', activeField, generatedFields)}`}>{formData.recipientName}</p>
+                <div className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-50', activeField, generatedFields) || getHighlightClass('BT-52', activeField, generatedFields) || getHighlightClass('BT-53', activeField, generatedFields)}`}>
+                  <span className={`${getHighlightClass('BT-50', activeField, generatedFields)}`}>{formData.recipientStreet}</span>, <span className={`${getHighlightClass('BT-53', activeField, generatedFields)}`}>{formData.recipientZip}</span> <span className={`${getHighlightClass('BT-52', activeField, generatedFields)}`}>{formData.recipientCity}</span>
                 </div>
                 {formData.recipientElectronicAddress && (
-                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-49', activeField)}`}>{formData.recipientElectronicAddress}</p>
+                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-49', activeField, generatedFields)}`}>{formData.recipientElectronicAddress}</p>
                 )}
             </div>
             <div className="text-right">
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">VON</p>
-                <p className={`font-medium text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-27', activeField)}`}>{formData.senderName}</p>
-                <div className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-35', activeField) || getHighlightClass('BT-37', activeField) || getHighlightClass('BT-38', activeField)}`}>
-                  <span className={`${getHighlightClass('BT-35', activeField)}`}>{formData.senderStreet}</span>, <span className={`${getHighlightClass('BT-38', activeField)}`}>{formData.senderZip}</span> <span className={`${getHighlightClass('BT-37', activeField)}`}>{formData.senderCity}</span>
+                <p className={`font-medium text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-27', activeField, generatedFields)}`}>{formData.senderName}</p>
+                <div className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-35', activeField, generatedFields) || getHighlightClass('BT-37', activeField, generatedFields) || getHighlightClass('BT-38', activeField, generatedFields)}`}>
+                  <span className={`${getHighlightClass('BT-35', activeField, generatedFields)}`}>{formData.senderStreet}</span>, <span className={`${getHighlightClass('BT-38', activeField, generatedFields)}`}>{formData.senderZip}</span> <span className={`${getHighlightClass('BT-37', activeField, generatedFields)}`}>{formData.senderCity}</span>
                 </div>
                 {formData.senderContactEmail && (
-                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-43', activeField)}`}>{formData.senderContactEmail}</p>
+                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-43', activeField, generatedFields)}`}>{formData.senderContactEmail}</p>
                 )}
                 {formData.senderElectronicAddress && (
-                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-34', activeField)}`}>{formData.senderElectronicAddress}</p>
+                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-34', activeField, generatedFields)}`}>{formData.senderElectronicAddress}</p>
                 )}
                 {formData.senderTaxId && (
-                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-31', activeField)}`}>Steuernummer: {formData.senderTaxId}</p>
+                    <p className={`text-gray-600 text-sm break-words p-1 rounded ${getHighlightClass('BT-31', activeField, generatedFields)}`}>Steuernummer: {formData.senderTaxId}</p>
                 )}
             </div>
         </section>
          <section className="grid grid-cols-3 gap-8 mt-4 pb-4">
             <div>
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">RECHNUNGS-NR.</p>
-                <p className={`font-mono text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-1', activeField)}`}>{formData.reference}</p>
+                <p className={`font-mono text-gray-800 break-all p-1 rounded ${getHighlightClass('BT-1', activeField, generatedFields)}`}>{formData.reference}</p>
             </div>
             <div>
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">DATUM</p>
-                <p className={`font-medium text-gray-800 p-1 rounded ${getHighlightClass('BT-2', activeField)}`}>{formatDate(formData.invoiceDate)}</p>
+                <p className={`font-medium text-gray-800 p-1 rounded ${getHighlightClass('BT-2', activeField, generatedFields)}`}>{formatDate(formData.invoiceDate)}</p>
             </div>
              <div>
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">LEISTUNGSDATUM</p>
-                <p className={`font-medium text-gray-800 p-1 rounded ${getHighlightClass('BT-72', activeField)}`}>{formatDate(formData.serviceDate)}</p>
+                <p className={`font-medium text-gray-800 p-1 rounded ${getHighlightClass('BT-72', activeField, generatedFields)}`}>{formatDate(formData.serviceDate)}</p>
             </div>
         </section>
         {/* Optionale Referenzfelder */}
@@ -1505,19 +1505,19 @@ const LayoutModern = ({ formData, activeField, generatedFields = new Set() }) =>
             {formData.orderReference && (
               <div>
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">BESTELLREFERENZ</p>
-                <p className={`font-mono text-gray-800 text-sm break-all p-1 rounded ${getHighlightClass('BT-13', activeField)}`}>{formData.orderReference}</p>
+                <p className={`font-mono text-gray-800 text-sm break-all p-1 rounded ${getHighlightClass('BT-13', activeField, generatedFields)}`}>{formData.orderReference}</p>
               </div>
             )}
             {formData.contractReference && (
               <div>
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">VERTRAGSREFERENZ</p>
-                <p className={`font-mono text-gray-800 text-sm break-all p-1 rounded ${getHighlightClass('BT-12', activeField)}`}>{formData.contractReference}</p>
+                <p className={`font-mono text-gray-800 text-sm break-all p-1 rounded ${getHighlightClass('BT-12', activeField, generatedFields)}`}>{formData.contractReference}</p>
               </div>
             )}
             {formData.precedingInvoiceReference && (
               <div>
                 <p className="text-xs font-bold text-gray-500 tracking-wider mb-2">VORHERIGE RECHNUNG</p>
-                <p className={`font-mono text-gray-800 text-sm break-all p-1 rounded ${getHighlightClass('BT-25', activeField)}`}>{formData.precedingInvoiceReference}</p>
+                <p className={`font-mono text-gray-800 text-sm break-all p-1 rounded ${getHighlightClass('BT-25', activeField, generatedFields)}`}>{formData.precedingInvoiceReference}</p>
               </div>
             )}
           </section>
