@@ -115,13 +115,13 @@ const eRechnungMappingData = [
     { id: 35, btId: 'BT-9', en16931: 'Payment due date', description: 'Fälligkeitsdatum', xrechnungPath: 'cbc:DueDate', zugferdPath: '.../ram:DueDateDateTime', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
     { id: 36, btId: 'BT-12', en16931: 'Contract reference', description: 'Vertragsreferenz', xrechnungPath: 'cac:ContractDocumentReference/cbc:ID', zugferdPath: '.../ram:ContractReferencedDocument/ram:IssuerAssignedID', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
     { id: 37, btId: 'BT-13', en16931: 'Purchase order reference', description: 'Bestellreferenz', xrechnungPath: 'cac:OrderReference/cbc:ID', zugferdPath: '.../ram:BuyerOrderReferencedDocument/ram:IssuerAssignedID', mandatory: true, formats: ['EN16931', 'XRechnung', 'ZUGFeRD'] },
+    { id: 38, btId: 'BT-34', en16931: 'Seller electronic address', description: 'Elektronische Adresse (Verkäufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: true, formats: ['XRechnung'] },
+    { id: 39, btId: 'BT-41', en16931: 'Seller contact point', description: 'Kontaktpunkt des Verkäufers', xrechnungPath: '.../Contact/cbc:Name', zugferdPath: '.../ram:DefinedTradeContact/ram:PersonName', mandatory: true, formats: ['XRechnung', 'ZUGFeRD'] },
+    { id: 42, btId: 'BT-49', en16931: 'Buyer electronic address', description: 'Elektronische Adresse (Käufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: true, formats: ['XRechnung'] },
 
     // === WIRKLICH OPTIONALE FELDER ===
-    { id: 38, btId: 'BT-34', en16931: 'Seller electronic address', description: 'Elektronische Adresse (Verkäufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung'] },
-    { id: 39, btId: 'BT-41', en16931: 'Seller contact point', description: 'Kontaktpunkt des Verkäufers', xrechnungPath: '.../Contact/cbc:Name', zugferdPath: '.../ram:DefinedTradeContact/ram:PersonName', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
     { id: 40, btId: 'BT-42', en16931: 'Seller contact telephone number', description: 'Telefon des Verkäufers', xrechnungPath: '.../Contact/cbc:Telephone', zugferdPath: '.../ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
     { id: 41, btId: 'BT-43', en16931: 'Seller contact email address', description: 'E-Mail des Verkäufers', xrechnungPath: '.../Contact/cbc:ElectronicMail', zugferdPath: '.../ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung', 'ZUGFeRD'] },
-    { id: 42, btId: 'BT-49', en16931: 'Buyer electronic address', description: 'Elektronische Adresse (Käufer)', xrechnungPath: '.../Party/cbc:EndpointID', zugferdPath: '.../ram:URIUniversalCommunication/ram:URIID', mandatory: false, formats: ['XRechnung'] },
 
     // === ERWEITERTE OPTIONALE FELDER ===
     { id: 43, btId: 'BT-25', en16931: 'Preceding Invoice reference', description: 'Vorherige Rechnungsreferenz', xrechnungPath: 'cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID', zugferdPath: '.../ram:InvoiceReferencedDocument/ram:IssuerAssignedID', mandatory: false, formats: ['EN16931', 'XRechnung'] },
@@ -135,12 +135,12 @@ const formatRequirements = {
         // Pflichtfelder für XRechnung 3.0.1 (seit 1. Februar 2024)
         mandatory: [
             'BT-1', 'BT-2', 'BT-3', 'BT-5', 'BT-10', // Basis
-            'BT-27', 'BT-31', 'BT-34', 'BT-35', 'BT-37', 'BT-38', 'BT-40', // Verkäufer
+            'BT-27', 'BT-31', 'BT-34', 'BT-35', 'BT-37', 'BT-38', 'BT-40', 'BT-41', // Verkäufer
             'BT-44', 'BT-49', 'BT-50', 'BT-52', 'BT-53', 'BT-55', // Käufer
             'BT-9', 'BT-12', 'BT-13', 'BT-20', 'BT-72', 'BT-81', 'BT-84', 'BT-86', // Zahlung/Lieferung
             'BT-126', 'BT-129', 'BT-146', 'BT-153', 'BT-152' // Positionen
         ],
-        optional: ['BT-41', 'BT-42', 'BT-43', 'BT-25', 'BT-92', 'BT-99']
+        optional: ['BT-42', 'BT-43', 'BT-25', 'BT-92', 'BT-99']
     },
     'EN16931': {
         // Pflichtfelder für EN16931 (Basis-Standard)
@@ -1879,12 +1879,12 @@ const HomePage = ({
                   <FormField name="senderZip" label="PLZ" value={formData.senderZip} onChange={handleInputChange} placeholder="12345" btId="BT-38" isUnmapped={unmappedFields.includes('senderZip')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                   <FormField name="senderCity" label="Ort" value={formData.senderCity} onChange={handleInputChange} placeholder="Musterstadt" btId="BT-37" isUnmapped={unmappedFields.includes('senderCity')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                   <FormField name="senderCountry" label="Ländercode" value={formData.senderCountry} onChange={handleInputChange} placeholder="DE" btId="BT-40" isUnmapped={unmappedFields.includes('senderCountry')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="senderElectronicAddress" label="Elektronische Adresse" value={formData.senderElectronicAddress} onChange={handleInputChange} placeholder="rechnung@firma.de" btId="BT-34" isUnmapped={unmappedFields.includes('senderElectronicAddress')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="senderContactName" label="Ansprechpartner" value={formData.senderContactName} onChange={handleInputChange} placeholder="Max Mustermann" btId="BT-41" isUnmapped={unmappedFields.includes('senderContactName')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                   
                   {/* Optionale Felder - nur wenn Checkbox aktiviert */}
                   {showOptionalFields && (
                     <>
-                      <FormField name="senderElectronicAddress" label="Elektronische Adresse" value={formData.senderElectronicAddress} onChange={handleInputChange} placeholder="rechnung@firma.de" btId="BT-34" isUnmapped={unmappedFields.includes('senderElectronicAddress')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
-                      <FormField name="senderContactName" label="Ansprechpartner" value={formData.senderContactName} onChange={handleInputChange} placeholder="Max Mustermann" btId="BT-41" isUnmapped={unmappedFields.includes('senderContactName')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                       <FormField name="senderContactPhone" label="Telefon" value={formData.senderContactPhone} onChange={handleInputChange} placeholder="+49 30 123456" btId="BT-42" isUnmapped={unmappedFields.includes('senderContactPhone')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                       <div className="md:col-span-2">
                         <FormField name="senderContactEmail" label="E-Mail" value={formData.senderContactEmail} onChange={handleInputChange} placeholder="max@firma.de" btId="BT-43" isUnmapped={unmappedFields.includes('senderContactEmail')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
@@ -1907,11 +1907,11 @@ const HomePage = ({
                   <FormField name="recipientStreet" label="Straße & Hausnummer" value={formData.recipientStreet} onChange={handleInputChange} placeholder="Kundenweg 2" btId="BT-50" isUnmapped={unmappedFields.includes('recipientStreet')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                   <FormField name="recipientZip" label="PLZ" value={formData.recipientZip} onChange={handleInputChange} placeholder="54321" btId="BT-53" isUnmapped={unmappedFields.includes('recipientZip')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                   <FormField name="recipientCity" label="Ort" value={formData.recipientCity} onChange={handleInputChange} placeholder="Kundenstadt" btId="BT-52" isUnmapped={unmappedFields.includes('recipientCity')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
+                  <FormField name="recipientElectronicAddress" label="Elektronische Adresse" value={formData.recipientElectronicAddress} onChange={handleInputChange} placeholder="rechnung@kunde.de" btId="BT-49" isUnmapped={unmappedFields.includes('recipientElectronicAddress')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                   
                   {/* Optionale Felder - nur wenn Checkbox aktiviert */}
                   {showOptionalFields && (
                     <>
-                      <FormField name="recipientElectronicAddress" label="Elektronische Adresse" value={formData.recipientElectronicAddress} onChange={handleInputChange} placeholder="rechnung@kunde.de" btId="BT-49" isUnmapped={unmappedFields.includes('recipientElectronicAddress')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                       <div className="md:col-span-2">
                           <FormField name="leitwegId" label="Leitweg-ID" value={formData.leitwegId} onChange={handleInputChange} placeholder="99999999-ABCDEF" btId="BT-10" isUnmapped={unmappedFields.includes('leitwegId')} onFocus={handleFieldFocus} onBlur={handleFieldBlur}/>
                       </div>
