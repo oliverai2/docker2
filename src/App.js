@@ -1331,7 +1331,7 @@ const getDocumentTypeName = (code) => {
 // #region LAYOUT COMPONENTS
 // ============================================================================
 
-const LayoutClassic = ({ formData, activeField }) => (
+const LayoutClassic = ({ formData, activeField, generatedFields = new Set() }) => (
     <div className="bg-white text-gray-800 p-10 font-sans shadow-2xl rounded-lg w-full">
       <header className="flex justify-between items-start pb-6 border-b-2 border-gray-100">
         <div>
@@ -1341,7 +1341,7 @@ const LayoutClassic = ({ formData, activeField }) => (
       <section className="grid grid-cols-2 gap-12 mt-8">
         <div>
           <p className="text-sm font-semibold text-gray-600 mb-2">RECHNUNGSSTELLER</p>
-          <p className={`font-bold text-gray-800 break-words p-1 rounded ${getHighlight('BT-27')}`}>{formData.senderName}</p>
+          <p className={`font-bold text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-27', activeField, generatedFields)}`}>{formData.senderName}</p>
           <div className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-35', activeField) || getHighlightClass('BT-37', activeField) || getHighlightClass('BT-38', activeField)}`}>
             <span className={`${getHighlightClass('BT-35', activeField)}`}>{formData.senderStreet}</span>, <span className={`${getHighlightClass('BT-38', activeField)}`}>{formData.senderZip}</span> <span className={`${getHighlightClass('BT-37', activeField)}`}>{formData.senderCity}</span>
           </div>
@@ -1452,7 +1452,7 @@ const LayoutClassic = ({ formData, activeField }) => (
     </div>
 );
 
-const LayoutModern = ({ formData, activeField }) => (
+const LayoutModern = ({ formData, activeField, generatedFields = new Set() }) => (
     <div className="bg-white text-gray-800 p-10 font-sans shadow-2xl rounded-lg w-full">
         <header className="flex justify-between items-center pb-6">
             <h1 className="text-5xl font-thin uppercase text-gray-800 tracking-[0.3em]">{getDocumentTypeName(formData.invoiceTypeCode)}</h1>
@@ -1601,7 +1601,7 @@ const LayoutModern = ({ formData, activeField }) => (
     </div>
 );
 
-const LayoutMinimalist = ({ formData, activeField }) => (
+const LayoutMinimalist = ({ formData, activeField, generatedFields = new Set() }) => (
     <div className="bg-white text-black p-10 font-mono text-xs w-full shadow-2xl rounded-lg">
         <header className="grid grid-cols-2 gap-10">
             <div className="break-words">
@@ -1653,7 +1653,7 @@ const LayoutMinimalist = ({ formData, activeField }) => (
     </div>
 );
 
-const LayoutCreative = ({ formData, activeField }) => (
+const LayoutCreative = ({ formData, activeField, generatedFields = new Set() }) => (
     <div className="bg-gray-900 text-white p-10 font-sans shadow-2xl rounded-lg w-full">
         <header className="flex justify-between items-start pb-6 border-b border-gray-700">
             <div>
@@ -1766,11 +1766,11 @@ const InvoicePreview = ({ formData, layout, showPdfPreview, pdfUrl, showOptional
     const displayData = getFilteredData();
     
     switch(layout) {
-        case 'modern': return <LayoutModern formData={displayData} activeField={activeField} />;
-        case 'minimalist': return <LayoutMinimalist formData={displayData} activeField={activeField} />;
-        case 'creative': return <LayoutCreative formData={displayData} activeField={activeField} />;
+        case 'modern': return <LayoutModern formData={displayData} activeField={activeField} generatedFields={generatedFields} />;
+        case 'minimalist': return <LayoutMinimalist formData={displayData} activeField={activeField} generatedFields={generatedFields} />;
+        case 'creative': return <LayoutCreative formData={displayData} activeField={activeField} generatedFields={generatedFields} />;
         case 'classic':
-        default: return <LayoutClassic formData={displayData} activeField={activeField} />;
+        default: return <LayoutClassic formData={displayData} activeField={activeField} generatedFields={generatedFields} />;
     }
 };
 
