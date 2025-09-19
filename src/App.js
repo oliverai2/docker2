@@ -1731,7 +1731,7 @@ const PdfPreview = ({ pdfUrl }) => {
     );
 };
 
-const InvoicePreview = ({ formData, layout, showPdfPreview, pdfUrl, showOptionalFields, activeField }) => {
+const InvoicePreview = ({ formData, layout, showPdfPreview, pdfUrl, showOptionalFields, activeField, generatedFields = new Set() }) => {
     if (showPdfPreview && pdfUrl) {
         return <PdfPreview pdfUrl={pdfUrl} />;
     }
@@ -2069,6 +2069,7 @@ const HomePage = ({
                             pdfUrl={uploadedPdfData}
                             showOptionalFields={showOptionalFields}
                             activeField={activeField}
+                            generatedFields={generatedFields}
                         />
                     </div>
                     <div className="h-16 md:h-24" />
