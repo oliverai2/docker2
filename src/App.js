@@ -1799,7 +1799,6 @@ const HomePage = ({
     generateXRechnungUBL,
     loadingSummary,
     handleOpenSapModal,
-    generatedFields, // Neue Prop für auto-generierte Felder
     sapXml,
     handleCopy,
     handleDownload,
