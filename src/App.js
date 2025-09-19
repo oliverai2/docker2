@@ -2983,7 +2983,7 @@ const App = () => {
     </PaymentTerms>
     <AccountingSupplierParty>
         <Party>
-            <EndpointID schemeID="EM">${escapeXml(formData.senderElectronicAddress)}</EndpointID>
+            ${formData.senderElectronicAddress ? `<EndpointID schemeID="EM">${escapeXml(formData.senderElectronicAddress)}</EndpointID>` : ''}
             <PartyName>
                 <Name>${escapeXml(formData.senderName)}</Name>
             </PartyName>
@@ -3004,16 +3004,17 @@ const App = () => {
             <PartyLegalEntity>
                 <RegistrationName>${escapeXml(formData.senderName)}</RegistrationName>
             </PartyLegalEntity>
+            ${formData.senderContactName || formData.senderContactPhone || formData.senderContactEmail ? `
             <Contact>
-                <Name>${escapeXml(formData.senderContactName)}</Name>
-                <Telephone>${escapeXml(formData.senderContactPhone)}</Telephone>
-                <ElectronicMail>${escapeXml(formData.senderContactEmail)}</ElectronicMail>
-            </Contact>
+                ${formData.senderContactName ? `<Name>${escapeXml(formData.senderContactName)}</Name>` : ''}
+                ${formData.senderContactPhone ? `<Telephone>${escapeXml(formData.senderContactPhone)}</Telephone>` : ''}
+                ${formData.senderContactEmail ? `<ElectronicMail>${escapeXml(formData.senderContactEmail)}</ElectronicMail>` : ''}
+            </Contact>` : ''}
         </Party>
     </AccountingSupplierParty>
     <AccountingCustomerParty>
         <Party>
-            <EndpointID schemeID="EM">${escapeXml(formData.recipientElectronicAddress)}</EndpointID>
+            ${formData.recipientElectronicAddress ? `<EndpointID schemeID="EM">${escapeXml(formData.recipientElectronicAddress)}</EndpointID>` : ''}
             <PartyName>
                 <Name>${escapeXml(formData.recipientName)}</Name>
             </PartyName>
