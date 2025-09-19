@@ -129,6 +129,68 @@ const eRechnungMappingData = [
     { id: 45, btId: 'BT-99', en16931: 'Document level charge amount', description: 'Zuschlag auf Dokumentenebene', xrechnungPath: 'cac:AllowanceCharge/cbc:Amount', zugferdPath: '.../ram:SpecifiedTradeAllowanceCharge/ram:ActualAmount', mandatory: false, formats: ['EN16931', 'XRechnung'] }
 ].sort((a, b) => parseInt(a.btId.substring(3)) - parseInt(b.btId.substring(3)));
 
+// Format-spezifische Pflichtfelder-Matrix für automatische Wertgenerierung
+const formatRequirements = {
+    'XRechnung': {
+        // Pflichtfelder für XRechnung 3.0.1 (seit 1. Februar 2024)
+        mandatory: [
+            'BT-1', 'BT-2', 'BT-3', 'BT-5', 'BT-10', // Basis
+            'BT-27', 'BT-31', 'BT-34', 'BT-35', 'BT-37', 'BT-38', 'BT-40', // Verkäufer
+            'BT-44', 'BT-49', 'BT-50', 'BT-52', 'BT-53', 'BT-55', // Käufer
+            'BT-9', 'BT-12', 'BT-13', 'BT-20', 'BT-72', 'BT-81', 'BT-84', 'BT-86', // Zahlung/Lieferung
+            'BT-126', 'BT-129', 'BT-146', 'BT-153', 'BT-152' // Positionen
+        ],
+        optional: ['BT-41', 'BT-42', 'BT-43', 'BT-25', 'BT-92', 'BT-99']
+    },
+    'EN16931': {
+        // Pflichtfelder für EN16931 (Basis-Standard)
+        mandatory: [
+            'BT-1', 'BT-2', 'BT-3', 'BT-5', // Basis
+            'BT-27', 'BT-31', 'BT-40', // Verkäufer
+            'BT-44', 'BT-55', // Käufer
+            'BT-126', 'BT-129', 'BT-146', 'BT-153' // Positionen
+        ],
+        optional: ['BT-34', 'BT-49', 'BT-41', 'BT-42', 'BT-43']
+    }
+};
+
+// Mapping von BT-IDs zu Feldnamen für automatische Wertgenerierung
+const btIdToFieldMapping = {
+    'BT-1': 'reference',
+    'BT-2': 'invoiceDate',
+    'BT-3': 'invoiceTypeCode',
+    'BT-5': 'invoiceCurrencyCode',
+    'BT-9': 'paymentDueDate',
+    'BT-10': 'leitwegId',
+    'BT-12': 'contractReference',
+    'BT-13': 'orderReference',
+    'BT-20': 'paymentTerms',
+    'BT-25': 'precedingInvoiceReference',
+    'BT-27': 'senderName',
+    'BT-31': 'senderTaxId',
+    'BT-34': 'senderElectronicAddress',
+    'BT-35': 'senderStreet',
+    'BT-37': 'senderCity',
+    'BT-38': 'senderZip',
+    'BT-40': 'senderCountry',
+    'BT-41': 'senderContactName',
+    'BT-42': 'senderContactPhone',
+    'BT-43': 'senderContactEmail',
+    'BT-44': 'recipientName',
+    'BT-49': 'recipientElectronicAddress',
+    'BT-50': 'recipientStreet',
+    'BT-52': 'recipientCity',
+    'BT-53': 'recipientZip',
+    'BT-55': 'recipientCountry',
+    'BT-72': 'serviceDate',
+    'BT-81': 'paymentMeansCode',
+    'BT-84': 'iban',
+    'BT-86': 'bic',
+    'BT-92': 'documentLevelAllowance',
+    'BT-99': 'documentLevelCharge',
+    'BT-152': 'taxRate'
+};
+
 // Verfügbare Platzhalter mit Kategorien für intelligente Verwaltung
 // eslint-disable-next-line no-unused-vars
 const availablePlaceholders = {
@@ -1129,11 +1191,124 @@ const formatDate = (dateString) => {
 };
 
 // Hilfsfunktion für Highlighting-Klassen
-const getHighlightClass = (btId, activeField) => {
+const getHighlightClass = (btId, activeField, generatedFields = new Set()) => {
     if (activeField === btId) {
         return 'bg-yellow-100/70 border-2 border-yellow-300/60 shadow-md transform scale-102 transition-all duration-300 text-gray-800';
     }
+    if (generatedFields.has(btId)) {
+        return 'bg-green-100/70 border-2 border-green-300/60 shadow-md transform scale-102 transition-all duration-500 text-gray-800 animate-pulse';
+    }
     return '';
+};
+
+// Funktion zur Erkennung fehlender Pflichtfelder für ein bestimmtes Format
+const identifyMissingFields = (formData, format) => {
+    const requiredBtIds = formatRequirements[format]?.mandatory || [];
+    const missing = [];
+    
+    requiredBtIds.forEach(btId => {
+        const fieldName = btIdToFieldMapping[btId];
+        if (fieldName && (!formData[fieldName] || formData[fieldName].trim() === '')) {
+            missing.push({ btId, fieldName });
+        }
+    });
+    
+    return missing;
+};
+
+// Intelligente Wertgenerierung für fehlende Felder
+const generateMissingValues = (missingFields, existingFormData) => {
+    const generated = {};
+    const generatedBtIds = [];
+    
+    missingFields.forEach(({ btId, fieldName }) => {
+        let value = '';
+        
+        switch (btId) {
+            case 'BT-34': // Seller electronic address
+                value = existingFormData.senderContactEmail || 
+                       `rechnung@${existingFormData.senderName.toLowerCase().replace(/[^a-z0-9]/g, '')}.de`;
+                break;
+            case 'BT-49': // Buyer electronic address
+                value = `eingang@${existingFormData.recipientName.toLowerCase().replace(/[^a-z0-9]/g, '')}.de`;
+                break;
+            case 'BT-9': // Payment due date
+                const invoiceDate = new Date(existingFormData.invoiceDate);
+                invoiceDate.setDate(invoiceDate.getDate() + 30);
+                value = invoiceDate.toISOString().slice(0, 10);
+                break;
+            case 'BT-12': // Contract reference
+                value = `KONTRAKT-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+                break;
+            case 'BT-13': // Order reference
+                value = `BEST-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+                break;
+            case 'BT-20': // Payment terms
+                value = 'Zahlbar innerhalb von 30 Tagen ohne Abzug.';
+                break;
+            case 'BT-41': // Seller contact name
+                value = 'Max Mustermann';
+                break;
+            case 'BT-42': // Seller contact phone
+                value = '+49 30 12345678';
+                break;
+            case 'BT-43': // Seller contact email
+                value = existingFormData.senderElectronicAddress || 
+                       `kontakt@${existingFormData.senderName.toLowerCase().replace(/[^a-z0-9]/g, '')}.de`;
+                break;
+            case 'BT-81': // Payment means code
+                value = '58'; // Überweisung
+                break;
+            case 'BT-84': // IBAN
+                value = 'DE89370400440532013000';
+                break;
+            case 'BT-86': // BIC
+                value = 'COBADEFFXXX';
+                break;
+            case 'BT-152': // Tax rate
+                value = '19';
+                break;
+            default:
+                // Für unbekannte Felder einen generischen Wert
+                value = `AUTO-${btId}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+        }
+        
+        if (value) {
+            generated[fieldName] = value;
+            generatedBtIds.push(btId);
+        }
+    });
+    
+    return { generated, generatedBtIds };
+};
+
+// Funktion zum Triggern der Highlights für auto-generierte Felder
+const triggerGeneratedFieldsHighlight = (btIds, setGeneratedFields, timeoutRef) => {
+    setGeneratedFields(new Set(btIds));
+    
+    // Clear existing timeout
+    if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+    }
+    
+    // Set new timeout for 5 seconds
+    timeoutRef.current = setTimeout(() => {
+        setGeneratedFields(new Set());
+    }, 5000);
+};
+
+// Intelligente schemeID-Auswahl für cbc:EndpointID
+const getSchemeID = (address) => {
+    if (!address) return 'EM';
+    
+    // E-Mail-Adresse erkennen
+    if (address.includes('@')) return 'EM';
+    
+    // Leitweg-ID Format erkennen (z.B. 04011000-12345-67)
+    if (address.match(/^\d{8,12}-[A-Za-z0-9-]+$/)) return '0204';
+    
+    // Default: E-Mail
+    return 'EM';
 };
 
 const formatCurrency = (amount) => {
@@ -1166,7 +1341,7 @@ const LayoutClassic = ({ formData, activeField }) => (
       <section className="grid grid-cols-2 gap-12 mt-8">
         <div>
           <p className="text-sm font-semibold text-gray-600 mb-2">RECHNUNGSSTELLER</p>
-          <p className={`font-bold text-gray-800 break-words p-1 rounded ${getHighlightClass('BT-27', activeField)}`}>{formData.senderName}</p>
+          <p className={`font-bold text-gray-800 break-words p-1 rounded ${getHighlight('BT-27')}`}>{formData.senderName}</p>
           <div className={`text-gray-600 break-words p-1 rounded ${getHighlightClass('BT-35', activeField) || getHighlightClass('BT-37', activeField) || getHighlightClass('BT-38', activeField)}`}>
             <span className={`${getHighlightClass('BT-35', activeField)}`}>{formData.senderStreet}</span>, <span className={`${getHighlightClass('BT-38', activeField)}`}>{formData.senderZip}</span> <span className={`${getHighlightClass('BT-37', activeField)}`}>{formData.senderCity}</span>
           </div>
@@ -1624,6 +1799,7 @@ const HomePage = ({
     generateXRechnungUBL,
     loadingSummary,
     handleOpenSapModal,
+    generatedFields, // Neue Prop für auto-generierte Felder
     sapXml,
     handleCopy,
     handleDownload,
@@ -1645,8 +1821,14 @@ const HomePage = ({
     setShowOptionalFields,
     activeField,
     handleFieldFocus,
-    handleFieldBlur
-}) => (
+    handleFieldBlur,
+    generatedFields
+}) => {
+    
+    // Lokale getHighlightClass-Funktion mit automatischer generatedFields-Verwendung
+    const getHighlight = (btId) => getHighlightClass(btId, activeField, generatedFields);
+    
+    return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left side: Form */}
@@ -1996,7 +2178,8 @@ const HomePage = ({
         </div>
       </div>
     </>
-);
+    );
+};
 
 // #endregion
 
@@ -2063,7 +2246,9 @@ const App = () => {
   const [xrechnungTabEnabled, setXrechnungTabEnabled] = useState(true);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [activeField, setActiveField] = useState(null); // BT-ID des aktiven Feldes für Highlighting
+  const [generatedFields, setGeneratedFields] = useState(new Set()); // BT-IDs der auto-generierten Felder
   const highlightTimeoutRef = useRef(null); // Ref für Highlight-Timer
+  const generatedFieldsTimeoutRef = useRef(null); // Ref für auto-generierte Felder Timer
   const [kreditorId, setKreditorId] = useState('');
   const [buchungskreisId, setBuchungskreisId] = useState('');
   const [invoiceSummary, setInvoiceSummary] = useState('');
@@ -2777,8 +2962,31 @@ const App = () => {
 
 
   const generateXRechnungUBL = async () => {
-    // Erweiterte Validierung mit EN16931/XRechnung-spezifischen Regeln
-    const validation = validateEN16931Fields(formData);
+    // 1. NEUE LOGIK: Identifiziere fehlende XRechnung-Pflichtfelder
+    const missingXRechnungFields = identifyMissingFields(formData, 'XRechnung');
+    
+    // 2. Generiere Zufallswerte für fehlende Felder
+    let updatedFormData = { ...formData };
+    let generatedBtIds = [];
+    
+    if (missingXRechnungFields.length > 0) {
+      const { generated, generatedBtIds: newGeneratedIds } = generateMissingValues(missingXRechnungFields, formData);
+      updatedFormData = { ...formData, ...generated };
+      generatedBtIds = newGeneratedIds;
+      
+      // Update formData in der App
+      setFormData(updatedFormData);
+      
+      // Trigger Highlights für auto-generierte Felder (5 Sekunden)
+      triggerGeneratedFieldsHighlight(generatedBtIds, setGeneratedFields, generatedFieldsTimeoutRef);
+      
+      // Zeige Nachricht über auto-generierte Felder
+      const fieldNames = missingXRechnungFields.map(f => f.btId).join(', ');
+      showMessage(`XRechnung Pflichtfelder automatisch generiert: ${fieldNames}`, 'success');
+    }
+
+    // 3. Erweiterte Validierung mit EN16931/XRechnung-spezifischen Regeln
+    const validation = validateEN16931Fields(updatedFormData);
     if (validation.errors.length > 0) {
       showMessage(`Validierungsfehler:\n${validation.errors.join('\n')}`, 'error');
       return;
@@ -2789,7 +2997,7 @@ const App = () => {
       showMessage(`Warnungen:\n${validation.warnings.join('\n')}`, 'warning');
     }
 
-    // Alte Validierung als Fallback
+    // 4. Alte Validierung als Fallback
     if (!validateFormData()) return;
 
     setLoading(true);
@@ -2798,8 +3006,8 @@ const App = () => {
     setSapXml('');
 
     try {
-      // Wende Defaults auf Formulardaten an
-      const enhancedFormData = applyFieldDefaults(formData);
+      // Wende Defaults auf aktualisierte Formulardaten an (inklusive auto-generierte Felder)
+      const enhancedFormData = applyFieldDefaults(updatedFormData);
       
       const taxRate = parseFloat(enhancedFormData.taxRate);
       if (isNaN(taxRate)) throw new Error('Steuersatz muss eine gültige Zahl sein.');
@@ -2850,7 +3058,7 @@ const App = () => {
     <cbc:BuyerReference>${escapeXml(enhancedFormData.leitwegId)}</cbc:BuyerReference>${generateDocumentReferences()}
     <cac:AccountingSupplierParty>
         <cac:Party>
-            ${enhancedFormData.senderElectronicAddress ? `<cbc:EndpointID schemeID="EM">${escapeXml(enhancedFormData.senderElectronicAddress)}</cbc:EndpointID>` : ''}
+            ${enhancedFormData.senderElectronicAddress ? `<cbc:EndpointID schemeID="${getSchemeID(enhancedFormData.senderElectronicAddress)}">${escapeXml(enhancedFormData.senderElectronicAddress)}</cbc:EndpointID>` : ''}
             <cac:PartyName>
                 <cbc:Name>${escapeXml(enhancedFormData.senderName)}</cbc:Name>
             </cac:PartyName>
@@ -2887,7 +3095,7 @@ const App = () => {
     </cac:AccountingSupplierParty>
     <cac:AccountingCustomerParty>
         <cac:Party>
-            ${enhancedFormData.recipientElectronicAddress ? `<cbc:EndpointID schemeID="EM">${escapeXml(enhancedFormData.recipientElectronicAddress)}</cbc:EndpointID>` : ''}
+            ${enhancedFormData.recipientElectronicAddress ? `<cbc:EndpointID schemeID="${getSchemeID(enhancedFormData.recipientElectronicAddress)}">${escapeXml(enhancedFormData.recipientElectronicAddress)}</cbc:EndpointID>` : ''}
             <cac:PartyName>
                 <cbc:Name>${escapeXml(enhancedFormData.recipientName)}</cbc:Name>
             </cac:PartyName>
@@ -2983,7 +3191,7 @@ const App = () => {
     </PaymentTerms>
     <AccountingSupplierParty>
         <Party>
-            ${formData.senderElectronicAddress ? `<EndpointID schemeID="EM">${escapeXml(formData.senderElectronicAddress)}</EndpointID>` : ''}
+            ${formData.senderElectronicAddress ? `<EndpointID schemeID="${getSchemeID(formData.senderElectronicAddress)}">${escapeXml(formData.senderElectronicAddress)}</EndpointID>` : ''}
             <PartyName>
                 <Name>${escapeXml(formData.senderName)}</Name>
             </PartyName>
@@ -3014,7 +3222,7 @@ const App = () => {
     </AccountingSupplierParty>
     <AccountingCustomerParty>
         <Party>
-            ${formData.recipientElectronicAddress ? `<EndpointID schemeID="EM">${escapeXml(formData.recipientElectronicAddress)}</EndpointID>` : ''}
+            ${formData.recipientElectronicAddress ? `<EndpointID schemeID="${getSchemeID(formData.recipientElectronicAddress)}">${escapeXml(formData.recipientElectronicAddress)}</EndpointID>` : ''}
             <PartyName>
                 <Name>${escapeXml(formData.recipientName)}</Name>
             </PartyName>
@@ -3624,6 +3832,7 @@ const App = () => {
                 setXrechnungXML={setXrechnungXML} setEn16931XML={setEn16931XML} dataSource={dataSource} showXRechnungButton={showXRechnungButton} xrechnungTabEnabled={xrechnungTabEnabled}
                 showPdfPreview={showPdfPreview} uploadedPdfData={uploadedPdfData} showOptionalFields={showOptionalFields} setShowOptionalFields={setShowOptionalFields}
                 activeField={activeField} handleFieldFocus={handleFieldFocus} handleFieldBlur={handleFieldBlur}
+                generatedFields={generatedFields} // Neue Prop für auto-generierte Felder
             />;
         case 'layoutSelection': return renderLayoutSelectionPage();
         case 'eRechnungMapping': return renderERechnungMappingPage();
